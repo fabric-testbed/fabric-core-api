@@ -1,0 +1,10 @@
+connexion
+fabric-comanage-api
+flask-migrate
+flask-sqlalchemy
+psycopg2-binary
+python-dateutil # alembic[tz]
+python-dotenv
+pytz
+sqlalchemy-stubs
+swagger-ui-bundle # connexion[swagger-ui]

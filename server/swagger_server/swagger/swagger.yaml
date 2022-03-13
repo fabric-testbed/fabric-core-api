@@ -1,0 +1,2838 @@
+openapi: 3.0.0
+info:
+  title: FABRIC Core API
+  description: FABRIC Core API
+  contact:
+    name: Michael J. Stealey
+    email: stealey@unc.edu
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/mit-license.html
+  version: 1.0.0
+servers:
+- url: http://127.0.0.1:5000
+  description: local development server (flask)
+- url: https://127.0.0.1:8443
+  description: local development server (nginx)
+- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.0.0
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: people
+  description: FABRIC People
+- name: projects
+  description: FABRIC Projects
+- name: publications
+  description: FABRIC Publications
+- name: sshkeys
+  description: FABRIC Public SSH Keys
+- name: updates
+  description: FABRIC Facility Updates
+- name: version
+  description: Core API Version
+- name: whoami
+  description: Who am I authenticated as
+paths:
+  /people:
+    get:
+      tags:
+      - people
+      summary: Search for FABRIC People
+      description: Search for FABRIC People by name or email
+      operationId: people_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      - name: offset
+        in: query
+        description: number of items to skip before starting to collect the result
+          set
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        description: maximum number of results to return per page (1 or more)
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 20
+          minimum: 1
+          type: integer
+          format: int32
+          default: 5
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/people'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/{uuid}:
+    get:
+      tags:
+      - people
+      summary: Person details by UUID
+      description: Person details by UUID
+      operationId: people_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: as_self
+        in: query
+        description: GET object as Self
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/people_details'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+    patch:
+      tags:
+      - people
+      summary: Update Person details as Self
+      description: Update Person details as Self
+      operationId: people_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_people_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/{uuid}/profile:
+    patch:
+      tags:
+      - people
+      summary: Update Person Profile details as Self
+      description: Update Person Profile details as Self
+      operationId: people_uuid_profile_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_people_profile_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/preferences:
+    get:
+      tags:
+      - people
+      summary: List of People Preference options
+      description: List of People Preference options
+      operationId: people_preferences_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/profile/other-identity-types:
+    get:
+      tags:
+      - people
+      summary: List of People Profile Other Identity Type options
+      description: List of People Profile Other Identity Type options
+      operationId: people_profile_other_identity_types_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/profile/preferences:
+    get:
+      tags:
+      - people
+      summary: List of People Profile Preference options
+      description: List of People Profile Preference options
+      operationId: people_profile_preferences_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/profile/professional-page-types:
+    get:
+      tags:
+      - people
+      summary: List of People Profile Professional Page Type options
+      description: List of People Profile Professional Page Type options
+      operationId: people_profile_professional_page_types_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/profile/social-page-types:
+    get:
+      tags:
+      - people
+      summary: List of People Profile Social Page Type options
+      description: List of People Profile Social Page Type options
+      operationId: people_profile_social_page_types_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /projects:
+    get:
+      tags:
+      - projects
+      summary: Search for FABRIC Projects
+      description: Search for FABRIC Projects by name
+      operationId: projects_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      - name: offset
+        in: query
+        description: number of items to skip before starting to collect the result
+          set
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        description: maximum number of results to return per page (1 or more)
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 20
+          minimum: 1
+          type: integer
+          format: int32
+          default: 5
+      - name: person_uuid
+        in: query
+        description: person uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+    post:
+      tags:
+      - projects
+      summary: Create new Project
+      description: Create new Project
+      operationId: projects_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects_details'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}:
+    get:
+      tags:
+      - projects
+      summary: Project details by UUID
+      description: Project details by UUID
+      operationId: projects_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/projects_details'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+    delete:
+      tags:
+      - projects
+      summary: Delete Project as owner
+      description: Delete Project as owner
+      operationId: projects_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+    patch:
+      tags:
+      - projects
+      summary: Update Project details as owner
+      description: Update Project details as owner
+      operationId: projects_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/profile:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Profile details as owner
+      description: Update Project Profile details as owner
+      operationId: projects_uuid_profile_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_profile_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/personnel:
+    patch:
+      tags:
+      - projects
+      summary: Update Project personnel as owner
+      description: Update Project personnel as owner
+      operationId: projects_uuid_personnel_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_personnel_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/preferences:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Preference options
+      description: List of Projects Preference options
+      operationId: projects_preferences_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/profile/preferences:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Profile Preference options
+      description: List of Projects Profile Preference options
+      operationId: projects_profile_preferences_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/tags:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Tags options
+      description: List of Projects Tags options
+      operationId: projects_tags_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /publications:
+    get:
+      tags:
+      - publications
+      summary: Publications (placeholder)
+      description: Search for Publications by author or title
+      operationId: publications_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      - name: offset
+        in: query
+        description: number of items to skip before starting to collect the result
+          set
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        description: maximum number of results to return per page (1 or more)
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 20
+          minimum: 1
+          type: integer
+          format: int32
+          default: 5
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+    post:
+      tags:
+      - publications
+      summary: Publications (placeholder)
+      description: Publications (placeholder)
+      operationId: publications_post
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+  /publications/{uuid}:
+    get:
+      tags:
+      - publications
+      summary: Publications (placeholder)
+      description: Publications (placeholder)
+      operationId: publications_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+    delete:
+      tags:
+      - publications
+      summary: Publications (placeholder)
+      description: Publications (placeholder)
+      operationId: publications_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+    patch:
+      tags:
+      - publications
+      summary: Publications (placeholder)
+      description: Publications (placeholder)
+      operationId: publications_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+  /publications/category-types:
+    get:
+      tags:
+      - publications
+      summary: List of Category Type options
+      description: List of Category Type options
+      operationId: publications_category_types_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.publications_controller
+  /bastionkeys:
+    get:
+      tags:
+      - sshkeys
+      summary: Get active SSH Keys
+      description: Get active SSH Keys
+      operationId: bastionkeys_get
+      parameters:
+      - name: secret
+        in: query
+        description: unique secret token
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: password
+      - name: since_date
+        in: query
+        description: starting date to search from
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bastionkeys'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+  /sshkeys:
+    get:
+      tags:
+      - sshkeys
+      summary: Get active SSH Keys
+      description: Get active SSH Keys
+      operationId: sshkeys_get
+      parameters:
+      - name: person_uuid
+        in: query
+        description: person uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sshkeys'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+    put:
+      tags:
+      - sshkeys
+      summary: Add a public SSH Key
+      description: Add a public SSH Key
+      operationId: sshkeys_put
+      requestBody:
+        $ref: '#/components/requestBodies/payload_sshkeys_put'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+    post:
+      tags:
+      - sshkeys
+      summary: Create a public/private SSH Key Pair
+      description: Create a public/private SSH Key Pair
+      operationId: sshkeys_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_sshkeys_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sshkey_pair'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+  /sshkeys/{uuid}:
+    get:
+      tags:
+      - sshkeys
+      summary: SSH Key details by UUID
+      description: SSH Key details by UUID
+      operationId: sshkeys_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+    delete:
+      tags:
+      - sshkeys
+      summary: Delete SSH Key by UUID
+      description: Delete SSH Key by UUID
+      operationId: sshkeys_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+  /updates:
+    get:
+      tags:
+      - updates
+      summary: Facility Updates (placeholder)
+      description: Facility Updates (placeholder)
+      operationId: updates_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updates'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.updates_controller
+    post:
+      tags:
+      - updates
+      summary: Facility Updates (placeholder)
+      description: Facility Updates (placeholder)
+      operationId: updates_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_facility_update_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updates'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.updates_controller
+  /updates/{uuid}:
+    get:
+      tags:
+      - updates
+      summary: Facility Updates (placeholder)
+      description: Facility Updates (placeholder)
+      operationId: updates_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updates'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.updates_controller
+    delete:
+      tags:
+      - updates
+      summary: Facility Updates (placeholder)
+      description: Facility Updates (placeholder)
+      operationId: updates_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.updates_controller
+    patch:
+      tags:
+      - updates
+      summary: Facility Updates (placeholder)
+      description: Facility Updates (placeholder)
+      operationId: updates_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_facility_update_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.updates_controller
+  /version:
+    get:
+      tags:
+      - version
+      summary: Version
+      description: Version
+      operationId: version_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/version'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.version_controller
+  /whoami:
+    get:
+      tags:
+      - whoami
+      summary: Who am I?
+      description: Who am I?
+      operationId: whoami_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/whoami'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.whoami_controller
+components:
+  schemas:
+    status_200_ok_single:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 200
+        type:
+          type: string
+    status_200_ok_paginated:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        limit:
+          type: integer
+        links:
+          $ref: '#/components/schemas/status_200_ok_paginated_links'
+        offset:
+          type: integer
+        size:
+          type: integer
+        status:
+          type: integer
+          default: 200
+        total:
+          type: integer
+        type:
+          type: string
+    status_200_ok_no_content:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_200_ok_no_content_data'
+        type:
+          type: string
+          default: no_content
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 200
+      example:
+        data:
+        - details: details
+          message: No Content
+        - details: details
+          message: No Content
+        size: 0
+        type: no_content
+        status: 6
+    status_400_bad_request:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_400_bad_request_errors'
+    status_401_unauthorized:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_401_unauthorized_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 401
+    status_403_forbidden:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_403_forbidden_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 403
+    status_404_not_found:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_404_not_found_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 404
+    status_500_internal_server_error:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_500_internal_server_error_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 500
+    person:
+      required:
+      - name
+      - uuid
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+    people:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/person'
+    people_details:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/people_one'
+    people_one:
+      required:
+      - affiliation
+      - name
+      - registered_on
+      - uuid
+      type: object
+      properties:
+        affiliation:
+          type: string
+        bastion_login:
+          type: string
+        cilogon_email:
+          type: string
+        cilogon_family_name:
+          type: string
+        cilogon_given_name:
+          type: string
+        cilogon_id:
+          type: string
+        cilogon_idp_name:
+          type: string
+        cilogon_name:
+          type: string
+        email:
+          type: string
+        email_addresses:
+          type: array
+          items:
+            type: string
+        eppn:
+          type: string
+        fabric_id:
+          type: string
+        name:
+          type: string
+        preferences:
+          $ref: '#/components/schemas/preferences'
+        profile:
+          $ref: '#/components/schemas/profile_people'
+        publications:
+          type: array
+          items:
+            type: object
+        registered_on:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/people_one_roles'
+        sshkeys:
+          type: array
+          items:
+            type: object
+        uuid:
+          type: string
+    projects:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/projects_data'
+    projects_details:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/projects_one'
+    projects_one:
+      required:
+      - created
+      - description
+      - facility
+      - is_public
+      - name
+      - uuid
+      type: object
+      properties:
+        active:
+          type: boolean
+          default: true
+        created:
+          type: string
+          format: date-time
+        description:
+          type: string
+        facility:
+          type: string
+        is_public:
+          type: boolean
+          default: true
+        memberships:
+          $ref: '#/components/schemas/project_membership'
+        modified:
+          type: string
+          format: date-time
+        name:
+          type: string
+        preferences:
+          $ref: '#/components/schemas/preferences'
+        profile:
+          $ref: '#/components/schemas/profile_projects'
+        project_creators:
+          type: array
+          items:
+            $ref: '#/components/schemas/person'
+        project_members:
+          type: array
+          items:
+            $ref: '#/components/schemas/person'
+        project_owners:
+          type: array
+          items:
+            $ref: '#/components/schemas/person'
+        publications:
+          type: array
+          items:
+            type: object
+        tags:
+          type: array
+          items:
+            type: string
+        uuid:
+          type: string
+    project_membership:
+      type: object
+      properties:
+        is_creator:
+          type: boolean
+          default: false
+        is_member:
+          type: boolean
+          default: false
+        is_owner:
+          type: boolean
+          default: false
+    profile_people:
+      type: object
+      properties:
+        bio:
+          type: string
+        cv:
+          type: string
+        job:
+          type: string
+        other_identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile_people_other_identities'
+        preferences:
+          $ref: '#/components/schemas/preferences'
+        professional:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile_people_professional'
+        pronouns:
+          type: string
+        social:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile_people_professional'
+        website:
+          type: string
+    profile_projects:
+      type: object
+      properties:
+        award_information:
+          type: string
+        goals:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        notebooks:
+          type: array
+          items:
+            type: object
+        preferences:
+          $ref: '#/components/schemas/preferences'
+        project_status:
+          type: string
+        purpose:
+          type: string
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile_projects_references'
+    preferences:
+      type: object
+      additionalProperties:
+        type: boolean
+      example:
+        show_XYZ: true
+    sshkey_pair:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/sshkey_pair_data'
+    sshkeys:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/sshkeys_one'
+    sshkeys_one:
+      type: object
+      properties:
+        comment:
+          type: string
+        created_on:
+          type: string
+          format: date-time
+        deactivated_on:
+          type: string
+          format: date-time
+        deactivated_reason:
+          type: string
+        description:
+          type: string
+        expires_on:
+          type: string
+          format: date-time
+        fabric_key_type:
+          type: string
+          enum:
+          - bastion
+          - sliver
+          default: sliver
+        fingerprint:
+          type: string
+        public_key:
+          type: string
+        ssh_key_type:
+          type: string
+        uuid:
+          type: string
+    bastionkeys:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/bastionkeys_one'
+    bastionkeys_one:
+      type: object
+      properties:
+        gecos:
+          type: string
+        login:
+          type: string
+        public_openssh:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - deactivated
+          - expired
+          default: active
+    updates:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/facility_update'
+    facility_update:
+      required:
+      - content
+      - date
+      - id
+      - title
+      type: object
+      properties:
+        button:
+          type: string
+        content:
+          type: string
+        date:
+          type: string
+          format: date
+        id:
+          type: integer
+        link:
+          type: string
+        title:
+          type: string
+        uuid:
+          type: string
+    version:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/version_data'
+    whoami:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/whoami_data'
+    api_options_details:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/api_options_one'
+    api_options_one:
+      type: object
+      properties:
+        api_endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/api_options_one_api_endpoints'
+        description:
+          type: string
+        key_value_pairs:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            show_XYZ: "BOOLEAN: show/hide XYZ in all interfaces"
+        name:
+          type: string
+    api_options:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          data:
+            type: array
+            items:
+              type: object
+              additionalProperties:
+                type: string
+              example: show_XYZ
+    people_patch:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        preferences:
+          $ref: '#/components/schemas/preferences'
+    people_profile_patch:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/profile_people'
+    projects_post:
+      required:
+      - description
+      - is_public
+      - name
+      type: object
+      properties:
+        description:
+          type: string
+        is_public:
+          type: boolean
+          default: true
+        name:
+          type: string
+        project_members:
+          type: array
+          items:
+            type: string
+        project_owners:
+          type: array
+          items:
+            type: string
+    projects_patch:
+      type: object
+      properties:
+        description:
+          type: string
+        is_public:
+          type: boolean
+        name:
+          type: string
+        preferences:
+          $ref: '#/components/schemas/preferences'
+    projects_profile_patch:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/profile_projects'
+    projects_personnel_patch:
+      type: object
+      properties:
+        project_members:
+          type: array
+          items:
+            type: string
+        project_owners:
+          type: array
+          items:
+            type: string
+    sshkeys_post:
+      required:
+      - comment
+      - description
+      - keytype
+      type: object
+      properties:
+        comment:
+          type: string
+        description:
+          type: string
+        keytype:
+          type: string
+          enum:
+          - bastion
+          - sliver
+          default: sliver
+    sshkeys_put:
+      required:
+      - description
+      - keytype
+      - public_openssh
+      type: object
+      properties:
+        description:
+          type: string
+        keytype:
+          type: string
+          enum:
+          - bastion
+          - sliver
+          default: sliver
+        public_openssh:
+          type: string
+    facility_update_post:
+      required:
+      - content
+      - date
+      - end_date
+      - id
+      - start_date
+      - title
+      type: object
+      properties:
+        button:
+          type: string
+        content:
+          type: string
+        date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date-time
+        id:
+          type: integer
+        link:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        title:
+          type: string
+    facility_update_patch:
+      type: object
+      properties:
+        button:
+          type: string
+        content:
+          type: string
+        date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date-time
+        id:
+          type: integer
+        link:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        title:
+          type: string
+    status_200_ok_paginated_links:
+      type: object
+      properties:
+        first:
+          type: string
+        last:
+          type: string
+        next:
+          type: string
+        prev:
+          type: string
+      example: null
+    status_200_ok_no_content_data:
+      type: object
+      properties:
+        message:
+          type: string
+          default: No Content
+        details:
+          type: string
+      example:
+        details: details
+        message: No Content
+    status_400_bad_request_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Bad Request
+        details:
+          type: string
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 400
+      example: null
+    status_401_unauthorized_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Unauthorized
+        details:
+          type: string
+      example: null
+    status_403_forbidden_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Forbidden
+        details:
+          type: string
+      example: null
+    status_404_not_found_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Not Found
+        details:
+          type: string
+      example: null
+    status_500_internal_server_error_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Internal Server Error
+        details:
+          type: string
+      example: null
+    people_one_roles:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example: null
+    projects_data:
+      required:
+      - created
+      - description
+      - facility
+      - is_public
+      - name
+      - uuid
+      properties:
+        created:
+          type: string
+        description:
+          type: string
+        facility:
+          type: string
+        is_public:
+          type: boolean
+          default: true
+        memberships:
+          $ref: '#/components/schemas/project_membership'
+        name:
+          type: string
+        uuid:
+          type: string
+      example: null
+    profile_people_other_identities:
+      type: object
+      properties:
+        identity:
+          type: string
+        type:
+          type: string
+      example: null
+    profile_people_professional:
+      type: object
+      properties:
+        url:
+          type: string
+        type:
+          type: string
+      example: null
+    profile_projects_references:
+      type: object
+      properties:
+        description:
+          type: string
+        url:
+          type: string
+      example: null
+    sshkey_pair_data:
+      type: object
+      properties:
+        private_openssh:
+          type: string
+        public_openssh:
+          type: string
+      example: null
+    version_data:
+      required:
+      - reference
+      - version
+      properties:
+        reference:
+          type: string
+          example: https://github.com/fabric-testbed/core-api
+        version:
+          type: string
+          example: 1.0.0
+      example: null
+    whoami_data:
+      required:
+      - active
+      - email
+      - enrolled
+      - name
+      - uuid
+      properties:
+        active:
+          type: boolean
+          default: false
+        email:
+          type: string
+        enrolled:
+          type: boolean
+          default: false
+        name:
+          type: string
+        uuid:
+          type: string
+      example: null
+    api_options_one_api_endpoints:
+      properties:
+        description:
+          type: string
+        endpoint:
+          type: string
+      example: null
+  responses:
+    "200_people":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/people'
+    "200_people_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/people_details'
+    "200_projects":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects'
+    "200_projects_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_details'
+    "200_bastionkeys":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/bastionkeys'
+    "200_sshkeys":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/sshkeys'
+    "200_sshkey_pair":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/sshkey_pair'
+    "200_version":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/version'
+    "200_whoami":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/whoami'
+    "200_updates":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/updates'
+    "200_api_options_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/api_options_details'
+    "200_api_options":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/api_options'
+    "200_ok_no_content":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_200_ok_no_content'
+    "400_bad_request":
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_400_bad_request'
+    "401_unauthorized":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_401_unauthorized'
+    "403_forbidden":
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_403_forbidden'
+    "404_not_found":
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_404_not_found'
+    "500_internal_server_error":
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_500_internal_server_error'
+  parameters:
+    offset:
+      name: offset
+      in: query
+      description: number of items to skip before starting to collect the result set
+      required: false
+      style: form
+      explode: true
+      schema:
+        minimum: 0
+        type: integer
+        format: int32
+        default: 0
+    limit:
+      name: limit
+      in: query
+      description: maximum number of results to return per page (1 or more)
+      required: false
+      style: form
+      explode: true
+      schema:
+        maximum: 20
+        minimum: 1
+        type: integer
+        format: int32
+        default: 5
+    search:
+      name: search
+      in: query
+      description: search term applied
+      required: false
+      style: form
+      explode: true
+      schema:
+        minLength: 3
+        type: string
+    as_self:
+      name: as_self
+      in: query
+      description: GET object as Self
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+        default: false
+    person_uuid:
+      name: person_uuid
+      in: query
+      description: person uuid
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+    operation:
+      name: operation
+      in: query
+      description: operation to be performed
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - add
+        - remove
+        default: add
+    secret:
+      name: secret
+      in: query
+      description: unique secret token
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: string
+        format: password
+    since_date:
+      name: since_date
+      in: query
+      description: starting date to search from
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: string
+        format: date-time
+    uuid:
+      name: uuid
+      in: path
+      description: universally unique identifier
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+  requestBodies:
+    payload_people_patch:
+      description: Update Person details as self
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/people_patch'
+    payload_people_profile_patch:
+      description: Update Person details as self
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/people_profile_patch'
+    payload_projects_post:
+      description: Create new Project
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_post'
+    payload_projects_patch:
+      description: Update Project details as owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_patch'
+    payload_projects_profile_patch:
+      description: Update Project Profile details as owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_profile_patch'
+    payload_projects_personnel_patch:
+      description: Update Project personnel as owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_personnel_patch'
+    payload_sshkeys_post:
+      description: Create a public/private SSH Key Pair
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/sshkeys_post'
+    payload_sshkeys_put:
+      description: Add a public SSH Key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/sshkeys_put'
+    payload_facility_update_post:
+      description: Create a facility update
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/facility_update_post'
+    payload_facility_update_patch:
+      description: Update an existing facility update
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/facility_update_patch'
+

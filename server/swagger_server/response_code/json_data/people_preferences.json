@@ -1,6 +1,6 @@
 {
   "name": "people.preferences",
-  "description": "a People object is public by default, but portions of it can be set to private",
+  "description": "A People object is public by default, but portions of it can be set to private by modifying its preferences",
   "api_endpoints": [
     {
       "endpoint": "/people/preferences",

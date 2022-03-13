@@ -1,6 +1,6 @@
 {
   "name": "people.profile.professionalpage.types",
-  "description": "a People object is public by default, but portions of it can be set to private",
+  "description": "Professional Page objects are user defined page or profile entries that reference other platforms",
   "api_endpoints": [
     {
       "endpoint": "/people/profile/professionalpage-types",

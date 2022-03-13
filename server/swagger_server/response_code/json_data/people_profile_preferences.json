@@ -1,6 +1,6 @@
 {
   "name": "people.profile.preferences",
-  "description": "a People Profile object is set to the value of people.preferences.show_profile by default, but its contents can be set to public or private as desired by the owner.",
+  "description": "A People Profile object is public by default, but portions of it can be set to private by modifying its preferences",
   "api_endpoints": [
     {
       "endpoint": "/people/profile/preferences",

@@ -1,6 +1,6 @@
 {
   "name": "projects.preferences",
-  "description": "a Project object is public by default, but all or portions of it can be set to private.",
+  "description": "A Projects object is public by default, but portions of it can be set to private by modifying its preferences",
   "api_endpoints": [
     {
       "endpoint": "/projects/preferences",

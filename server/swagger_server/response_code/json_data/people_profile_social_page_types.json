@@ -1,6 +1,6 @@
 {
   "name": "people.profile.socialpage.types",
-  "description": "a People object is public by default, but portions of it can be set to private",
+  "description": "Social Page objects are user defined page or profile entries that reference other platforms",
   "api_endpoints": [
     {
       "endpoint": "/people/profile/socialpage-types",

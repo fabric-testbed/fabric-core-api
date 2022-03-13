@@ -1,6 +1,6 @@
 {
   "name": "projects.tags",
-  "description": "FABRIC tags as denoted by the key in key_value_pairs",
+  "description": "Project Tags denote project capability and are only configurable by a Facility Operator",
   "api_endpoints": [
     {
       "endpoint": "/projects/tags",

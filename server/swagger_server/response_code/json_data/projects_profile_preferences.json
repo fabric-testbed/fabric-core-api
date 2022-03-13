@@ -1,6 +1,6 @@
 {
   "name": "projects.profile.preferences",
-  "description": "a Projects Profile object is set to the value of projects.preferences.show_profile by default, but its contents can be set to public or private as desired by the owner.",
+  "description": "A Project Profile object is public by default, but portions of it can be set to private by modifying its preferences",
   "api_endpoints": [
     {
       "endpoint": "/projects/profile/preferences",

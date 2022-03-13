@@ -59,9 +59,11 @@ class TestProjectsController(BaseTestCase):
 
         List of Projects Preference options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/projects/preferences',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -70,9 +72,11 @@ class TestProjectsController(BaseTestCase):
 
         List of Projects Profile Preference options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/projects/profile/preferences',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -81,9 +85,11 @@ class TestProjectsController(BaseTestCase):
 
         List of Projects Tags options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/projects/tags',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -145,6 +151,20 @@ class TestProjectsController(BaseTestCase):
         body = ProjectsProfilePatch()
         response = self.client.open(
             '/projects/{uuid}/profile'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_tags_patch(self):
+        """Test case for projects_uuid_tags_patch
+
+        Update Projects Tags as Facility Operator
+        """
+        body = ['body_example']
+        response = self.client.open(
+            '/projects/{uuid}/tags'.format(uuid='uuid_example'),
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')

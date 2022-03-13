@@ -52,37 +52,43 @@ def projects_post(body=None):  # noqa: E501
     return rc.projects_post(body)
 
 
-def projects_preferences_get():  # noqa: E501
+def projects_preferences_get(search=None):  # noqa: E501
     """List of Projects Preference options
 
     List of Projects Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.projects_preferences_get()
+    return rc.projects_preferences_get(search)
 
 
-def projects_profile_preferences_get():  # noqa: E501
+def projects_profile_preferences_get(search=None):  # noqa: E501
     """List of Projects Profile Preference options
 
     List of Projects Profile Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.projects_profile_preferences_get()
+    return rc.projects_profile_preferences_get(search)
 
 
-def projects_tags_get():  # noqa: E501
+def projects_tags_get(search=None):  # noqa: E501
     """List of Projects Tags options
 
     List of Projects Tags options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.projects_tags_get()
+    return rc.projects_tags_get(search)
 
 
 def projects_uuid_delete(uuid):  # noqa: E501
@@ -160,3 +166,18 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProjectsProfilePatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_profile_patch(uuid, body)
+
+
+def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
+    """Update Projects Tags as Facility Operator
+
+    Update Projects Tags as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Tags as Facility Operator
+    :type body: List[]
+
+    :rtype: Status200OkNoContent
+    """
+    return rc.projects_uuid_tags_patch(uuid, body)

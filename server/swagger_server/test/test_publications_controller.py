@@ -23,9 +23,11 @@ class TestPublicationsController(BaseTestCase):
 
         List of Category Type options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/publications/category-types',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

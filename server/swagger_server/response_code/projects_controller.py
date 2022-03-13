@@ -1,5 +1,6 @@
 import connexion
 import six
+import logging
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
@@ -15,7 +16,10 @@ from swagger_server.models.status403_forbidden import Status403Forbidden  # noqa
 from swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
 from swagger_server import util
-from swagger_server.response_code import projects_controller as rc
+from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
+from swagger_server.response_code.cors_response import cors_200, cors_500
+
+logger = logging.getLogger(__name__)
 
 
 def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noqa: E501
@@ -50,37 +54,82 @@ def projects_post(body=None):  # noqa: E501
     return 'do some magic!'
 
 
-def projects_preferences_get():  # noqa: E501
+def projects_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Preference options
 
     List of Projects Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PROJECTS_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PROJECTS_PREFERENCES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PROJECTS_PREFERENCES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("projects_preferences_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with Projects.Preferences.Get()')
 
 
-def projects_profile_preferences_get():  # noqa: E501
+def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Profile Preference options
 
     List of Projects Profile Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PROJECTS_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PROJECTS_PROFILE_PREFERENCES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PROJECTS_PROFILE_PREFERENCES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("projects_profile_preferences_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with Projects.Profile.Preferences.Get()')
 
 
-def projects_tags_get():  # noqa: E501
+def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Tags options
 
     List of Projects Tags options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PROJECTS_TAGS.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PROJECTS_TAGS.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PROJECTS_TAGS.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("projects_tags_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with Projects.Tags.Get()')
 
 
 def projects_uuid_delete(uuid):  # noqa: E501
@@ -148,6 +197,21 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     :type uuid: str
     :param body: Update Project Profile details as owner
     :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    return 'do some magic!'
+
+
+def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
+    """Update Projects Tags as Facility Operator
+
+    Update Projects Tags as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Tags as Facility Operator
+    :type body: List[]
 
     :rtype: Status200OkNoContent
     """

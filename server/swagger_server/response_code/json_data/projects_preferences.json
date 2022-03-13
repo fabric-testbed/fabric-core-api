@@ -1,0 +1,20 @@
+{
+  "name": "projects.preferences",
+  "description": "a Project object is public by default, but all or portions of it can be set to private.",
+  "api_endpoints": [
+    {
+      "endpoint": "/projects/preferences",
+      "description": "GET: List of Projects Preference options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/projects/{uuid}",
+      "description": "PATCH: overwrite Projects Preference when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "show_profile": "show/hide profile in all interfaces (default: True)",
+    "show_project_members": "show/hide project_members in all interfaces (default: True)",
+    "show_project_owners": "show/hide project_owners in all interfaces (default: True)",
+    "show_publications": "show/hide publications in all interfaces (default: True)"
+  }
+}

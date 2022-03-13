@@ -33,59 +33,69 @@ def people_get(search=None, offset=None, limit=None):  # noqa: E501
     return rc.people_get(search, offset, limit)
 
 
-def people_preferences_get():  # noqa: E501
+def people_preferences_get(search=None):  # noqa: E501
     """List of People Preference options
 
     List of People Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.people_preferences_get()
+    return rc.people_preferences_get(search)
 
 
-def people_profile_other_identity_types_get():  # noqa: E501
+def people_profile_otheridentity_types_get(search=None):  # noqa: E501
     """List of People Profile Other Identity Type options
 
     List of People Profile Other Identity Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.people_profile_other_identity_types_get()
+    return rc.people_profile_otheridentity_types_get(search)
 
 
-def people_profile_preferences_get():  # noqa: E501
+def people_profile_preferences_get(search=None):  # noqa: E501
     """List of People Profile Preference options
 
     List of People Profile Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.people_profile_preferences_get()
+    return rc.people_profile_preferences_get(search)
 
 
-def people_profile_professional_page_types_get():  # noqa: E501
+def people_profile_professionalpage_types_get(search=None):  # noqa: E501
     """List of People Profile Professional Page Type options
 
     List of People Profile Professional Page Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.people_profile_professional_page_types_get()
+    return rc.people_profile_professionalpage_types_get(search)
 
 
-def people_profile_social_page_types_get():  # noqa: E501
+def people_profile_socialpage_types_get(search=None):  # noqa: E501
     """List of People Profile Social Page Type options
 
     List of People Profile Social Page Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.people_profile_social_page_types_get()
+    return rc.people_profile_socialpage_types_get(search)
 
 
 def people_uuid_get(uuid, as_self=None):  # noqa: E501

@@ -42,20 +42,24 @@ class TestPeopleController(BaseTestCase):
 
         List of People Preference options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/people/preferences',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_people_profile_other_identity_types_get(self):
-        """Test case for people_profile_other_identity_types_get
+    def test_people_profile_otheridentity_types_get(self):
+        """Test case for people_profile_otheridentity_types_get
 
         List of People Profile Other Identity Type options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
-            '/people/profile/other-identity-types',
-            method='GET')
+            '/people/profile/otheridentity-types',
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -64,31 +68,37 @@ class TestPeopleController(BaseTestCase):
 
         List of People Profile Preference options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
             '/people/profile/preferences',
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_people_profile_professional_page_types_get(self):
-        """Test case for people_profile_professional_page_types_get
+    def test_people_profile_professionalpage_types_get(self):
+        """Test case for people_profile_professionalpage_types_get
 
         List of People Profile Professional Page Type options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
-            '/people/profile/professional-page-types',
-            method='GET')
+            '/people/profile/professionalpage-types',
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_people_profile_social_page_types_get(self):
-        """Test case for people_profile_social_page_types_get
+    def test_people_profile_socialpage_types_get(self):
+        """Test case for people_profile_socialpage_types_get
 
         List of People Profile Social Page Type options
         """
+        query_string = [('search', 'search_example')]
         response = self.client.open(
-            '/people/profile/social-page-types',
-            method='GET')
+            '/people/profile/socialpage-types',
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

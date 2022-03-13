@@ -1,5 +1,6 @@
 import connexion
 import six
+import logging
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
@@ -13,7 +14,11 @@ from swagger_server.models.status403_forbidden import Status403Forbidden  # noqa
 from swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
 from swagger_server import util
-from swagger_server.response_code import people_controller as rc
+from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
+    PEOPLE_PROFILE_PREFERENCES, PEOPLE_PROFILE_PROFESSIONAL_TYPES, PEOPLE_PROFILE_SOCIAL_TYPES
+from swagger_server.response_code.cors_response import cors_200, cors_500
+
+logger = logging.getLogger(__name__)
 
 
 def people_get(search=None, offset=None, limit=None):  # noqa: E501
@@ -33,59 +38,135 @@ def people_get(search=None, offset=None, limit=None):  # noqa: E501
     return 'do some magic!'
 
 
-def people_preferences_get():  # noqa: E501
+def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Preference options
 
     List of People Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PEOPLE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PEOPLE_PREFERENCES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PEOPLE_PREFERENCES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_preferences_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Preferences.Get()')
 
 
-def people_profile_other_identity_types_get():  # noqa: E501
+def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Other Identity Type options
 
     List of People Profile Other Identity Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_profile_otheridentity_types_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.OtherIdentity.Types.Get()')
 
 
-def people_profile_preferences_get():  # noqa: E501
+def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Preference options
 
     List of People Profile Preference options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PEOPLE_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PEOPLE_PROFILE_PREFERENCES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PEOPLE_PROFILE_PREFERENCES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_profile_preferences_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
-def people_profile_professional_page_types_get():  # noqa: E501
+def people_profile_professionalpage_types_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Professional Page Type options
 
     List of People Profile Professional Page Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PEOPLE_PROFILE_PROFESSIONAL_TYPES.search(search) if
+                    search.casefold() in tag.casefold()]
+        else:
+            data = PEOPLE_PROFILE_PROFESSIONAL_TYPES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PEOPLE_PROFILE_PROFESSIONAL_TYPES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_profile_professionalpage_types_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.Professional.Types.Get()')
 
 
-def people_profile_social_page_types_get():  # noqa: E501
+def people_profile_socialpage_types_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Social Page Type options
 
     List of People Profile Social Page Type options # noqa: E501
 
+    :param search: search term applied
+    :type search: str
 
     :rtype: ApiOptions
     """
-    return 'do some magic!'
+    try:
+        if search:
+            data = [tag for tag in PEOPLE_PROFILE_SOCIAL_TYPES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            data = PEOPLE_PROFILE_SOCIAL_TYPES.options
+        response = ApiOptions()
+        response.data = data
+        response.size = len(data)
+        response.status = 200
+        response.type = PEOPLE_PROFILE_SOCIAL_TYPES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_profile_socialpage_types_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.Social.Types.Get()')
 
 
 def people_uuid_get(uuid, as_self=None):  # noqa: E501

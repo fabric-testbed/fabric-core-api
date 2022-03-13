@@ -1,0 +1,24 @@
+{
+  "name": "people.profile.preferences",
+  "description": "a People Profile object is set to the value of people.preferences.show_profile by default, but its contents can be set to public or private as desired by the owner.",
+  "api_endpoints": [
+    {
+      "endpoint": "/people/profile/preferences",
+      "description": "GET: List of People Profile Preference options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/people/{uuid}/profile",
+      "description": "PATCH: overwrite People Profile Preference when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "show_bio": "show/hide bio in all interfaces (default: True)",
+    "show_cv": "show/hide cv in all interfaces (default: True)",
+    "show_job": "show/hide job in all interfaces (default: True)",
+    "show_other_identities": "show/hide other_identities in all interfaces (default: True)",
+    "show_professional": "show/hide professional in all interfaces (default: True)",
+    "show_pronouns": "show/hide pronouns in all interfaces (default: True)",
+    "show_social": "show/hide social in all interfaces (default: True)",
+    "show_website": "show/hide website in all interfaces (default: True)"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "people.profile.professionalpage.types",
+  "description": "a People object is public by default, but portions of it can be set to private",
+  "api_endpoints": [
+    {
+      "endpoint": "/people/profile/professionalpage-types",
+      "description": "GET: List of People Profile Professional Page Type options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/people/{uuid}/profile",
+      "description": "PATCH: overwrite People Profile Professional Page Entry when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "bitbucket": "Bitbucket Professional Page - https://bitbucket.org",
+    "facebook": "Facebook Professional Page - https://www.facebook.com",
+    "github": "GitHub Professional Page - https://github.com",
+    "gitlab": "GitLab Professional Page - https://gitlab.com",
+    "google": "Google Professional Page - https://www.google.com",
+    "instagram": "Instagram Professional Page - https://www.instagram.com",
+    "linkedin": "LinkedIn Professional Page - https://www.linkedin.com",
+    "messenger": "Messenger Professional Page - https://www.facebook.com/messenger",
+    "other": "Other Professional Page - generic",
+    "pinterest": "Pinterest Professional Page - https://www.pinterest.com",
+    "twitter": "Twitter Professional Page - https://twitter.com",
+    "youtube": "YouTube Professional Page - https://www.youtube.com"
+  }
+}

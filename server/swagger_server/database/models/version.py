@@ -2,7 +2,7 @@ from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
 
-class CoreApiVersion(BaseMixin, TimestampMixin, db.Model):
+class ApiVersion(BaseMixin, TimestampMixin, db.Model):
     """
     - active - version status
     - created - timestamp created (TimestampMixin)

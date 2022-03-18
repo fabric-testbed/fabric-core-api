@@ -1,5 +1,6 @@
 import connexion
 import six
+from swagger_server.response_code.decorators import login_required
 
 from swagger_server.models.bastionkeys import Bastionkeys  # noqa: E501
 from swagger_server.models.sshkey_pair import SshkeyPair  # noqa: E501
@@ -44,6 +45,7 @@ def sshkeys_get(person_uuid=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def sshkeys_post(body=None):  # noqa: E501
     """Create a public/private SSH Key Pair
 
@@ -57,6 +59,7 @@ def sshkeys_post(body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def sshkeys_put(body=None):  # noqa: E501
     """Add a public SSH Key
 
@@ -70,6 +73,7 @@ def sshkeys_put(body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def sshkeys_uuid_delete(uuid):  # noqa: E501
     """Delete SSH Key by UUID
 

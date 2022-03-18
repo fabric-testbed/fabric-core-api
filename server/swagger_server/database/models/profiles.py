@@ -1,95 +1,13 @@
 import enum
 
 from swagger_server.database.db import db
-from swagger_server.database.models import _PEOPLE_ID, _PROJECTS_ID, _PROFILE_PROJECTS_ID, _PROFILE_PEOPLE_ID
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
 
-# Enum for preferences type
-class PreferencesTypeEnum(enum.Enum):
-    people = 'people'
-    projects = 'projects'
-    profile_people = 'profile_people'
-    profile_projects = 'profile_projects'
-
-
 # Enum for external pages type
-class ExternalPagesTypeEnum(enum.Enum):
+class EnumExternalPageTypes(enum.Enum):
     professional = 'professional'
     social = 'social'
-
-
-class ExternalPagesUrlEnum(enum.Enum):
-    bitbucket = 'bitbucket'
-    facebook = 'facebook'
-    github = 'github'
-    gitlab = 'gitlab'
-    instagram = 'instagram'
-    linkedin = 'linkedin'
-    messenger = 'messenger'
-    other = 'other'
-    pinterest = 'pinterest'
-    twitter = 'twitter'
-    youtube = 'youtube'
-
-
-# Enum for identities type
-class OtherIdentitiesTypeEnum(enum.Enum):
-    google_scholar = 'google_scholar'
-    orcid = 'orcid'
-    other = 'other'
-
-
-class FabricPreferences(BaseMixin, TimestampMixin, db.Model):
-    """
-    Table format
-    - created - timestamp created (TimestampMixin)
-    - id - primary key (BaseMixin)
-    - key - string
-    - modified - timestamp modified (TimestampMixin)
-    - people_id - foriegnkey to fabric_people (nullable)
-    - projects_id - foriegnkey to fabric_projects (nullable)
-    - type - string:['people', 'projects', 'profile_people', 'profile_projects']
-    - value - boolean
-    Preference per Type
-    people
-    - show_email: <bool>
-    - show_eppn: <bool>
-    - show_profile: <bool>
-    - show_publications: <bool>
-    - show_roles: <bool>
-    - show_sshkeys: <bool>
-    profile_people
-    - show_bio: <bool>,
-    - show_cv: <bool>,
-    - show_job: <bool>,
-    - show_other_identities: <bool>,
-    - show_professional: <bool>,
-    - show_pronouns: <bool>,
-    - show_social: <bool>,
-    - show_website: <bool>
-    projects
-    - is_public
-    - show_profile: <bool>
-    - show_publications: <bool>
-    profile_projects
-    - show_award_information: <bool>
-    - show_goals: <bool>
-    - show_keywords: <bool>
-    - show_notebooks: <bool>
-    - show_project_status: <bool>
-    - show_purpose: <bool>
-    - show_references: <bool>
-    """
-    __tablename__ = 'preferences'
-
-    key = db.Column(db.String(), nullable=False)
-    people_id = db.Column(db.Integer, db.ForeignKey(_PEOPLE_ID), nullable=True)
-    profile_people_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PEOPLE_ID), nullable=True)
-    profile_projects_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PROJECTS_ID), nullable=True)
-    projects_id = db.Column(db.Integer, db.ForeignKey(_PROJECTS_ID), nullable=True)
-    type = db.Column(db.Enum(PreferencesTypeEnum), default=PreferencesTypeEnum.people, nullable=False)
-    value = db.Column(db.Boolean, default=True, nullable=False)
 
 
 class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
@@ -104,6 +22,7 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     - identities - IDs from other identity services such as ORCID, Google Scholar
     - job - Role/job/position
     - modified - timestamp modified (TimestampMixin)
+    - people_id - foreignkey to people table
     - pronouns - personal pronouns used
     - uuid - unique universal identifier
     - website - Link to a personal website
@@ -115,11 +34,11 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     external_pages = db.relationship('ProfilesExternalPages', backref='profiles_people', lazy=True)
     job = db.Column(db.String(), nullable=True)
     other_identities = db.relationship('ProfilesOtherIdentities', backref='profiles_people', lazy=True)
-    people_id = db.Column(db.Integer, db.ForeignKey(_PEOPLE_ID), nullable=False)
+    people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     preferences = db.relationship('FabricPreferences', backref='profiles_people', lazy=True)
     pronouns = db.Column(db.String(), nullable=True)
-    website = db.Column(db.String(), nullable=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
+    website = db.Column(db.String(), nullable=True)
 
 
 class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
@@ -153,32 +72,39 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
 
 
 class ProfilesExternalPages(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - profile_id - foreignkey to profiles table
+    - page_type
+    - url
+    - url_type
+    """
     __tablename__ = 'profiles_external_pages'
 
-    profile_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PEOPLE_ID), nullable=False)
-    page_type = db.Column(db.Enum(ExternalPagesTypeEnum), default=ExternalPagesTypeEnum.professional, nullable=False)
-    url_type = db.Column(db.Enum(ExternalPagesUrlEnum), default=ExternalPagesUrlEnum.github, nullable=False)
+    profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
+    page_type = db.Column(db.Enum(EnumExternalPageTypes), default=EnumExternalPageTypes.professional, nullable=False)
     url = db.Column(db.String(), nullable=False)
-
-
-class ProfilesOtherIdentities(BaseMixin, db.Model):
-    __tablename__ = 'profiles_other_identities'
-
-    identity = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PEOPLE_ID), nullable=False)
-    type = db.Column(db.Enum(OtherIdentitiesTypeEnum), default=OtherIdentitiesTypeEnum.orcid, nullable=False)
+    url_type = db.Column(db.String(), nullable=False)
 
 
 class ProfilesKeywords(BaseMixin, db.Model):
     __tablename__ = 'profiles_keywords'
 
     keyword = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PROJECTS_ID), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
+
+
+class ProfilesOtherIdentities(BaseMixin, db.Model):
+    __tablename__ = 'profiles_other_identities'
+
+    identity = db.Column(db.String(), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
+    type = db.Column(db.String(), nullable=False)
 
 
 class ProfilesReferences(BaseMixin, db.Model):
     __tablename__ = 'profiles_references'
 
     description = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey(_PROFILE_PROJECTS_ID), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     url = db.Column(db.String(), nullable=False)

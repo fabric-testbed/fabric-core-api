@@ -1,5 +1,6 @@
 import connexion
 import six
+from swagger_server.response_code.decorators import login_required
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
@@ -12,10 +13,10 @@ from swagger_server import util
 from swagger_server.response_code import publications_controller as rc
 
 
-def publications_category_types_get(search=None):  # noqa: E501
-    """List of Category Type options
+def publications_classification_terms_get(search=None):  # noqa: E501
+    """List of Classification Terms
 
-    List of Category Type options # noqa: E501
+    List of Classification Terms # noqa: E501
 
     :param search: search term applied
     :type search: str
@@ -42,6 +43,7 @@ def publications_get(search=None, offset=None, limit=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def publications_post():  # noqa: E501
     """Publications (placeholder)
 
@@ -53,6 +55,7 @@ def publications_post():  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def publications_uuid_delete(uuid):  # noqa: E501
     """Publications (placeholder)
 
@@ -79,6 +82,7 @@ def publications_uuid_get(uuid):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def publications_uuid_patch(uuid):  # noqa: E501
     """Publications (placeholder)
 

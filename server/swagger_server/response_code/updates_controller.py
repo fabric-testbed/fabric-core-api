@@ -1,5 +1,6 @@
 import connexion
 import six
+from swagger_server.response_code.decorators import login_required
 
 from swagger_server.models.facility_update_patch import FacilityUpdatePatch  # noqa: E501
 from swagger_server.models.facility_update_post import FacilityUpdatePost  # noqa: E501
@@ -25,6 +26,7 @@ def updates_get():  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def updates_post(body=None):  # noqa: E501
     """Facility Updates (placeholder)
 
@@ -38,6 +40,7 @@ def updates_post(body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def updates_uuid_delete(uuid):  # noqa: E501
     """Facility Updates (placeholder)
 
@@ -64,6 +67,7 @@ def updates_uuid_get(uuid):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def updates_uuid_patch(uuid, body=None):  # noqa: E501
     """Facility Updates (placeholder)
 

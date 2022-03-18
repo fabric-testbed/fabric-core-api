@@ -27,7 +27,7 @@ class CoreApiOptions(ABC):
             self.key_value_pairs = []
             for key in file_dict['key_value_pairs'].keys():
                 self.key_value_pairs.append({key: file_dict['key_value_pairs'][key]})
-            self.options = list(file_dict['key_value_pairs'].keys())
+            self.options = sorted(list(file_dict['key_value_pairs'].keys()))
 
     def search(self, pattern: str = None) -> [str]:
         if pattern:

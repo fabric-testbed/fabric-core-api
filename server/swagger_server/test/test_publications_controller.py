@@ -18,14 +18,14 @@ from swagger_server.test import BaseTestCase
 class TestPublicationsController(BaseTestCase):
     """PublicationsController integration test stubs"""
 
-    def test_publications_category_types_get(self):
-        """Test case for publications_category_types_get
+    def test_publications_classification_terms_get(self):
+        """Test case for publications_classification_terms_get
 
-        List of Category Type options
+        List of Classification Terms
         """
         query_string = [('search', 'search_example')]
         response = self.client.open(
-            '/publications/category-types',
+            '/publications/classification-terms',
             method='GET',
             query_string=query_string)
         self.assert200(response,

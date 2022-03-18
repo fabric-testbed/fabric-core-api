@@ -12,17 +12,17 @@ from swagger_server import util
 from swagger_server.response_code import publications_controller as rc
 
 
-def publications_category_types_get(search=None):  # noqa: E501
-    """List of Category Type options
+def publications_classification_terms_get(search=None):  # noqa: E501
+    """List of Classification Terms
 
-    List of Category Type options # noqa: E501
+    List of Classification Terms # noqa: E501
 
     :param search: search term applied
     :type search: str
 
     :rtype: ApiOptions
     """
-    return rc.publications_category_types_get(search)
+    return rc.publications_classification_terms_get(search)
 
 
 def publications_get(search=None, offset=None, limit=None):  # noqa: E501

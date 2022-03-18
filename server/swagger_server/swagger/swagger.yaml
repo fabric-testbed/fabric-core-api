@@ -1249,13 +1249,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.publications_controller
-  /publications/category-types:
+  /publications/classification-terms:
     get:
       tags:
       - publications
-      summary: List of Category Type options
-      description: List of Category Type options
-      operationId: publications_category_types_get
+      summary: List of Classification Terms
+      description: List of Classification Terms
+      operationId: publications_classification_terms_get
       parameters:
       - name: search
         in: query

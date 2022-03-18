@@ -1,6 +1,7 @@
 import connexion
 import six
 import logging
+from swagger_server.response_code.decorators import login_required
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
@@ -21,7 +22,8 @@ from swagger_server.response_code.cors_response import cors_200, cors_500
 logger = logging.getLogger(__name__)
 
 
-def people_get(search=None, offset=None, limit=None):  # noqa: E501
+@login_required
+def people_get(search=None, offset=None, limit=None) -> People:  # noqa: E501
     """Search for FABRIC People
 
     Search for FABRIC People by name or email # noqa: E501
@@ -35,7 +37,11 @@ def people_get(search=None, offset=None, limit=None):  # noqa: E501
 
     :rtype: People
     """
-    return 'do some magic!'
+    response = People()
+
+    response.status = 200
+    response.type = 'people'
+    return cors_200(response_body=response)
 
 
 def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
@@ -169,6 +175,7 @@ def people_profile_socialpage_types_get(search=None) -> ApiOptions:  # noqa: E50
         return cors_500(details='Ooops! something has gone wrong with People.Profile.Social.Types.Get()')
 
 
+@login_required
 def people_uuid_get(uuid, as_self=None):  # noqa: E501
     """Person details by UUID
 
@@ -184,6 +191,7 @@ def people_uuid_get(uuid, as_self=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def people_uuid_patch(uuid, body=None):  # noqa: E501
     """Update Person details as Self
 
@@ -199,6 +207,7 @@ def people_uuid_patch(uuid, body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def people_uuid_profile_patch(uuid, body=None):  # noqa: E501
     """Update Person Profile details as Self
 

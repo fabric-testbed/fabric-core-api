@@ -15,10 +15,11 @@ BEGIN: Imports needed for alembic and flask using multiple model definition file
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
 from swagger_server.database.models.people import EmailAddresses, Organizations, FabricGroups, FabricPeople, \
     FabricRoles
-from swagger_server.database.models.prefs_and_profiles import ProfilesExternalPages, FabricPreferences, \
-    FabricProfilesPeople, FabricProfilesProjects, ProfilesOtherIdentities, ProfilesKeywords, ProfilesReferences
+from swagger_server.database.models.preferences import FabricPreferences
+from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, \
+    ProfilesExternalPages, ProfilesKeywords, ProfilesOtherIdentities, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
-from swagger_server.database.models.public import CoreApiVersion
+from swagger_server.database.models.version import ApiVersion
 """
 -------------------------------------------------------------------------------
 END: Imports needed for alembic and flask using multiple model definition files

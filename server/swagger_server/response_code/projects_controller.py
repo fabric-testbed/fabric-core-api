@@ -1,6 +1,7 @@
 import connexion
 import six
 import logging
+from swagger_server.response_code.decorators import login_required
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
@@ -22,6 +23,7 @@ from swagger_server.response_code.cors_response import cors_200, cors_500
 logger = logging.getLogger(__name__)
 
 
+@login_required
 def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noqa: E501
     """Search for FABRIC Projects
 
@@ -41,6 +43,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
     return 'do some magic!'
 
 
+@login_required
 def projects_post(body=None):  # noqa: E501
     """Create new Project
 
@@ -132,6 +135,7 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Tags.Get()')
 
 
+@login_required
 def projects_uuid_delete(uuid):  # noqa: E501
     """Delete Project as owner
 
@@ -145,6 +149,7 @@ def projects_uuid_delete(uuid):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def projects_uuid_get(uuid):  # noqa: E501
     """Project details by UUID
 
@@ -158,6 +163,7 @@ def projects_uuid_get(uuid):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def projects_uuid_patch(uuid, body=None):  # noqa: E501
     """Update Project details as owner
 
@@ -173,6 +179,7 @@ def projects_uuid_patch(uuid, body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def projects_uuid_personnel_patch(uuid, body=None):  # noqa: E501
     """Update Project personnel as owner
 
@@ -188,6 +195,7 @@ def projects_uuid_personnel_patch(uuid, body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     """Update Project Profile details as owner
 
@@ -203,6 +211,7 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     return 'do some magic!'
 
 
+@login_required
 def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
     """Update Projects Tags as Facility Operator
 

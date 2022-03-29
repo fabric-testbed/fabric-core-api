@@ -3,14 +3,15 @@ from uuid import uuid4
 
 from comanage_api import ComanageApi
 
-from swagger_server import __API_VERSION__ as api_version, __API_REFERENCE__ as api_reference
 from swagger_server.__main__ import app, db, logger
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
-from swagger_server.database.models.prefs_and_profiles import FabricPreferences, FabricProfilesPeople, FabricProfilesProjects
-from swagger_server.database.models.projects import FabricProjects, projects_creators, projects_members, projects_owners
-from swagger_server.database.models.public import CoreApiVersion
-from swagger_server.response_code import _PEOPLE_PREFERENCE_KEYS, _PROFILE_PEOPLE_PREFERENCE_KEYS, \
-    _PROJECTS_PREFERENCE_KEYS, _PROFILE_PROJECTS_PREFERENCE_KEYS
+from swagger_server.database.models.preferences import FabricPreferences
+from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects
+from swagger_server.database.models.projects import FabricProjects
+from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_PREFERENCES, PROJECTS_PREFERENCES, \
+    PROJECTS_PROFILE_PREFERENCES
+from swagger_server.response_code.comanage_utils import update_groups, update_organizations
+from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id, update_fabric_person
 
 app.app_context().push()
 
@@ -24,32 +25,32 @@ api = ComanageApi(
 )
 
 
-def load_version() -> None:
-    """
-    __tablename__ = 'version'
-
-    version = db.Column(db.String(), nullable=False)
-    reference = db.Column(db.String(), nullable=False)
-    """
-    version = CoreApiVersion.query.filter_by(active=True).first()
-    if not version:
-        logger.info("CREATE: version = {0}, reference = {1}".format(api_version, api_reference))
-        version = CoreApiVersion()
-        version.version = api_version
-        version.reference = api_reference
-        db.session.add(version)
-        db.session.commit()
-    elif version.version < api_version:
-        logger.info("UPDATE: version = {0}, reference = {1}".format(api_version, api_reference))
-        version.active = False
-        new_version = CoreApiVersion()
-        new_version.version = api_version
-        new_version.reference = api_reference
-        db.session.add(new_version)
-        db.session.commit()
-    else:
-        logger.info("NO CHANGE: version = {0}, reference = {1}".format(api_version, api_reference))
-    db.session.close()
+# def load_version() -> None:
+#     """
+#     __tablename__ = 'version'
+#
+#     version = db.Column(db.String(), nullable=False)
+#     reference = db.Column(db.String(), nullable=False)
+#     """
+#     version = CoreApiVersion.query.filter_by(active=True).first()
+#     if not version:
+#         logger.info("CREATE: version = {0}, reference = {1}".format(api_version, api_reference))
+#         version = CoreApiVersion()
+#         version.version = api_version
+#         version.reference = api_reference
+#         db.session.add(version)
+#         db.session.commit()
+#     elif version.version < api_version:
+#         logger.info("UPDATE: version = {0}, reference = {1}".format(api_version, api_reference))
+#         version.active = False
+#         new_version = CoreApiVersion()
+#         new_version.version = api_version
+#         new_version.reference = api_reference
+#         db.session.add(new_version)
+#         db.session.commit()
+#     else:
+#         logger.info("NO CHANGE: version = {0}, reference = {1}".format(api_version, api_reference))
+#     db.session.close()
 
 
 def load_email_addresses(co_person_id: int, fab_person: FabricPeople) -> None:
@@ -98,8 +99,9 @@ def load_identifiers(co_person_id: int, fab_person: FabricPeople) -> None:
             logger.info("UPDATE: entry in 'people' table for 'oidc_claim_eppn': {0}".format(fab_person.display_name))
             fab_person.oidc_claim_eppn = i.get('Identifier', '')
         if i.get('Type', None) == os.getenv('CORE_API_CO_USER_IDENTIFIER', 'registryid') and not fab_person.fabric_id:
-            logger.info("UPDATE: entry in 'people' table for '{0}': {1}".format(os.getenv('CORE_API_CO_USER_IDENTIFIER'),
-                                                                                fab_person.display_name))
+            logger.info(
+                "UPDATE: entry in 'people' table for '{0}': {1}".format(os.getenv('CORE_API_CO_USER_IDENTIFIER'),
+                                                                        fab_person.display_name))
             fab_person.fabric_id = i.get('Identifier', '')
     db.session.commit()
 
@@ -150,7 +152,7 @@ def create_people_preferences(fab_person: FabricPeople) -> None:
     value = db.Column(db.Boolean, default=True, nullable=False)
     """
     pref_type = 'people'
-    for key in _PEOPLE_PREFERENCE_KEYS:
+    for key in PEOPLE_PREFERENCES:
         pref = FabricPreferences()
         pref.key = key
         pref.value = True
@@ -172,7 +174,7 @@ def create_projects_preferences(fab_project: FabricProjects) -> None:
     value = db.Column(db.Boolean, default=True, nullable=False)
     """
     pref_type = 'projects'
-    for key in _PROJECTS_PREFERENCE_KEYS:
+    for key in PROJECTS_PREFERENCES:
         pref = FabricPreferences()
         pref.key = key
         pref.value = True
@@ -201,7 +203,7 @@ def create_profile_projects(fab_project: FabricProjects) -> None:
 
 def create_profile_people_preferences(fab_profile: FabricProfilesPeople) -> None:
     pref_type = 'profile_people'
-    for key in _PROFILE_PEOPLE_PREFERENCE_KEYS:
+    for key in PEOPLE_PROFILE_PREFERENCES:
         pref = FabricPreferences()
         pref.key = key
         pref.value = True
@@ -214,7 +216,7 @@ def create_profile_people_preferences(fab_profile: FabricProfilesPeople) -> None
 
 def create_profile_projects_preferences(fab_profile: FabricProfilesProjects) -> None:
     pref_type = 'profile_projects'
-    for key in _PROFILE_PROJECTS_PREFERENCE_KEYS:
+    for key in PROJECTS_PROFILE_PREFERENCES:
         pref = FabricPreferences()
         pref.key = key
         pref.value = True
@@ -349,8 +351,9 @@ def load_people_roles():
                     else:
                         modified = False
                         if fab_role.name != fab_group.name:
-                            logger.info("UPDATE: entry in 'roles' table for co_person_role_id: {0}, name = '{1}'".format(
-                                co_person_role_id, fab_group.name))
+                            logger.info(
+                                "UPDATE: entry in 'roles' table for co_person_role_id: {0}, name = '{1}'".format(
+                                    co_person_role_id, fab_group.name))
                             fab_role.name = fab_group.name
                             db.session.commit()
                             modified = True
@@ -362,14 +365,16 @@ def load_people_roles():
                             db.session.commit()
                             modified = True
                         if fab_role.status != co_role.get('Status'):
-                            logger.info("UPDATE: entry in 'roles' table for co_person_role_id: {0}, status = '{1}'".format(
-                                co_person_role_id, co_role.get('Status')))
+                            logger.info(
+                                "UPDATE: entry in 'roles' table for co_person_role_id: {0}, status = '{1}'".format(
+                                    co_person_role_id, co_role.get('Status')))
                             fab_role.status = co_role.get('Status')
                             db.session.commit()
                             modified = True
                         if not modified:
                             logger.info(
-                                "NO CHANGE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
+                                "NO CHANGE: entry in 'roles' table for co_person_role_id: {0}".format(
+                                    co_person_role_id))
         else:
             logger.warning("ERROR: unable to locate co_person_id {0} in the 'people' table".format(co_person_id))
 
@@ -526,18 +531,33 @@ def load_people_active():
                 break
 
 
+def load_people_from_comanage():
+    co_people = api.copeople_view_per_co().get('CoPeople', [])
+    for co_person in co_people:
+        co_person_id = co_person.get('Id')
+        fab_person = FabricPeople.query.filter_by(co_person_id=co_person_id).one_or_none()
+        if not fab_person:
+            fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person_id)
+        update_fabric_person(fab_person=fab_person)
+
+
 if __name__ == '__main__':
-    logger.info("--- Load database table 'version' as CoreApiVersion ---")
-    load_version()
-    logger.info("--- Load database table 'organizations' as Organizations ---")
-    load_organizations()
-    logger.info("--- Load database table 'people' as FabricPeople ---")
-    load_people()
     logger.info("--- Load database table 'groups' as FabricGroups ---")
-    load_groups()
-    logger.info("--- Load database table 'roles' as FabricRoles ---")
-    load_people_roles()
-    logger.info("--- Set 'active' status in database table 'people' ---")
-    load_people_active()
-    logger.info("--- Load database table 'projects' as FabricProjects ---")
-    load_projects()
+    update_groups()
+    logger.info("--- Load database table 'organizations' as Organizations ---")
+    update_organizations()
+    logger.info("--- Load database table 'people' as FabricPeople ---")
+    load_people_from_comanage()
+
+    # logger.info("--- Load database table 'organizations' as Organizations ---")
+    # load_organizations()
+    # logger.info("--- Load database table 'people' as FabricPeople ---")
+    # load_people()
+    # logger.info("--- Load database table 'groups' as FabricGroups ---")
+    # load_groups()
+    # logger.info("--- Load database table 'roles' as FabricRoles ---")
+    # load_people_roles()
+    # logger.info("--- Set 'active' status in database table 'people' ---")
+    # load_people_active()
+    # logger.info("--- Load database table 'projects' as FabricProjects ---")
+    # load_projects()

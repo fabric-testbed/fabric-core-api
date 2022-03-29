@@ -17,7 +17,7 @@ class PeopleOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_idp_name: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, publications: List[object]=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, publications: List[object]=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, uuid: str=None):  # noqa: E501
         """PeopleOne - a model defined in Swagger
 
         :param affiliation: The affiliation of this PeopleOne.  # noqa: E501
@@ -32,8 +32,6 @@ class PeopleOne(Model):
         :type cilogon_given_name: str
         :param cilogon_id: The cilogon_id of this PeopleOne.  # noqa: E501
         :type cilogon_id: str
-        :param cilogon_idp_name: The cilogon_idp_name of this PeopleOne.  # noqa: E501
-        :type cilogon_idp_name: str
         :param cilogon_name: The cilogon_name of this PeopleOne.  # noqa: E501
         :type cilogon_name: str
         :param email: The email of this PeopleOne.  # noqa: E501
@@ -68,7 +66,6 @@ class PeopleOne(Model):
             'cilogon_family_name': str,
             'cilogon_given_name': str,
             'cilogon_id': str,
-            'cilogon_idp_name': str,
             'cilogon_name': str,
             'email': str,
             'email_addresses': List[str],
@@ -91,7 +88,6 @@ class PeopleOne(Model):
             'cilogon_family_name': 'cilogon_family_name',
             'cilogon_given_name': 'cilogon_given_name',
             'cilogon_id': 'cilogon_id',
-            'cilogon_idp_name': 'cilogon_idp_name',
             'cilogon_name': 'cilogon_name',
             'email': 'email',
             'email_addresses': 'email_addresses',
@@ -112,7 +108,6 @@ class PeopleOne(Model):
         self._cilogon_family_name = cilogon_family_name
         self._cilogon_given_name = cilogon_given_name
         self._cilogon_id = cilogon_id
-        self._cilogon_idp_name = cilogon_idp_name
         self._cilogon_name = cilogon_name
         self._email = email
         self._email_addresses = email_addresses
@@ -265,27 +260,6 @@ class PeopleOne(Model):
         """
 
         self._cilogon_id = cilogon_id
-
-    @property
-    def cilogon_idp_name(self) -> str:
-        """Gets the cilogon_idp_name of this PeopleOne.
-
-
-        :return: The cilogon_idp_name of this PeopleOne.
-        :rtype: str
-        """
-        return self._cilogon_idp_name
-
-    @cilogon_idp_name.setter
-    def cilogon_idp_name(self, cilogon_idp_name: str):
-        """Sets the cilogon_idp_name of this PeopleOne.
-
-
-        :param cilogon_idp_name: The cilogon_idp_name of this PeopleOne.
-        :type cilogon_idp_name: str
-        """
-
-        self._cilogon_idp_name = cilogon_idp_name
 
     @property
     def cilogon_name(self) -> str:

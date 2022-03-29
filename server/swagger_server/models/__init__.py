@@ -17,7 +17,6 @@ from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.people_one import PeopleOne
 from swagger_server.models.people_one_roles import PeopleOneRoles
 from swagger_server.models.people_patch import PeoplePatch
-from swagger_server.models.people_profile_patch import PeopleProfilePatch
 from swagger_server.models.person import Person
 from swagger_server.models.preferences import Preferences
 from swagger_server.models.profile_people import ProfilePeople
@@ -33,7 +32,6 @@ from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
-from swagger_server.models.projects_profile_patch import ProjectsProfilePatch
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkey_pair_data import SshkeyPairData
 from swagger_server.models.sshkeys import Sshkeys

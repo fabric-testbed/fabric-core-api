@@ -5,7 +5,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
-from swagger_server.models.people_profile_patch import PeopleProfilePatch  # noqa: E501
+from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -143,5 +143,5 @@ def people_uuid_profile_patch(uuid, body=None):  # noqa: E501
     :rtype: Status200OkNoContent
     """
     if connexion.request.is_json:
-        body = PeopleProfilePatch.from_dict(connexion.request.get_json())  # noqa: E501
+        body = ProfilePeople.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.people_uuid_profile_patch(uuid, body)

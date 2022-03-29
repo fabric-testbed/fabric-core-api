@@ -4,6 +4,9 @@ from swagger_server.database.db import db
 
 
 class BaseMixin(object):
+    """
+    - id - primary key
+    """
     id = db.Column(db.Integer, nullable=False, primary_key=True)
 
     def __init__(self, *args, **kwargs):
@@ -11,6 +14,10 @@ class BaseMixin(object):
 
 
 class TimestampMixin(object):
+    """
+    - created - timestamp created
+    - modified - timestamp modified
+    """
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
 
@@ -19,6 +26,10 @@ class TimestampMixin(object):
 
 
 class TrackingMixin(object):
+    """
+    - created_by_uuid - uuid of person created_by
+    - modified_by_uuid - uuid of person created_by
+    """
     created_by_uuid = db.Column(db.String(), nullable=True)
     modified_by_uuid = db.Column(db.String(), nullable=True)
 

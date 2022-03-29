@@ -1,22 +1,21 @@
 import os
 
 from swagger_server.database.db import db
-from swagger_server.database.models import _PEOPLE_ID, _PROJECTS_ID
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
 
 projects_creators = db.Table('projects_creators',
-                             db.Column('people_id', db.Integer, db.ForeignKey(_PEOPLE_ID), primary_key=True),
-                             db.Column('projects_id', db.Integer, db.ForeignKey(_PROJECTS_ID), primary_key=True)
+                             db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+                             db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                              )
 
 projects_members = db.Table('projects_members',
-                            db.Column('people_id', db.Integer, db.ForeignKey(_PEOPLE_ID), primary_key=True),
-                            db.Column('projects_id', db.Integer, db.ForeignKey(_PROJECTS_ID), primary_key=True)
+                            db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+                            db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                             )
 
 projects_owners = db.Table('projects_owners',
-                           db.Column('people_id', db.Integer, db.ForeignKey(_PEOPLE_ID), primary_key=True),
-                           db.Column('projects_id', db.Integer, db.ForeignKey(_PROJECTS_ID), primary_key=True)
+                           db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+                           db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                            )
 
 
@@ -24,17 +23,17 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     - active - project status
     - created - timestamp created (TimestampMixin)
-    - created_by - person created (TrackingMixin)
+    - created_by_uuid - uuid of person created_by (TrackingMixin)
     - description - project description
     - facility - project facility (default = FABRIC)
     - id - primary key (BaseMixin)
     - is_public - show/hide project in all public interfaces (default: True)
     - modified - timestamp modified (TimestampMixin)
-    - modified_by - person modified (TrackingMixin)
+    - modified_by_uuid - uuid of person modified_by (TrackingMixin)
     - name - project name
     - preferences - array of preference booleans
-    - profile - foriegnkey to profile_projects
-    - project_creator - one-to-one person
+    - profile - foreignkey link to profile_projects
+    - project_creators - one-to-many people (initially one person)
     - project_members - one-to-many people
     - project_owners - one-to-many people
     - tags - array of tag strings
@@ -65,7 +64,12 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
 
 
 class ProjectsTags(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - projects_id - foreignkey link to projects table
+    - tag - tag as string
+    """
     __tablename__ = 'projects_tags'
 
-    projects_id = db.Column(db.Integer, db.ForeignKey(_PROJECTS_ID), nullable=False)
+    projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     tag = db.Column(db.Text, nullable=False)

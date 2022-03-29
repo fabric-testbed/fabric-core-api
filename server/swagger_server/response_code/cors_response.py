@@ -65,8 +65,8 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 
 def cors_200(response_body: Union[
-    ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys, Updates, Version,
-    Whoami
+    ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
+    Status200OkNoContent, Updates, Version, Whoami
 ] = None) -> cors_response:
     """
     Return 200 - OK

@@ -2031,8 +2031,6 @@ components:
           type: string
         cilogon_id:
           type: string
-        cilogon_idp_name:
-          type: string
         cilogon_name:
           type: string
         email:
@@ -2393,11 +2391,6 @@ components:
           type: string
         preferences:
           $ref: '#/components/schemas/preferences'
-    people_profile_patch:
-      type: object
-      properties:
-        profile:
-          $ref: '#/components/schemas/profile_people'
     projects_post:
       required:
       - description
@@ -2431,11 +2424,6 @@ components:
           type: string
         preferences:
           $ref: '#/components/schemas/preferences'
-    projects_profile_patch:
-      type: object
-      properties:
-        profile:
-          $ref: '#/components/schemas/profile_projects'
     projects_personnel_patch:
       type: object
       properties:
@@ -2932,7 +2920,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/people_profile_patch'
+            $ref: '#/components/schemas/profile_people'
     payload_projects_post:
       description: Create new Project
       content:
@@ -2950,7 +2938,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/projects_profile_patch'
+            $ref: '#/components/schemas/profile_projects'
     payload_projects_personnel_patch:
       description: Update Project personnel as owner
       content:

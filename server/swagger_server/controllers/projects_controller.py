@@ -2,12 +2,12 @@ import connexion
 import six
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
+from swagger_server.models.profile_projects import ProfileProjects  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
-from swagger_server.models.projects_profile_patch import ProjectsProfilePatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -164,7 +164,7 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     :rtype: Status200OkNoContent
     """
     if connexion.request.is_json:
-        body = ProjectsProfilePatch.from_dict(connexion.request.get_json())  # noqa: E501
+        body = ProfileProjects.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_profile_patch(uuid, body)
 
 

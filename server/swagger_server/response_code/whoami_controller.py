@@ -1,20 +1,17 @@
-import connexion
-import six
+import logging
+import os
+from datetime import datetime, timezone
 
-from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
-from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
-from swagger_server.models.whoami import Whoami  # noqa: E501
-from swagger_server import util
-from swagger_server.response_code import whoami_controller as rc
+from swagger_server.models.whoami import Whoami, WhoamiData  # noqa: E501
+from swagger_server.response_code.cors_response import cors_200, cors_500
+from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
 
-from flask import request
-import base64
-import gzip
-import jwt
-import json
+logger = logging.getLogger(__name__)
 
 
-def whoami_get():  # noqa: E501
+@login_required
+def whoami_get() -> Whoami:  # noqa: E501
     """Who am I?
 
     Who am I? # noqa: E501
@@ -22,31 +19,29 @@ def whoami_get():  # noqa: E501
 
     :rtype: Whoami
     """
-    if 'fabric-service-alpha' in request.cookies:
-        print('Logged in')
-        compressed_base64_cookie = request.cookies.get('fabric-service-alpha')
-        encoded_compressed_base64_cookie = compressed_base64_cookie.encode('utf-8')
-        compressed_bytes = base64.urlsafe_b64decode(encoded_compressed_base64_cookie)
-        decompressed_bytes = gzip.decompress(compressed_bytes)
-        decoded_bytes = decompressed_bytes.decode('utf-8')
-
-        vouch_string = jwt.decode(
-            jwt=decoded_bytes,
-            key="narei7ood7aigheiK3noph9Eesei3miechoakohpheij",
-            algorithms=["HS256"],
-            options={"verify_aud": False}
-        )
-
-        print(json.dumps(vouch_string, indent=2))
-    else:
-        print('NOT logged in')
-
-    # idp_idtoken = request.headers.get('X-Vouch-Idp-Idtoken', None)
-    # cookie = request.cookies.get('fabric-service-alpha', None)
-    # print('idp_token: ', idp_idtoken)
-    # print('cookie: ', cookie)
-    # decoded = base64.b64decode(cookie)
-    # # sample = decoded.decode('utf-8')
-    # print(decoded)
-    # print(sample)
-    return 'do some magic!'
+    try:
+        # get person from people table
+        person = get_person_by_login_claims()
+        # check last time the user was updated against COmanage
+        now = datetime.now(timezone.utc)
+        if person.updated.timestamp() + int(os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
+            logger.info('UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
+            update_fabric_person(fab_person=person)
+        # set WhoamiData object
+        whoami = WhoamiData()
+        whoami.active = person.active if person.active else False
+        whoami.email = person.preferred_email if person.preferred_email else ''
+        whoami.enrolled = True if person.co_person_id else False
+        whoami.name = person.display_name if person.display_name else ''
+        whoami.uuid = person.uuid if person.uuid else ''
+        # set Whoami object and return
+        response = Whoami()
+        response.data = [whoami]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'whoami'
+        return cors_200(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with whoami_get(): {0}'.format(exc)
+        logger.error(details)
+        return cors_500(details=details)

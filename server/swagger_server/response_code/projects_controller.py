@@ -9,7 +9,6 @@ from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
-from swagger_server.models.projects_profile_patch import ProjectsProfilePatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501

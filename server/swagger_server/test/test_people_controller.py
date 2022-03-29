@@ -9,7 +9,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
-from swagger_server.models.people_profile_patch import PeopleProfilePatch  # noqa: E501
+from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -134,7 +134,7 @@ class TestPeopleController(BaseTestCase):
 
         Update Person Profile details as Self
         """
-        body = PeopleProfilePatch()
+        body = ProfilePeople()
         response = self.client.open(
             '/people/{uuid}/profile'.format(uuid='uuid_example'),
             method='PATCH',

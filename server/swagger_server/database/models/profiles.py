@@ -6,8 +6,8 @@ from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
 # Enum for external pages type
 class EnumExternalPageTypes(enum.Enum):
-    professional = 'professional'
-    social = 'social'
+    professional = 1
+    social = 2
 
 
 class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
@@ -22,7 +22,8 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     - identities - IDs from other identity services such as ORCID, Google Scholar
     - job - Role/job/position
     - modified - timestamp modified (TimestampMixin)
-    - people_id - foreignkey to people table
+    - people_id - foreignkey link to people table
+    - preferences - array of preference booleans
     - pronouns - personal pronouns used
     - uuid - unique universal identifier
     - website - Link to a personal website
@@ -49,8 +50,8 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     - id - primary key (BaseMixin)
     - keywords - subjects/topics/keywords
     - modified - timestamp modified (TimestampMixin)
-    - notebooks - python notebooks to share
-    - project_status - s there a status for a project (e.g., like if it is for a class and the class ends)...
+    - notebooks - array of python notebooks to share
+    - project_status - Is there a status for a project (e.g., like if it is for a class and the class ends)...
       we may not need to show this necessarily but we do need to know it.
       Can this be automated in some way based on a lack of activity?
     - purpose - class? research? Etc?
@@ -62,7 +63,8 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     award_information = db.Column(db.String(), nullable=True)
     goals = db.Column(db.String(), nullable=True)
     keywords = db.relationship('ProfilesKeywords', backref='profiles_projects', lazy=True)
-    notebooks = db.Column(db.String(), nullable=True)
+    # notebooks = db.relationship('Notebooks', secondary=notebooks, lazy='subquery',
+    #                             backref=db.backref('profiles_projects', lazy=True))
     preferences = db.relationship('FabricPreferences', backref='profiles_projects', lazy=True)
     project_status = db.Column(db.String(), nullable=True)
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
@@ -74,37 +76,54 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
 class ProfilesExternalPages(BaseMixin, db.Model):
     """
     - id - primary key (BaseMixin)
-    - profile_id - foreignkey to profiles table
-    - page_type
-    - url
-    - url_type
+    - page_type - type of page as enum
+    - profiles_people_id - foreignkey link to profiles_people table
+    - url - url as string
+    - url_type - type of url
     """
     __tablename__ = 'profiles_external_pages'
 
-    profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     page_type = db.Column(db.Enum(EnumExternalPageTypes), default=EnumExternalPageTypes.professional, nullable=False)
+    profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     url = db.Column(db.String(), nullable=False)
     url_type = db.Column(db.String(), nullable=False)
 
 
 class ProfilesKeywords(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - keyword - keyword as string
+    - profiles_projects_id - foreignkey link to profiles_projects
+    """
     __tablename__ = 'profiles_keywords'
 
     keyword = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
+    profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
 
 
 class ProfilesOtherIdentities(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - identity - identity as string
+    - profiles_id - foreignkey link to profiles table
+    - type - type of other identity
+    """
     __tablename__ = 'profiles_other_identities'
 
     identity = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
+    profiles_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     type = db.Column(db.String(), nullable=False)
 
 
 class ProfilesReferences(BaseMixin, db.Model):
+    """
+    - description - description as string
+    - id - primary key (BaseMixin)
+    - profiles_projects_id - foreignkey link to profiles_projects
+    - url - url as string
+    """
     __tablename__ = 'profiles_references'
 
     description = db.Column(db.String(), nullable=False)
-    profile_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
+    profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     url = db.Column(db.String(), nullable=False)

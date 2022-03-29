@@ -14,6 +14,7 @@ class EmailAddresses(BaseMixin, db.Model):
     - people_id - foreignkey link to people table
     - type - type of email address as string
     """
+    query: db.Query
     __tablename__ = 'people_email_addresses'
 
     co_email_address_id = db.Column(db.Integer)
@@ -32,6 +33,7 @@ class FabricGroups(BaseMixin, db.Model):
     - id - primary key (BaseMixin)
     - name - COU name
     """
+    query: db.Query
     __tablename__ = 'groups'
 
     co_cou_id = db.Column(db.Integer, nullable=False)
@@ -70,6 +72,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     - updated - timestamp user was last updated against COmanage
     - * uuid - unique universal identifier
     """
+    query: db.Query
     __tablename__ = 'people'
 
     active = db.Column(db.Boolean, nullable=False, default=False)
@@ -128,6 +131,7 @@ class FabricRoles(BaseMixin, db.Model):
     - people_id - foreignkey link to people table
     - status - role status
     """
+    query: db.Query
     __tablename__ = 'people_roles'
 
     affiliation = db.Column(db.String(), nullable=False)
@@ -148,6 +152,7 @@ class Organizations(BaseMixin, db.Model):
     - org_identitiy_id - COmanage Id
     - organization - name
     """
+    query: db.Query
     __tablename__ = 'people_organizations'
 
     affiliation = db.Column(db.String(), nullable=False)

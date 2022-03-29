@@ -25,6 +25,7 @@ class FabricPreferences(BaseMixin, TimestampMixin, db.Model):
     - * type - string:['people', 'projects', 'profiles_people', 'profiles_projects']
     - * value - boolean
     """
+    query: db.Query
     __tablename__ = 'preferences'
 
     key = db.Column(db.String(), nullable=False)

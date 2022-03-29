@@ -4,7 +4,8 @@ import os
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
 from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
-from swagger_server.database.models.profiles import FabricProfilesPeople, ProfilesOtherIdentities, ProfilesExternalPages
+from swagger_server.database.models.profiles import FabricProfilesPeople, ProfilesOtherIdentities, \
+    ProfilesExternalPages, EnumExternalPageTypes
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People, Person, Status200OkPaginatedLinks  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails, PeopleOne  # noqa: E501
@@ -17,7 +18,8 @@ from swagger_server.response_code.cors_response import cors_200, cors_400, cors_
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, get_people_roles
 from swagger_server.response_code.preferences_utils import get_people_preferences
-from swagger_server.response_code.profiles_utils import get_profile_people
+from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
+    array_difference, external_pages_to_array_professional, external_pages_to_array, external_pages_to_array_social
 from swagger_server.response_code.response_utils import is_valid_url
 
 logger = logging.getLogger(__name__)
@@ -465,27 +467,42 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             logger.info("NOP: people_uuid_profile_patch(): 'job' - {0}".format(exc))
         # check for other_identities
         try:
-            for oi in body.other_identities:
-                oi_identity = oi.identity
-                oi_type = oi.type
-                if oi_type not in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options:
-                    details = "OtherIdentities: '{0}' is not a valid identity type".format(oi_type)
-                    logger.error(details)
-                    return cors_400(details=details)
+            oi_orig = other_identities_to_array(fab_person.profile.other_identities)
+            oi_new = other_identities_to_array(body.other_identities)
+            oi_add = array_difference(oi_new, oi_orig)
+            oi_remove = array_difference(oi_orig, oi_new)
+            # add new identities
+            for oi in oi_add:
                 fab_oi = ProfilesOtherIdentities.query.filter(
-                    ProfilesOtherIdentities.identity == oi_identity,
+                    ProfilesOtherIdentities.identity == oi.get('identity'),
                     ProfilesOtherIdentities.profiles_id == fab_profile.id,
-                    ProfilesOtherIdentities.type == oi_type
+                    ProfilesOtherIdentities.type == oi.get('type')
                 ).one_or_none()
                 if not fab_oi:
+                    if oi.get('type') not in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options:
+                        details = "OtherIdentities: '{0}' is not a valid identity type".format(oi.get('type'))
+                        logger.error(details)
+                        return cors_400(details=details)
                     fab_oi = ProfilesOtherIdentities()
-                    fab_oi.identity = oi_identity
+                    fab_oi.identity = oi.get('identity')
                     fab_oi.profiles_id = fab_profile.id
-                    fab_oi.type = oi_type
+                    fab_oi.type = oi.get('type')
                     db.session.add(fab_oi)
                     db.session.commit()
-                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = {2}".format(
-                        fab_person.uuid, oi_type, oi_identity))
+                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_oi.type, fab_oi.identity))
+            # remove old identities
+            for oi in oi_remove:
+                fab_oi = ProfilesOtherIdentities.query.filter(
+                    ProfilesOtherIdentities.identity == oi.get('identity'),
+                    ProfilesOtherIdentities.profiles_id == fab_profile.id,
+                    ProfilesOtherIdentities.type == oi.get('type')
+                ).one_or_none()
+                if fab_oi:
+                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_oi.type, fab_oi.identity))
+                    db.session.delete(fab_oi)
+                    db.session.commit()
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'other_identities' - {0}".format(exc))
         # check for preferences
@@ -506,7 +523,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                         db.session.add(fab_pref)
                         db.session.commit()
                         fab_profile.preferences.append(fab_pref)
-                        logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = {2}".format(
+                        logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
                             fab_person.uuid, fab_pref.key, fab_pref.value))
                     else:
                         details = "People Preferences: '{0}' is not a valid preference type".format(key)
@@ -515,11 +532,59 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 else:
                     fab_pref.value = body.preferences.get(key)
                     db.session.commit()
-                    logger.info("UPDATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = {2}".format(
+                    logger.info("UPDATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'preferences' - {0}".format(exc))
         # check for professional pages
+        try:
+            pp_orig = external_pages_to_array_professional(fab_person.profile.external_pages)
+            pp_new = external_pages_to_array(body.professional)
+            pp_add = array_difference(pp_new, pp_orig)
+            pp_remove = array_difference(pp_orig, pp_new)
+            print(pp_add)
+            print(pp_remove)
+            # add new professional pages
+            for pp in pp_add:
+                fab_pp = ProfilesExternalPages.query.filter(
+                    ProfilesExternalPages.page_type == EnumExternalPageTypes.professional,
+                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
+                    ProfilesExternalPages.url == pp.get('url'),
+                    ProfilesExternalPages.url_type == pp.get('type')
+                ).one_or_none()
+                if not fab_pp:
+                    if pp.get('type') not in PEOPLE_PROFILE_PROFESSIONAL_TYPES.options:
+                        details = "ProfessionalPages: '{0}' is not a valid page type".format(pp.get('type'))
+                        logger.error(details)
+                        return cors_400(details=details)
+                    if not is_valid_url(pp.get('url')):
+                        details = "ProfessionalPages: '{0}' is not a valid URL".format(pp.get('url'))
+                        logger.error(details)
+                        return cors_400(details=details)
+                    fab_pp = ProfilesExternalPages()
+                    fab_pp.page_type = EnumExternalPageTypes.professional
+                    fab_pp.profiles_people_id = fab_profile.id
+                    fab_pp.url = pp.get('url')
+                    fab_pp.url_type = pp.get('type')
+                    db.session.add(fab_pp)
+                    db.session.commit()
+                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'professional_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_pp.url_type, fab_pp.url))
+            # remove old professional pages
+            for pp in pp_remove:
+                fab_pp = ProfilesExternalPages.query.filter(
+                    ProfilesExternalPages.page_type == EnumExternalPageTypes.professional,
+                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
+                    ProfilesExternalPages.url == pp.get('url'),
+                    ProfilesExternalPages.url_type == pp.get('type')
+                ).one_or_none()
+                if fab_pp:
+                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'professional_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_pp.url_type, fab_pp.url))
+                    db.session.delete(fab_pp)
+                    db.session.commit()
+        except Exception as exc:
+            logger.info("NOP: people_uuid_profile_patch(): 'professional_pages' - {0}".format(exc))
         # check for pronouns
         try:
             if len(body.pronouns) == 0:
@@ -532,6 +597,54 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'pronouns' - {0}".format(exc))
         # check for social
+        try:
+            sp_orig = external_pages_to_array_social(fab_person.profile.external_pages)
+            sp_new = external_pages_to_array(body.social)
+            sp_add = array_difference(sp_new, sp_orig)
+            sp_remove = array_difference(sp_orig, sp_new)
+            print(sp_add)
+            print(sp_remove)
+            # add new social pages
+            for sp in sp_add:
+                fab_sp = ProfilesExternalPages.query.filter(
+                    ProfilesExternalPages.page_type == EnumExternalPageTypes.social,
+                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
+                    ProfilesExternalPages.url == sp.get('url'),
+                    ProfilesExternalPages.url_type == sp.get('type')
+                ).one_or_none()
+                if not fab_sp:
+                    if sp.get('type') not in PEOPLE_PROFILE_SOCIAL_TYPES.options:
+                        details = "ProfessionalPages: '{0}' is not a valid page type".format(sp.get('type'))
+                        logger.error(details)
+                        return cors_400(details=details)
+                    if not is_valid_url(sp.get('url')):
+                        details = "ProfessionalPages: '{0}' is not a valid URL".format(sp.get('url'))
+                        logger.error(details)
+                        return cors_400(details=details)
+                    fab_sp = ProfilesExternalPages()
+                    fab_sp.page_type = EnumExternalPageTypes.social
+                    fab_sp.profiles_people_id = fab_profile.id
+                    fab_sp.url = sp.get('url')
+                    fab_sp.url_type = sp.get('type')
+                    db.session.add(fab_sp)
+                    db.session.commit()
+                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'social_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_sp.url_type, fab_sp.url))
+            # remove old social pages
+            for sp in sp_remove:
+                fab_sp = ProfilesExternalPages.query.filter(
+                    ProfilesExternalPages.page_type == EnumExternalPageTypes.social,
+                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
+                    ProfilesExternalPages.url == sp.get('url'),
+                    ProfilesExternalPages.url_type == sp.get('type')
+                ).one_or_none()
+                if fab_sp:
+                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'social_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_sp.url_type, fab_sp.url))
+                    db.session.delete(fab_sp)
+                    db.session.commit()
+        except Exception as exc:
+            logger.info("NOP: people_uuid_profile_patch(): 'social_pages' - {0}".format(exc))
         # check for website
         try:
             if len(body.website) == 0:
@@ -544,7 +657,8 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     logger.error(details)
                     return cors_400(details=details)
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesPeople: uuid={0}, website={1}'.format(fab_profile.uuid, fab_profile.website))
+            logger.info(
+                'UPDATE: FabricProfilesPeople: uuid={0}, website={1}'.format(fab_profile.uuid, fab_profile.website))
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'website' - {0}".format(exc))
         # create response

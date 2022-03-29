@@ -39,6 +39,7 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - tags - array of tag strings
     - uuid - unique universal identifier
     """
+    query: db.Query
     __tablename__ = 'projects'
 
     active = db.Column(db.Boolean, default=True, nullable=False)
@@ -69,6 +70,7 @@ class ProjectsTags(BaseMixin, db.Model):
     - projects_id - foreignkey link to projects table
     - tag - tag as string
     """
+    query: db.Query
     __tablename__ = 'projects_tags'
 
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)

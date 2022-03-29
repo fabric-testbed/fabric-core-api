@@ -26,6 +26,24 @@ FabricProfilesPeople model (* denotes required)
 """
 
 
+def array_difference(a, b): return [x for x in a if x not in b]
+
+
+def other_identities_to_array(n): return [{'identity': x.identity, 'type': x.type} for x in n]
+
+
+def external_pages_to_array(n):
+    return [{'url': x.url, 'type': x.type} for x in n]
+
+
+def external_pages_to_array_professional(n):
+    return [{'url': x.url, 'type': x.url_type} for x in n if x.page_type == EnumExternalPageTypes.professional]
+
+
+def external_pages_to_array_social(n):
+    return [{'url': x.url, 'type': x.url_type} for x in n if x.page_type == EnumExternalPageTypes.social]
+
+
 def create_profile_people(fab_person: FabricPeople = None) -> None:
     fab_profile = FabricProfilesPeople()
     fab_profile.uuid = uuid4()

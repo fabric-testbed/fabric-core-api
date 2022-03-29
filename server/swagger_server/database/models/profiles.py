@@ -28,6 +28,7 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     - uuid - unique universal identifier
     - website - Link to a personal website
     """
+    query: db.Query
     __tablename__ = 'profiles_people'
 
     bio = db.Column(db.String(), nullable=True)
@@ -58,6 +59,7 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     - references - works where this project work is discussed/featured
     - uuid - unique universal identifier
     """
+    query: db.Query
     __tablename__ = 'profiles_projects'
 
     award_information = db.Column(db.String(), nullable=True)
@@ -81,6 +83,7 @@ class ProfilesExternalPages(BaseMixin, db.Model):
     - url - url as string
     - url_type - type of url
     """
+    query: db.Query
     __tablename__ = 'profiles_external_pages'
 
     page_type = db.Column(db.Enum(EnumExternalPageTypes), default=EnumExternalPageTypes.professional, nullable=False)
@@ -95,6 +98,7 @@ class ProfilesKeywords(BaseMixin, db.Model):
     - keyword - keyword as string
     - profiles_projects_id - foreignkey link to profiles_projects
     """
+    query: db.Query
     __tablename__ = 'profiles_keywords'
 
     keyword = db.Column(db.String(), nullable=False)
@@ -108,6 +112,7 @@ class ProfilesOtherIdentities(BaseMixin, db.Model):
     - profiles_id - foreignkey link to profiles table
     - type - type of other identity
     """
+    query: db.Query
     __tablename__ = 'profiles_other_identities'
 
     identity = db.Column(db.String(), nullable=False)
@@ -122,6 +127,7 @@ class ProfilesReferences(BaseMixin, db.Model):
     - profiles_projects_id - foreignkey link to profiles_projects
     - url - url as string
     """
+    query: db.Query
     __tablename__ = 'profiles_references'
 
     description = db.Column(db.String(), nullable=False)

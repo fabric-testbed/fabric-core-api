@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
-from swagger_server.models.projects_data import ProjectsData  # noqa: F401,E501
+from swagger_server.models.project import Project  # noqa: F401,E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginated  # noqa: F401,E501
 from swagger_server.models.status200_ok_paginated_links import Status200OkPaginatedLinks  # noqa: F401,E501
 from swagger_server import util
@@ -17,11 +17,11 @@ class Projects(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[ProjectsData]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
+    def __init__(self, data: List[Project]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
         """Projects - a model defined in Swagger
 
         :param data: The data of this Projects.  # noqa: E501
-        :type data: List[ProjectsData]
+        :type data: List[Project]
         :param limit: The limit of this Projects.  # noqa: E501
         :type limit: int
         :param links: The links of this Projects.  # noqa: E501
@@ -38,7 +38,7 @@ class Projects(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[ProjectsData],
+            'data': List[Project],
             'limit': int,
             'links': Status200OkPaginatedLinks,
             'offset': int,
@@ -79,22 +79,22 @@ class Projects(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[ProjectsData]:
+    def data(self) -> List[Project]:
         """Gets the data of this Projects.
 
 
         :return: The data of this Projects.
-        :rtype: List[ProjectsData]
+        :rtype: List[Project]
         """
         return self._data
 
     @data.setter
-    def data(self, data: List[ProjectsData]):
+    def data(self, data: List[Project]):
         """Sets the data of this Projects.
 
 
         :param data: The data of this Projects.
-        :type data: List[ProjectsData]
+        :type data: List[Project]
         """
 
         self._data = data

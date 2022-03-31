@@ -1,5 +1,6 @@
 import os
 from uuid import uuid4
+from datetime import datetime
 
 from comanage_api import ComanageApi
 
@@ -12,6 +13,7 @@ from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_PREF
     PROJECTS_PROFILE_PREFERENCES
 from swagger_server.response_code.comanage_utils import update_groups, update_organizations
 from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id, update_fabric_person
+from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
 
 app.app_context().push()
 
@@ -486,6 +488,8 @@ def load_groups():
             fab_group = FabricGroups()
             fab_group.co_cou_id = co_cou_id
             fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
+            print(co_cou.get('Created'))
+            fab_group.created = datetime.strptime(co_cou.get('Created'), '%d/%m/%y %H:%M:%S')
             fab_group.name = co_cou.get('Name')
             fab_group.description = co_cou.get('Description')
             fab_group.deleted = co_cou.get('Deleted')
@@ -541,6 +545,15 @@ def load_people_from_comanage():
         update_fabric_person(fab_person=fab_person)
 
 
+def load_projects_from_groups():
+    project_cous = FabricGroups.query.filter(
+        FabricGroups.co_parent_cou_id == os.getenv('COU_ID_PROJECTS')).order_by(
+        FabricGroups.name).all()
+    for cou in project_cous:
+        uuid = cou.name.rsplit('-', 1)[0]
+        create_fabric_project_from_uuid(uuid=uuid)
+
+
 if __name__ == '__main__':
     logger.info("--- Load database table 'groups' as FabricGroups ---")
     update_groups()
@@ -548,6 +561,8 @@ if __name__ == '__main__':
     update_organizations()
     logger.info("--- Load database table 'people' as FabricPeople ---")
     load_people_from_comanage()
+    logger.info("--- Load database table 'projects' as FabricProjects ---")
+    load_projects_from_groups()
 
     # logger.info("--- Load database table 'organizations' as Organizations ---")
     # load_organizations()

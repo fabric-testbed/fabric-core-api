@@ -23,14 +23,16 @@ class EmailAddresses(BaseMixin, db.Model):
     type = db.Column(db.String())
 
 
-class FabricGroups(BaseMixin, db.Model):
+class FabricGroups(BaseMixin, TimestampMixin, db.Model):
     """
     Cous - from COmanage
     - co_cou_id - Cous Id
     - co_parent_cou_id - Cous Parent Id
+    - created - timestamp created (TimestampMixin)
     - deleted - COU status (false == active)
     - description - COU description
     - id - primary key (BaseMixin)
+    - modified - timestamp modified (TimestampMixin)
     - name - COU name
     """
     query: db.Query

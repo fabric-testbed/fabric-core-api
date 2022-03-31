@@ -24,9 +24,9 @@ from swagger_server.models.profile_people_other_identities import ProfilePeopleO
 from swagger_server.models.profile_people_professional import ProfilePeopleProfessional
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.profile_projects_references import ProfileProjectsReferences
+from swagger_server.models.project import Project
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects import Projects
-from swagger_server.models.projects_data import ProjectsData
 from swagger_server.models.projects_details import ProjectsDetails
 from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_patch import ProjectsPatch

@@ -2,9 +2,12 @@ from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes
+from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes, FabricProfilesProjects
+from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeopleProfessional
-from swagger_server.response_code.preferences_utils import create_profile_people_preferences
+from swagger_server.models.profile_projects import ProfileProjects
+from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
+    create_profile_projects_preferences
 
 """
 FabricProfilesPeople model (* denotes required)
@@ -120,3 +123,41 @@ def get_profile_external_pages(profile_people: FabricProfilesPeople = None,
             data.append(ppep)
 
     return data
+
+
+def create_profile_projects(fab_project: FabricProjects = None) -> None:
+    fab_profile = FabricProfilesProjects()
+    fab_profile.uuid = uuid4()
+    fab_profile.projects = fab_project
+    db.session.add(fab_profile)
+    db.session.commit()
+    create_profile_projects_preferences(fab_profile=fab_profile)
+
+
+def get_profile_projects(profile_projects_id: int = None, as_owner: bool = False) -> ProfileProjects:
+    fab_profile = FabricProfilesProjects.query.filter_by(id=profile_projects_id).one_or_none()
+    profile_prefs = {p.key: p.value for p in fab_profile.preferences}
+    profile_projects = ProfileProjects()
+    if as_owner:
+        profile_projects.award_information = fab_profile.award_information
+        profile_projects.goals = fab_profile.goals
+        profile_projects.keywords = [k.keyword for k in fab_profile.keywords]
+        profile_projects.notebooks = []
+        profile_projects.preferences = profile_prefs
+        profile_projects.project_status = fab_profile.project_status
+        profile_projects.purpose = fab_profile.purpose
+        profile_projects.references = [{'description': r.description, 'url': r.url} for r in fab_profile.references]
+    else:
+        profile_projects.award_information = fab_profile.award_information if profile_prefs.get(
+            'show_award_information') else None
+        profile_projects.goals = fab_profile.goals if profile_prefs.get('show_goals') else None
+        profile_projects.keywords = [k.keyword for k in fab_profile.keywords] if profile_prefs.get(
+            'show_keywords') else None
+        profile_projects.notebooks = [] if profile_prefs.get('show_notebooks') else None
+        profile_projects.project_status = fab_profile.project_status if profile_prefs.get(
+            'show_project_status') else None
+        profile_projects.purpose = fab_profile.purpose if profile_prefs.get('show_purpose') else None
+        profile_projects.references = [{'description': r.description, 'url': r.url} for r in
+                                       fab_profile.references] if profile_prefs.get('show_references') else None
+
+    return profile_projects

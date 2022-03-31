@@ -250,6 +250,8 @@ class ProjectsOne(Model):
         :param memberships: The memberships of this ProjectsOne.
         :type memberships: ProjectMembership
         """
+        if memberships is None:
+            raise ValueError("Invalid value for `memberships`, must not be `None`")  # noqa: E501
 
         self._memberships = memberships
 

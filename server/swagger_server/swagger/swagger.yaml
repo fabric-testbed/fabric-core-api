@@ -2065,6 +2065,32 @@ components:
             type: object
         uuid:
           type: string
+    project:
+      required:
+      - created
+      - description
+      - facility
+      - is_public
+      - memberships
+      - name
+      - uuid
+      type: object
+      properties:
+        created:
+          type: string
+        description:
+          type: string
+        facility:
+          type: string
+        is_public:
+          type: boolean
+          default: true
+        memberships:
+          $ref: '#/components/schemas/project_membership'
+        name:
+          type: string
+        uuid:
+          type: string
     projects:
       type: object
       allOf:
@@ -2074,7 +2100,7 @@ components:
           data:
             type: array
             items:
-              $ref: '#/components/schemas/projects_data'
+              $ref: '#/components/schemas/project'
     projects_details:
       type: object
       allOf:
@@ -2091,6 +2117,7 @@ components:
       - description
       - facility
       - is_public
+      - memberships
       - name
       - uuid
       type: object
@@ -2603,31 +2630,6 @@ components:
         name:
           type: string
         description:
-          type: string
-      example: null
-    projects_data:
-      required:
-      - created
-      - description
-      - facility
-      - is_public
-      - name
-      - uuid
-      properties:
-        created:
-          type: string
-        description:
-          type: string
-        facility:
-          type: string
-        is_public:
-          type: boolean
-          default: true
-        memberships:
-          $ref: '#/components/schemas/project_membership'
-        name:
-          type: string
-        uuid:
           type: string
       example: null
     profile_people_other_identities:

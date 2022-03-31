@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 from comanage_api import ComanageApi
 
@@ -163,6 +164,7 @@ def update_groups():
                 fab_group = FabricGroups()
                 fab_group.co_cou_id = co_cou_id
                 fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
+                fab_group.created = datetime.strptime(co_cou.get('Created'), '%Y-%m-%d %H:%M:%S')
                 fab_group.deleted = co_cou.get('Deleted')
                 fab_group.description = co_cou.get('Description')
                 fab_group.name = co_cou.get('Name')

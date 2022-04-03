@@ -7,6 +7,8 @@ from swagger_server.database.models.people import FabricGroups, FabricRoles, Fab
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.models.project_membership import ProjectMembership
+from swagger_server.response_code.response_utils import array_difference
+from swagger_server.response_code.comanage_utils import create_comanage_role, delete_comanage_role
 
 logger = logging.getLogger(__name__)
 
@@ -154,3 +156,95 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel_data.append(person)
 
     return personnel_data
+
+
+def update_projects_personnel(fab_project: FabricProjects = None, personnel: [FabricPeople] = None, personnel_type: str = None) -> None:
+    if personnel_type == 'creators':
+        p_orig = [str(p.uuid) for p in fab_project.project_creators]
+        p_new = personnel
+        p_add = array_difference(p_new, p_orig)
+        p_remove = array_difference(p_orig, p_new)
+        # get FabricGroup information
+        fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-pc').one_or_none()
+        if fab_group:
+            # add project_creators
+            for pc in p_add:
+                fab_person = FabricPeople.query.filter_by(uuid=pc).one_or_none()
+                if fab_person:
+                    create_comanage_role(fab_person=fab_person, fab_group=fab_group)
+                    fab_project.project_creators.append(fab_person)
+                    db.session.commit()
+            # remove project_creators
+            for pc in p_remove:
+                fab_person = FabricPeople.query.filter_by(uuid=pc).one_or_none()
+                co_person_role = FabricRoles.query.filter(
+                    FabricRoles.co_person_id == fab_person.co_person_id,
+                    FabricRoles.co_cou_id == fab_group.co_cou_id,
+                    FabricRoles.name == fab_group.name,
+                    FabricRoles.people_id == fab_person.id
+                ).one_or_none()
+                if co_person_role:
+                    fab_project.project_creators.remove(fab_person)
+                    delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
+                    db.session.commit()
+    elif personnel_type == 'members':
+        p_orig = [str(p.uuid) for p in fab_project.project_members]
+        p_new = personnel
+        p_add = array_difference(p_new, p_orig)
+        p_remove = array_difference(p_orig, p_new)
+        # get FabricGroup information
+        fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-pm').one_or_none()
+        if fab_group:
+            # add project_members
+            for pm in p_add:
+                fab_person = FabricPeople.query.filter_by(uuid=pm).one_or_none()
+                if fab_person:
+                    create_comanage_role(fab_person=fab_person, fab_group=fab_group)
+                    fab_project.project_members.append(fab_person)
+                    db.session.commit()
+            # remove project_members
+            for pm in p_remove:
+                fab_person = FabricPeople.query.filter_by(uuid=pm).one_or_none()
+                co_person_role = FabricRoles.query.filter(
+                    FabricRoles.co_person_id == fab_person.co_person_id,
+                    FabricRoles.co_cou_id == fab_group.co_cou_id,
+                    FabricRoles.name == fab_group.name,
+                    FabricRoles.people_id == fab_person.id
+                ).one_or_none()
+                if co_person_role:
+                    fab_project.project_members.remove(fab_person)
+                    delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
+                    db.session.commit()
+    elif personnel_type == 'owners':
+        p_orig = [str(p.uuid) for p in fab_project.project_owners]
+        p_new = personnel
+        p_add = array_difference(p_new, p_orig)
+        p_remove = array_difference(p_orig, p_new)
+        # get FabricGroup information
+        fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-po').one_or_none()
+        if fab_group:
+            # add project_owners
+            for po in p_add:
+                fab_person = FabricPeople.query.filter_by(uuid=po).one_or_none()
+                if fab_person:
+                    create_comanage_role(fab_person=fab_person, fab_group=fab_group)
+                    fab_project.project_owners.append(fab_person)
+                    db.session.commit()
+            # remove project_owners
+            for po in p_remove:
+                fab_person = FabricPeople.query.filter_by(uuid=po).one_or_none()
+                co_person_role = FabricRoles.query.filter(
+                    FabricRoles.co_person_id == fab_person.co_person_id,
+                    FabricRoles.co_cou_id == fab_group.co_cou_id,
+                    FabricRoles.name == fab_group.name,
+                    FabricRoles.people_id == fab_person.id
+                ).one_or_none()
+                if co_person_role:
+                    fab_project.project_owners.remove(fab_person)
+                    delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
+                    db.session.commit()
+    else:
+        logger.error('Invalid personnel_type provided')
+
+
+

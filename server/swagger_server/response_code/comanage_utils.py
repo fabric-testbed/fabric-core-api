@@ -20,6 +20,99 @@ api = ComanageApi(
 )
 
 
+def create_comanage_group(name: str = None, description: str = None, parent_cou_id: int = None) -> int:
+    try:
+        if parent_cou_id:
+            cou = api.cous_add(name=name, description=description, parent_id=parent_cou_id)
+        else:
+            cou = api.cous_add(name=name, description=description)
+        if cou:
+            fab_group = FabricGroups()
+            fab_group.co_cou_id = cou.get('Id')
+            if parent_cou_id:
+                fab_group.co_parent_cou_id = parent_cou_id
+            fab_group.description = description
+            fab_group.name = name
+            db.session.add(fab_group)
+            db.session.commit()
+            logger.info(
+                "CREATE: entry in 'groups' table for co_cou_id: {0}".format(cou.get('Id')))
+            return cou.get('Id')
+        else:
+            return -1
+    except Exception as exc:
+        details = 'Oops! something went wrong with create_comanage_group(): {0}'.format(exc)
+        logger.error(details)
+        return -1
+
+
+def delete_comanage_group(co_cou_id: int = None) -> bool:
+    try:
+        co_cou = FabricRoles.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+        if co_cou:
+            # delete COU in COmanage
+            is_deleted = api.cous_delete(cou_id=co_cou_id)
+            # delete group in FABRIC
+            if is_deleted:
+                logger.info(
+                    "DELETE: entry in 'groups' table for co_cou_id: {0}".format(
+                        co_cou.co_cou_id))
+                db.session.delete(co_cou)
+                db.session.commit()
+            return is_deleted
+    except Exception as exc:
+        details = 'Oops! something went wrong with delete_comanage_group(): {0}'.format(exc)
+        logger.error(details)
+        return False
+
+
+def create_comanage_role(fab_person: FabricPeople = None, fab_group: FabricGroups = None) -> bool:
+    status = 'Active'
+    affiliation = 'member'
+    try:
+        co_person_role = api.coperson_roles_add(
+            coperson_id=fab_person.co_person_id, cou_id=fab_group.co_cou_id, status=status, affiliation=affiliation)
+        if co_person_role:
+            fab_role = FabricRoles()
+            fab_role.affiliation = affiliation
+            fab_role.co_cou_id = fab_group.co_cou_id
+            fab_role.co_person_id = fab_person.co_person_id
+            fab_role.co_person_role_id = co_person_role.get('Id')
+            fab_role.name = fab_group.name
+            fab_role.description = fab_group.description
+            fab_role.people_id = fab_person.id
+            fab_role.status = status
+            db.session.add(fab_role)
+            db.session.commit()
+            logger.info(
+                "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role.get('Id')))
+            return True
+    except Exception as exc:
+        details = 'Oops! something went wrong with create_comanage_role(): {0}'.format(exc)
+        logger.error(details)
+        return False
+
+
+def delete_comanage_role(co_person_role_id: int = None) -> bool:
+    try:
+        co_person_role = FabricRoles.query.filter_by(co_person_role_id=co_person_role_id).one_or_none()
+        if co_person_role:
+            # delete co_person_role in COmanage
+            is_deleted = api.coperson_roles_delete(coperson_role_id=co_person_role_id)
+            # delete co_person_role in FABRIC
+            if is_deleted:
+                logger.info(
+                    "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(
+                        co_person_role.co_person_role_id))
+                db.session.delete(co_person_role)
+                db.session.commit()
+            return is_deleted
+    except Exception as exc:
+        details = 'Oops! something went wrong with delete_comanage_role(): {0}'.format(exc)
+        logger.error(details)
+        return False
+
+
 def update_people_identifiers(fab_person_id: int, co_person_id: int) -> None:
     try:
         fab_person = FabricPeople.query.filter_by(id=fab_person_id).one_or_none()

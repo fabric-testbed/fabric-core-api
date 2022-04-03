@@ -29,9 +29,6 @@ FabricProfilesPeople model (* denotes required)
 """
 
 
-def array_difference(a, b): return [x for x in a if x not in b]
-
-
 def other_identities_to_array(n): return [{'identity': x.identity, 'type': x.type} for x in n]
 
 

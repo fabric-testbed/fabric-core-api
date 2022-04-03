@@ -16,6 +16,7 @@ class EmailAddresses(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'people_email_addresses'
+    __table_args__ = (db.UniqueConstraint('co_email_address_id', 'people_id', name='constraint_email_addresses'),)
 
     co_email_address_id = db.Column(db.Integer)
     email = db.Column(db.String())
@@ -37,6 +38,7 @@ class FabricGroups(BaseMixin, TimestampMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'groups'
+    __table_args__ = (db.UniqueConstraint('co_cou_id', name='constraint_fabric_groups'),)
 
     co_cou_id = db.Column(db.Integer, nullable=False)
     co_parent_cou_id = db.Column(db.Integer, nullable=True)
@@ -76,6 +78,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'people'
+    __table_args__ = (db.UniqueConstraint('co_person_id', name='constraint_fabric_people'),)
 
     active = db.Column(db.Boolean, nullable=False, default=False)
     bastion_login = db.Column(db.String(), nullable=True)
@@ -135,6 +138,7 @@ class FabricRoles(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'people_roles'
+    __table_args__ = (db.UniqueConstraint('co_cou_id', 'people_id', name='constraint_fabric_roles'),)
 
     affiliation = db.Column(db.String(), nullable=False)
     co_cou_id = db.Column(db.Integer, nullable=False)
@@ -156,6 +160,7 @@ class Organizations(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'people_organizations'
+    __table_args__ = (db.UniqueConstraint('org_identity_id', name='constraint_organizations'),)
 
     affiliation = db.Column(db.String(), nullable=False)
     org_identity_id = db.Column(db.Integer)

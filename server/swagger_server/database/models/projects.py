@@ -72,6 +72,7 @@ class ProjectsTags(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'projects_tags'
+    __table_args__ = (db.UniqueConstraint('projects_id', 'tag', name='constraint_projects_tags'),)
 
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     tag = db.Column(db.Text, nullable=False)

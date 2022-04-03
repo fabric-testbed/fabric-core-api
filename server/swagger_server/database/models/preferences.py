@@ -27,6 +27,8 @@ class FabricPreferences(BaseMixin, TimestampMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'preferences'
+    __table_args__ = (db.UniqueConstraint('key', 'people_id', 'profiles_people_id', 'profiles_projects_id',
+                                          'projects_id', name='constraint_preferences'),)
 
     key = db.Column(db.String(), nullable=False)
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=True)

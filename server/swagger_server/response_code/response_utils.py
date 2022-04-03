@@ -37,6 +37,9 @@ class CoreApiOptions(ABC):
         return sorted(found)
 
 
+def array_difference(a, b): return [x for x in a if x not in b]
+
+
 def is_valid_url(url: str = None) -> bool:
     """
     Validate URL format

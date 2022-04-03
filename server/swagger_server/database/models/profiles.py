@@ -30,6 +30,7 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_people'
+    __table_args__ = (db.UniqueConstraint('people_id', name='constraint_profiles_people'),)
 
     bio = db.Column(db.String(), nullable=True)
     cv = db.Column(db.String(), nullable=True)
@@ -61,6 +62,7 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_projects'
+    __table_args__ = (db.UniqueConstraint('projects_id', name='constraint_profiles_projects'),)
 
     award_information = db.Column(db.String(), nullable=True)
     goals = db.Column(db.String(), nullable=True)
@@ -100,6 +102,7 @@ class ProfilesKeywords(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_keywords'
+    __table_args__ = (db.UniqueConstraint('keyword', 'profiles_projects_id', name='constraint_projects_keywords'),)
 
     keyword = db.Column(db.String(), nullable=False)
     profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)

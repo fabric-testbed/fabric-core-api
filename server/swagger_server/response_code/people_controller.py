@@ -19,8 +19,8 @@ from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, get_people_roles
 from swagger_server.response_code.preferences_utils import get_people_preferences
 from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
-    array_difference, external_pages_to_array_professional, external_pages_to_array, external_pages_to_array_social
-from swagger_server.response_code.response_utils import is_valid_url
+    external_pages_to_array_professional, external_pages_to_array, external_pages_to_array_social
+from swagger_server.response_code.response_utils import is_valid_url, array_difference
 
 logger = logging.getLogger(__name__)
 

@@ -2462,6 +2462,13 @@ components:
           type: array
           items:
             type: string
+    projects_tags_patch:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
     sshkeys_post:
       required:
       - comment
@@ -2952,9 +2959,7 @@ components:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              type: string
+            $ref: '#/components/schemas/projects_tags_patch'
     payload_sshkeys_post:
       description: Create a public/private SSH Key Pair
       content:

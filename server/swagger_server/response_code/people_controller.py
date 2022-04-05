@@ -367,7 +367,7 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                     if key in PEOPLE_PREFERENCES.options:
                         fab_pref = FabricPreferences()
                         fab_pref.key = key
-                        fab_pref.value = body.get('preferences').get(key)
+                        fab_pref.value = body.preferences.get(key)
                         fab_pref.type = EnumPreferenceTypes.people
                         fab_pref.people_id = fab_person.id
                         db.session.add(fab_pref)
@@ -380,7 +380,7 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                         logger.error(details)
                         return cors_400(details=details)
                 else:
-                    fab_pref.value = body.get('preferences').get(key)
+                    fab_pref.value = body.preferences.get(key)
                     db.session.commit()
                     logger.info("UPDATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))

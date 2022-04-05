@@ -2,7 +2,7 @@ import os
 import logging
 from swagger_server.database.db import db
 from swagger_server.models.person import Person
-from swagger_server.database.models.projects import FabricProjects, projects_creators, projects_members, projects_owners
+from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.people import FabricGroups, FabricRoles, FabricPeople
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
@@ -247,4 +247,27 @@ def update_projects_personnel(fab_project: FabricProjects = None, personnel: [Fa
         logger.error('Invalid personnel_type provided')
 
 
+def update_projects_tags(fab_project: FabricProjects = None, tags: [str] = None) -> None:
+    tags_orig = [p.tag for p in fab_project.tags]
+    tags_new = tags
+    tags_add = array_difference(tags_new, tags_orig)
+    tags_remove = array_difference(tags_orig, tags_new)
+    # add projects tags
+    for tag in tags_add:
+        fab_tag = ProjectsTags.query.filter(
+            ProjectsTags.projects_id == fab_project.id, ProjectsTags.tag == tag).one_or_none()
+        if not fab_tag:
+            fab_tag = ProjectsTags()
+            fab_tag.projects_id = fab_project.id
+            fab_tag.tag = tag
+            fab_project.tags.append(fab_tag)
+            db.session.commit()
+    # remove projects tags
+    for tag in tags_remove:
+        fab_tag = ProjectsTags.query.filter(
+            ProjectsTags.projects_id == fab_project.id, ProjectsTags.tag == tag).one_or_none()
+        if fab_tag:
+            fab_project.tags.remove(fab_tag)
+            db.session.delete(fab_tag)
+            db.session.commit()
 

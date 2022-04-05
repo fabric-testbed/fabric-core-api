@@ -66,6 +66,35 @@ def delete_comanage_group(co_cou_id: int = None) -> bool:
         return False
 
 
+def update_comanage_group(co_cou_id: int, name: str = None, description: str = None, parent_cou_id: int = None) -> bool:
+    try:
+        fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+        if fab_group:
+            # update COmanage COU
+            is_updated = api.cous_edit(
+                cou_id=co_cou_id,
+                name=name if name else None,
+                description=description if description else None,
+                parent_id=parent_cou_id if parent_cou_id else None
+            )
+            # update FabricGroup
+            if is_updated:
+                if description:
+                    fab_group.description = description
+                if name:
+                    fab_group.name = name
+                if parent_cou_id:
+                    fab_group.co_parent_cou_id = parent_cou_id
+                db.session.commit()
+            return is_updated
+        else:
+            return False
+    except Exception as exc:
+        details = 'Oops! something went wrong with create_comanage_group(): {0}'.format(exc)
+        logger.error(details)
+        return False
+
+
 def create_comanage_role(fab_person: FabricPeople = None, fab_group: FabricGroups = None) -> bool:
     status = 'Active'
     affiliation = 'member'

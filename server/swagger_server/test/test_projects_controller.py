@@ -12,6 +12,7 @@ from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -162,7 +163,7 @@ class TestProjectsController(BaseTestCase):
 
         Update Projects Tags as Facility Operator
         """
-        body = ['body_example']
+        body = ProjectsTagsPatch()
         response = self.client.open(
             '/projects/{uuid}/tags'.format(uuid='uuid_example'),
             method='PATCH',

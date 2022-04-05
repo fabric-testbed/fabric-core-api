@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from sqlalchemy.schema import Index
 
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
@@ -121,6 +122,9 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
 
     def is_project_owner(self, project_uuid: str = None) -> bool:
         return project_uuid + '-po' in [r.name.casefold() for r in self.roles]
+
+
+Index('index_people', FabricPeople.uuid, FabricPeople.co_person_id, FabricPeople.id)
 
 
 class FabricRoles(BaseMixin, db.Model):

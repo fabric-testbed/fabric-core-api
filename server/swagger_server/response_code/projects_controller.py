@@ -4,23 +4,26 @@ from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
+from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.projects import Project, Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsOne, ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
+from swagger_server.models.projects_patch import ProjectsPatch
+from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.status200_ok_no_content import Status200OkNoContentData, Status200OkNoContent  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
-from swagger_server.response_code.comanage_utils import create_comanage_group
-from swagger_server.response_code.cors_response import cors_200, cors_403, cors_404, cors_500
+from swagger_server.response_code.comanage_utils import create_comanage_group, update_comanage_group
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import get_profile_projects, create_profile_projects
 from swagger_server.response_code.projects_utils import get_project_membership, get_projects_personnel, \
-    update_projects_personnel
+    update_projects_personnel, update_projects_tags
 
 logger = logging.getLogger(__name__)
 
@@ -420,7 +423,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
 
 
 @login_required
-def projects_uuid_patch(uuid, body=None):  # noqa: E501
+def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status200OkNoContent:  # noqa: E501
     """Update Project details as owner
 
     Update Project details as owner # noqa: E501
@@ -432,7 +435,100 @@ def projects_uuid_patch(uuid, body=None):  # noqa: E501
 
     :rtype: Status200OkNoContent
     """
-    return 'do some magic!'
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # check api_user active flag and verify creator or owner role
+        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
+                uuid + '-po' not in [r.name for r in api_user.roles]:
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check for description
+        try:
+            if len(body.description) != 0:
+                fab_project.description = body.description
+                db.session.commit()
+                logger.info('UPDATE: FabricProjects: uuid={0}, description={1}'.format(
+                    fab_project.uuid, fab_project.description))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_patch(): 'description' - {0}".format(exc))
+        # check for is_public
+        try:
+            if body.is_public is not None:
+                if body.is_public:
+                    fab_project.is_public = True
+                if not body.is_public:
+                    fab_project.is_public = False
+                db.session.commit()
+                logger.info('UPDATE: FabricProjects: uuid={0}, is_public={1}'.format(
+                    fab_project.uuid, fab_project.is_public))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_patch(): 'is_public' - {0}".format(exc))
+        # check for name
+        try:
+            if len(body.name) != 0:
+                is_pc_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pc, description=body.name)
+                is_pm_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pm, description=body.name)
+                is_po_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_po, description=body.name)
+                if is_pc_name and is_pm_name and is_po_name:
+                    fab_project.name = body.name
+                    db.session.commit()
+                    logger.info('UPDATE: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
+                else:
+                    logger.error('ERROR: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_patch(): 'name' - {0}".format(exc))
+        # check for preferences
+        try:
+            for key in body.preferences.keys():
+                fab_pref = FabricPreferences.query.filter(
+                    FabricPreferences.key == key,
+                    FabricPreferences.projects_id == fab_project.id,
+                    FabricPreferences.type == EnumPreferenceTypes.projects
+                ).one_or_none()
+                if not fab_pref:
+                    if key in PROJECTS_PREFERENCES.options:
+                        fab_pref = FabricPreferences()
+                        fab_pref.key = key
+                        fab_pref.value = body.preferences.get(key)
+                        fab_pref.type = EnumPreferenceTypes.projects
+                        fab_pref.projects_id = fab_project.id
+                        db.session.add(fab_pref)
+                        db.session.commit()
+                        fab_project.preferences.append(fab_pref)
+                        logger.info("CREATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
+                            fab_project.uuid, fab_pref.key, fab_pref.value))
+                    else:
+                        details = "Projects Preferences: '{0}' is not a valid preference type".format(key)
+                        logger.error(details)
+                        return cors_400(details=details)
+                else:
+                    fab_pref.value = body.preferences.get(key)
+                    db.session.commit()
+                    logger.info("UPDATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
+                        fab_project.uuid, fab_pref.key, fab_pref.value))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_patch(): 'preferences' - {0}".format(exc))
+
+        # create response
+        patch_info = Status200OkNoContentData()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.data = [patch_info]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_patch(): {0}'.format(exc)
+        logger.error(details)
+        return cors_500(details=details)
 
 
 @login_required
@@ -512,7 +608,7 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
 
 
 @login_required
-def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
+def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Status200OkNoContent:  # noqa: E501
     """Update Projects Tags as Facility Operator
 
     Update Projects Tags as Facility Operator # noqa: E501
@@ -520,8 +616,45 @@ def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
     :param uuid: universally unique identifier
     :type uuid: str
     :param body: Update Project Tags as Facility Operator
-    :type body: List[]
+    :type body: dict | bytes
 
     :rtype: Status200OkNoContent
     """
-    return 'do some magic!'
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # check api_user active flag and verify creator or owner role
+        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
+                uuid + '-po' not in [r.name for r in api_user.roles]:
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check for tags
+        try:
+            if len(body.tags) == 0:
+                update_projects_tags(fab_project=fab_project, tags=body.tags)
+                logger.info('UPDATE: FabricProjects: uuid={0}, tags=[]')
+            else:
+                update_projects_tags(fab_project=fab_project, tags=body.tags)
+                logger.info('UPDATE: FabricProjects: uuid={0}, tags={1}'.format(
+                    fab_project.uuid, [t.tag for t in fab_project.tags]))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_tags_patch(): 'tags' - {0}".format(exc))
+        # create response
+        patch_info = Status200OkNoContentData()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.data = [patch_info]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_patch(): {0}'.format(exc)
+        logger.error(details)
+        return cors_500(details=details)

@@ -8,6 +8,7 @@ from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -176,8 +177,10 @@ def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
     :param uuid: universally unique identifier
     :type uuid: str
     :param body: Update Project Tags as Facility Operator
-    :type body: List[]
+    :type body: dict | bytes
 
     :rtype: Status200OkNoContent
     """
+    if connexion.request.is_json:
+        body = ProjectsTagsPatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_tags_patch(uuid, body)

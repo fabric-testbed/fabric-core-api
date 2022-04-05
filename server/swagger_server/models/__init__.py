@@ -32,6 +32,7 @@ from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkey_pair_data import SshkeyPairData
 from swagger_server.models.sshkeys import Sshkeys

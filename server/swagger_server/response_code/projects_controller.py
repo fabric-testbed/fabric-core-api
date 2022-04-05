@@ -6,12 +6,14 @@ from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
 from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.profiles import FabricProfilesProjects, ProfilesReferences, ProfilesKeywords
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.projects import Project, Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsOne, ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
+from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.status200_ok_no_content import Status200OkNoContentData, Status200OkNoContent  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
@@ -21,9 +23,11 @@ from swagger_server.response_code.cors_response import cors_200, cors_400, cors_
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import create_projects_preferences
-from swagger_server.response_code.profiles_utils import get_profile_projects, create_profile_projects
+from swagger_server.response_code.profiles_utils import get_profile_projects, create_profile_projects, \
+    update_profiles_projects_keywords, references_to_array
 from swagger_server.response_code.projects_utils import get_project_membership, get_projects_personnel, \
     update_projects_personnel, update_projects_tags
+from swagger_server.response_code.response_utils import is_valid_url, array_difference
 
 logger = logging.getLogger(__name__)
 
@@ -592,7 +596,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
 
 
 @login_required
-def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
+def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noqa: E501
     """Update Project Profile details as owner
 
     Update Project Profile details as owner # noqa: E501
@@ -604,7 +608,163 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
 
     :rtype: Status200OkNoContent
     """
-    return 'do some magic!'
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # check api_user active flag and verify creator or owner role
+        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
+                uuid + '-po' not in [r.name for r in api_user.roles]:
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        fab_profile = FabricProfilesProjects.query.filter_by(id=fab_project.profile.id).one_or_none()
+        # check for award_information
+        try:
+            if len(body.award_information) == 0:
+                fab_profile.award_information = None
+            else:
+                fab_profile.award_information = body.award_information
+            db.session.commit()
+            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, award_information={1}'.format(
+                fab_profile.uuid, fab_profile.award_information))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'award_information' - {0}".format(exc))
+        # check for goals
+        try:
+            if len(body.goals) == 0:
+                fab_profile.goals = None
+            else:
+                fab_profile.goals = body.goals
+            db.session.commit()
+            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, goals={1}'.format(
+                fab_profile.uuid, fab_profile.goals))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'goals' - {0}".format(exc))
+        # check for keywords
+        try:
+            if len(body.keywords) == 0:
+                update_profiles_projects_keywords(fab_profile=fab_profile, keywords=body.keywords)
+                logger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords=[]')
+            else:
+                update_profiles_projects_keywords(fab_profile=fab_profile, keywords=body.keywords)
+                logger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords={1}'.format(
+                    fab_project.uuid, [k.keyword for k in fab_profile.keywords]))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'keywords' - {0}".format(exc))
+        # check for notebooks
+        # TODO - define notebooks
+        # check for preferences
+        try:
+            for key in body.preferences.keys():
+                fab_pref = FabricPreferences.query.filter(
+                    FabricPreferences.key == key,
+                    FabricPreferences.profiles_projects_id == fab_profile.id,
+                    FabricPreferences.type == EnumPreferenceTypes.profiles_projects
+                ).one_or_none()
+                if not fab_pref:
+                    if key in PROJECTS_PROFILE_PREFERENCES.options:
+                        fab_pref = FabricPreferences()
+                        fab_pref.key = key
+                        fab_pref.value = body.preferences.get(key)
+                        fab_pref.type = EnumPreferenceTypes.profiles_projects
+                        fab_pref.profiles_projects_id = fab_profile.id
+                        db.session.add(fab_pref)
+                        db.session.commit()
+                        fab_profile.preferences.append(fab_pref)
+                        logger.info("CREATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                            fab_project.uuid, fab_pref.key, fab_pref.value))
+                    else:
+                        details = "Projects Preferences: '{0}' is not a valid preference type".format(key)
+                        logger.error(details)
+                        return cors_400(details=details)
+                else:
+                    fab_pref.value = body.preferences.get(key)
+                    db.session.commit()
+                    logger.info("UPDATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                        fab_project.uuid, fab_pref.key, fab_pref.value))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'preferences' - {0}".format(exc))
+        # check for project_status
+        try:
+            if len(body.project_status) == 0:
+                fab_profile.project_status = None
+            else:
+                fab_profile.project_status = body.project_status
+            db.session.commit()
+            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, project_status={1}'.format(
+                fab_profile.uuid, fab_profile.project_status))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'project_status' - {0}".format(exc))
+        # check for purpose
+        try:
+            if len(body.purpose) == 0:
+                fab_profile.purpose = None
+            else:
+                fab_profile.purpose = body.purpose
+            db.session.commit()
+            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, purpose={1}'.format(
+                fab_profile.uuid, fab_profile.purpose))
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'purpose' - {0}".format(exc))
+        # check for references
+        try:
+            ref_orig = references_to_array(fab_project.profile.references)
+            ref_new = references_to_array(body.references)
+            ref_add = array_difference(ref_new, ref_orig)
+            ref_remove = array_difference(ref_orig, ref_new)
+            # add new references
+            for ref in ref_add:
+                fab_ref = ProfilesReferences.query.filter(
+                    ProfilesReferences.description == ref.get('description'),
+                    ProfilesReferences.profiles_projects_id == fab_profile.id,
+                    ProfilesReferences.url == ref.get('url')
+                ).one_or_none()
+                if not fab_ref:
+                    if not is_valid_url(ref.get('url')):
+                        details = "References: '{0}' is not a valid URL type".format(ref.get('url'))
+                        logger.error(details)
+                        return cors_400(details=details)
+                    fab_ref = ProfilesReferences()
+                    fab_ref.description = ref.get('description')
+                    fab_ref.profiles_projects_id = fab_profile.id
+                    fab_ref.url = ref.get('url')
+                    db.session.add(fab_ref)
+                    db.session.commit()
+                    logger.info("CREATE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+                        fab_project.uuid, fab_ref.description, fab_ref.url))
+            # # remove old references
+            for ref in ref_remove:
+                fab_ref = ProfilesReferences.query.filter(
+                    ProfilesReferences.description == ref.get('description'),
+                    ProfilesReferences.profiles_projects_id == fab_profile.id,
+                    ProfilesReferences.url == ref.get('url')
+                ).one_or_none()
+                if fab_ref:
+                    logger.info("DELETE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+                        fab_project.uuid, fab_ref.description, fab_ref.url))
+                    db.session.delete(fab_ref)
+                    db.session.commit()
+        except Exception as exc:
+            logger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
+
+        # create response
+        patch_info = Status200OkNoContentData()
+        patch_info.details = "Profile for Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.data = [patch_info]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_profile_patch(): {0}'.format(exc)
+        logger.error(details)
+        return cors_500(details=details)
 
 
 @login_required

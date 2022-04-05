@@ -2,12 +2,14 @@ from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes, FabricProfilesProjects
+from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes, FabricProfilesProjects, \
+    ProfilesKeywords
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeopleProfessional
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
     create_profile_projects_preferences
+from swagger_server.response_code.response_utils import array_difference
 
 """
 FabricProfilesPeople model (* denotes required)
@@ -42,6 +44,9 @@ def external_pages_to_array_professional(n):
 
 def external_pages_to_array_social(n):
     return [{'url': x.url, 'type': x.url_type} for x in n if x.page_type == EnumExternalPageTypes.social]
+
+
+def references_to_array(n): return [{'description': x.description, 'url': x.url} for x in n]
 
 
 def create_profile_people(fab_person: FabricPeople = None) -> None:
@@ -158,3 +163,28 @@ def get_profile_projects(profile_projects_id: int = None, as_owner: bool = False
                                        fab_profile.references] if profile_prefs.get('show_references') else None
 
     return profile_projects
+
+
+def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects = None, keywords: [str] = None) -> None:
+    kw_orig = [k.keyword for k in fab_profile.keywords]
+    kw_new = keywords
+    kw_add = array_difference(kw_new, kw_orig)
+    kw_remove = array_difference(kw_orig, kw_new)
+    # add profiles projects keywords
+    for kw in kw_add:
+        fab_kw = ProfilesKeywords.query.filter(
+            ProfilesKeywords.keyword == kw, ProfilesKeywords.profiles_projects_id == fab_profile.id).one_or_none()
+        if not fab_kw:
+            fab_kw = ProfilesKeywords()
+            fab_kw.profiles_projects_id = fab_profile.id
+            fab_kw.keyword = kw
+            fab_profile.keywords.append(fab_kw)
+            db.session.commit()
+    # remove profiles projects keywords
+    for kw in kw_remove:
+        fab_kw = ProfilesKeywords.query.filter(
+            ProfilesKeywords.keyword == kw, ProfilesKeywords.profiles_projects_id == fab_profile.id).one_or_none()
+        if fab_kw:
+            fab_profile.keywords.remove(fab_kw)
+            db.session.delete(fab_kw)
+            db.session.commit()

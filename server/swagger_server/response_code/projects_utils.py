@@ -1,19 +1,23 @@
-import os
 import logging
+import os
+from uuid import uuid4
+
 from swagger_server.database.db import db
-from swagger_server.models.person import Person
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.people import FabricGroups, FabricRoles, FabricPeople
+from swagger_server.database.models.projects import FabricProjects, ProjectsTags
+from swagger_server.models.person import Person
+from swagger_server.models.project_membership import ProjectMembership
+from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.response_code.comanage_utils import create_comanage_role, delete_comanage_role, \
+    create_comanage_group
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
-from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.response_code.response_utils import array_difference
-from swagger_server.response_code.comanage_utils import create_comanage_role, delete_comanage_role
 
 logger = logging.getLogger(__name__)
 
 
-def create_fabric_project_from_api():
+def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPeople) -> FabricProjects:
     """
     * Denotes required fields
     - *active
@@ -45,7 +49,58 @@ def create_fabric_project_from_api():
         ]
     }
     """
-    pass
+    # create Project
+    fab_project = FabricProjects()
+    fab_project.active = False
+    fab_project.description = body.description
+    fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
+    fab_project.is_public = body.is_public
+    fab_project.name = body.name
+    fab_project.uuid = uuid4()
+    db.session.add(fab_project)
+    db.session.commit()
+    # create COU groups
+    fab_project.co_cou_id_pc = create_comanage_group(
+        name=str(fab_project.uuid) + '-pc', description=fab_project.name,
+        parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    fab_project.co_cou_id_pm = create_comanage_group(
+        name=str(fab_project.uuid) + '-pm', description=fab_project.name,
+        parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    fab_project.co_cou_id_po = create_comanage_group(
+        name=str(fab_project.uuid) + '-po', description=fab_project.name,
+        parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    db.session.commit()
+    # create preferences
+    create_projects_preferences(fab_project=fab_project)
+    # create profile
+    create_profile_projects(fab_project=fab_project)
+    # add project_creators
+    update_projects_personnel(fab_project=fab_project, personnel=[str(project_creator.uuid)], personnel_type='creators')
+    # check for project_members
+    try:
+        if len(body.project_members) == 0:
+            print('NO MEMBERS')
+    except Exception as exc:
+        body.project_members = []
+        logger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
+    # add project_members
+    update_projects_personnel(fab_project=fab_project, personnel=body.project_members, personnel_type='members')
+    # check for project_owners
+    try:
+        if len(body.project_owners) == 0:
+            print('NO OWNERS')
+            body.project_owners.append(str(project_creator.uuid))
+        else:
+            print('SOME OWNERS')
+            body.project_owners.append(str(project_creator.uuid))
+    except Exception as exc:
+        body.project_owners = [str(project_creator.uuid)]
+        logger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
+    # add project_owners
+    update_projects_personnel(fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
+    db.session.commit()
+
+    return fab_project
 
 
 def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
@@ -113,7 +168,8 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
                     fab_project.project_owners.append(po)
             db.session.commit()
         else:
-            logger.warning("NOT FOUND: create_fabric_project_from_uuid(): Unable to find cou with uuid: '{0}'".format(uuid))
+            logger.warning(
+                "NOT FOUND: create_fabric_project_from_uuid(): Unable to find cou with uuid: '{0}'".format(uuid))
 
     return fab_project
 
@@ -158,7 +214,9 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
     return personnel_data
 
 
-def update_projects_personnel(fab_project: FabricProjects = None, personnel: [FabricPeople] = None, personnel_type: str = None) -> None:
+def update_projects_personnel(fab_project: FabricProjects = None, personnel: [FabricPeople] = None,
+                              personnel_type: str = None) -> None:
+    personnel = list(set(personnel))
     if personnel_type == 'creators':
         p_orig = [str(p.uuid) for p in fab_project.project_creators]
         p_new = personnel
@@ -270,4 +328,3 @@ def update_projects_tags(fab_project: FabricProjects = None, tags: [str] = None)
             fab_project.tags.remove(fab_tag)
             db.session.delete(fab_tag)
             db.session.commit()
-

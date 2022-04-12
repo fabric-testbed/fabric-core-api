@@ -1,33 +1,33 @@
 import logging
 import os
-from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
+from swagger_server.database.models.profiles import FabricProfilesProjects
 from swagger_server.database.models.projects import FabricProjects
-from swagger_server.database.models.profiles import FabricProfilesProjects, ProfilesReferences, ProfilesKeywords
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
+from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsOne, ProjectsDetails  # noqa: E501
-from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_patch import ProjectsPatch
-from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
-from swagger_server.models.profile_projects import ProfileProjects
+from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.status200_ok_no_content import Status200OkNoContentData, Status200OkNoContent  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
-from swagger_server.response_code.comanage_utils import create_comanage_group, update_comanage_group
+from swagger_server.response_code.comanage_utils import update_comanage_group, \
+    delete_comanage_group
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.preferences_utils import create_projects_preferences
-from swagger_server.response_code.profiles_utils import get_profile_projects, create_profile_projects, \
-    update_profiles_projects_keywords, references_to_array
+from swagger_server.response_code.preferences_utils import delete_projects_preferences
+from swagger_server.response_code.profiles_utils import get_profile_projects, update_profiles_projects_keywords, \
+    delete_profile_projects, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import get_project_membership, get_projects_personnel, \
-    update_projects_personnel, update_projects_tags
-from swagger_server.response_code.response_utils import is_valid_url, array_difference
+    update_projects_personnel, update_projects_tags, create_fabric_project_from_api
+from swagger_server.response_code.response_utils import is_valid_url
 
 logger = logging.getLogger(__name__)
 
@@ -200,53 +200,10 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PROJECT_LEADS')))
         # create Project
-        project = FabricProjects()
-        project.active = False
-        project.description = body.description
-        project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
-        project.is_public = body.is_public
-        project.name = body.name
-        project.uuid = uuid4()
-        db.session.add(project)
+        fab_project = create_fabric_project_from_api(body=body, project_creator=api_user)
+        fab_project.active = True
         db.session.commit()
-        # create COU groups
-        project.co_cou_id_pc = create_comanage_group(
-            name=str(project.uuid) + '-pc', description=project.name, parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
-        project.co_cou_id_pm = create_comanage_group(
-            name=str(project.uuid) + '-pm', description=project.name, parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
-        project.co_cou_id_po = create_comanage_group(
-            name=str(project.uuid) + '-po', description=project.name, parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
-        db.session.commit()
-        # create preferences
-        create_projects_preferences(fab_project=project)
-        # create profile
-        create_profile_projects(fab_project=project)
-        # add project_creators
-        update_projects_personnel(fab_project=project, personnel=[str(api_user.uuid)], personnel_type='creators')
-        # check for project_members
-        try:
-            if len(body.project_members) == 0:
-                print('NO MEMBERS')
-        except Exception as exc:
-            body.project_members = []
-            logger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
-        # add project_members
-        update_projects_personnel(fab_project=project, personnel=body.project_members, personnel_type='members')
-        # check for project_owners
-        try:
-            if len(body.project_owners) == 0:
-                print('NO OWNERS')
-                body.project_owners.append(str(api_user.uuid))
-            else:
-                print('SOME OWNERS')
-                body.project_owners.append(str(api_user.uuid))
-        except Exception as exc:
-            body.project_owners = [str(api_user.uuid)]
-            logger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
-        # add project_owners
-        update_projects_personnel(fab_project=project, personnel=body.project_owners, personnel_type='owners')
-        # return ProjectDetails response
-        return projects_uuid_get(uuid=str(project.uuid))
+        return projects_uuid_get(uuid=str(fab_project.uuid))
     except Exception as exc:
         details = 'Oops! something went wrong with projects_post(): {0}'.format(exc)
         logger.error(details)
@@ -342,7 +299,55 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
 
     :rtype: Status200OkNoContent
     """
-    return 'do some magic!'
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check api_user active flag and verify creator role
+        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
+                uuid + '-po' not in [r.name for r in api_user.roles]:
+            return cors_403(
+                details="User: '{0}' is not the creator of the project".format(api_user.display_name))
+        # delete Tags
+        update_projects_tags(fab_project=fab_project, tags=[])
+        # delete Preferences
+        delete_projects_preferences(fab_project=fab_project)
+        # delete Profile
+        delete_profile_projects(fab_project=fab_project)
+        # remove project_creators
+        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='creators')
+        # remove project_members
+        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='members')
+        # remove project_owners
+        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='owners')
+        # remove Publications
+        # TODO: define Publications
+        # delete COUs -pc, -pm, -po
+        delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
+        delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
+        delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+        # delete FabricProject
+        details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        logger.info(details)
+        db.session.delete(fab_project)
+        db.session.commit()
+        # create response
+        patch_info = Status200OkNoContentData()
+        patch_info.details = details
+        response = Status200OkNoContent()
+        response.data = [patch_info]
+        response.size = len(response.data)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_delete(): {0}'.format(exc)
+        logger.error(details)
+        return cors_500(details=details)
 
 
 @login_required
@@ -388,6 +393,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.project_creators = get_projects_personnel(fab_project=fab_project, personnel_type='creators')
             project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
             project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
+            # TODO - define publications
             project_one.publications = []
             project_one.tags = [t.tag for t in fab_project.tags]
         # set remaining attributes for everyone else
@@ -442,16 +448,16 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check api_user active flag and verify creator or owner role
         if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
                 uuid + '-po' not in [r.name for r in api_user.roles]:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
-        # get project by uuid
-        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
-        if not fab_project:
-            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check for description
         try:
             if len(body.description) != 0:
@@ -552,16 +558,16 @@ def projects_uuid_personnel_patch(uuid: str = None,
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check api_user active flag and verify creator or owner role
         if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
                 uuid + '-po' not in [r.name for r in api_user.roles]:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
-        # get project by uuid
-        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
-        if not fab_project:
-            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check for project_members
         try:
             if len(body.project_members) == 0:
@@ -611,16 +617,16 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check api_user active flag and verify creator or owner role
         if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
                 uuid + '-po' not in [r.name for r in api_user.roles]:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
-        # get project by uuid
-        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
-        if not fab_project:
-            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         fab_profile = FabricProfilesProjects.query.filter_by(id=fab_project.profile.id).one_or_none()
         # check for award_information
         try:
@@ -712,42 +718,12 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             logger.info("NOP: projects_uuid_profile_patch(): 'purpose' - {0}".format(exc))
         # check for references
         try:
-            ref_orig = references_to_array(fab_project.profile.references)
-            ref_new = references_to_array(body.references)
-            ref_add = array_difference(ref_new, ref_orig)
-            ref_remove = array_difference(ref_orig, ref_new)
-            # add new references
-            for ref in ref_add:
-                fab_ref = ProfilesReferences.query.filter(
-                    ProfilesReferences.description == ref.get('description'),
-                    ProfilesReferences.profiles_projects_id == fab_profile.id,
-                    ProfilesReferences.url == ref.get('url')
-                ).one_or_none()
-                if not fab_ref:
-                    if not is_valid_url(ref.get('url')):
-                        details = "References: '{0}' is not a valid URL type".format(ref.get('url'))
-                        logger.error(details)
-                        return cors_400(details=details)
-                    fab_ref = ProfilesReferences()
-                    fab_ref.description = ref.get('description')
-                    fab_ref.profiles_projects_id = fab_profile.id
-                    fab_ref.url = ref.get('url')
-                    db.session.add(fab_ref)
-                    db.session.commit()
-                    logger.info("CREATE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
-                        fab_project.uuid, fab_ref.description, fab_ref.url))
-            # # remove old references
-            for ref in ref_remove:
-                fab_ref = ProfilesReferences.query.filter(
-                    ProfilesReferences.description == ref.get('description'),
-                    ProfilesReferences.profiles_projects_id == fab_profile.id,
-                    ProfilesReferences.url == ref.get('url')
-                ).one_or_none()
-                if fab_ref:
-                    logger.info("DELETE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
-                        fab_project.uuid, fab_ref.description, fab_ref.url))
-                    db.session.delete(fab_ref)
-                    db.session.commit()
+            for ref in body.references:
+                if not is_valid_url(ref.url):
+                    details = "References: '{0}' is not a valid URL type".format(ref.url)
+                    logger.error(details)
+                    return cors_400(details=details)
+            update_profiles_projects_references(fab_profile=fab_project.profile, references=body.references)
         except Exception as exc:
             logger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
 
@@ -783,16 +759,16 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check api_user active flag and verify creator or owner role
         if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
                 uuid + '-po' not in [r.name for r in api_user.roles]:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
-        # get project by uuid
-        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
-        if not fab_project:
-            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # check for tags
         try:
             if len(body.tags) == 0:

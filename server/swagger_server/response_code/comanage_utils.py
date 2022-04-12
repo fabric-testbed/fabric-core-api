@@ -20,7 +20,7 @@ api = ComanageApi(
 )
 
 
-def create_comanage_group(name: str = None, description: str = None, parent_cou_id: int = None) -> int:
+def create_comanage_group(name: str, description: str = None, parent_cou_id: int = None) -> int:
     try:
         if parent_cou_id:
             cou = api.cous_add(name=name, description=description, parent_id=parent_cou_id)
@@ -46,10 +46,14 @@ def create_comanage_group(name: str = None, description: str = None, parent_cou_
         return -1
 
 
-def delete_comanage_group(co_cou_id: int = None) -> bool:
+def delete_comanage_group(co_cou_id: int) -> bool:
     try:
-        co_cou = FabricRoles.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+        co_cou = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
         if co_cou:
+            # delete roles associated to the FABRIC group
+            roles = FabricRoles.query.filter_by(co_cou_id=co_cou_id)
+            for role in roles:
+                delete_comanage_role(co_person_role_id=role.co_person_role_id)
             # delete COU in COmanage
             is_deleted = api.cous_delete(cou_id=co_cou_id)
             # delete group in FABRIC
@@ -95,7 +99,7 @@ def update_comanage_group(co_cou_id: int, name: str = None, description: str = N
         return False
 
 
-def create_comanage_role(fab_person: FabricPeople = None, fab_group: FabricGroups = None) -> bool:
+def create_comanage_role(fab_person: FabricPeople, fab_group: FabricGroups) -> bool:
     status = 'Active'
     affiliation = 'member'
     try:
@@ -122,7 +126,7 @@ def create_comanage_role(fab_person: FabricPeople = None, fab_group: FabricGroup
         return False
 
 
-def delete_comanage_role(co_person_role_id: int = None) -> bool:
+def delete_comanage_role(co_person_role_id: int) -> bool:
     try:
         co_person_role = FabricRoles.query.filter_by(co_person_role_id=co_person_role_id).one_or_none()
         if co_person_role:
@@ -325,7 +329,8 @@ def update_organizations() -> None:
             if org_identity_id and organization and affiliation and not org.get('Deleted'):
                 fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
                 if not fab_org:
-                    logger.info("CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
+                    logger.info(
+                        "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
                     fab_org = Organizations()
                     fab_org.org_identity_id = org_identity_id
                     fab_org.organization = organization

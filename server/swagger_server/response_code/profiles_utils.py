@@ -1,15 +1,18 @@
+import logging
 from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes, FabricProfilesProjects, \
-    ProfilesKeywords
+    ProfilesKeywords, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeopleProfessional
-from swagger_server.models.profile_projects import ProfileProjects
+from swagger_server.models.profile_projects import ProfileProjects, ProfileProjectsReferences
 from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
-    create_profile_projects_preferences
+    create_profile_projects_preferences, delete_profile_projects_preferences
 from swagger_server.response_code.response_utils import array_difference
+
+logger = logging.getLogger(__name__)
 
 """
 FabricProfilesPeople model (* denotes required)
@@ -49,7 +52,7 @@ def external_pages_to_array_social(n):
 def references_to_array(n): return [{'description': x.description, 'url': x.url} for x in n]
 
 
-def create_profile_people(fab_person: FabricPeople = None) -> None:
+def create_profile_people(fab_person: FabricPeople) -> None:
     fab_profile = FabricProfilesPeople()
     fab_profile.uuid = uuid4()
     fab_profile.people = fab_person
@@ -58,7 +61,7 @@ def create_profile_people(fab_person: FabricPeople = None) -> None:
     create_profile_people_preferences(fab_profile=fab_profile)
 
 
-def get_profile_people(profile_people_id: int = None, as_self: bool = False) -> ProfilePeople:
+def get_profile_people(profile_people_id: int, as_self: bool = False) -> ProfilePeople:
     fab_profile = FabricProfilesPeople.query.filter_by(id=profile_people_id).one_or_none()
     profile_prefs = {p.key: p.value for p in fab_profile.preferences}
     profile_people = ProfilePeople()
@@ -92,7 +95,7 @@ def get_profile_people(profile_people_id: int = None, as_self: bool = False) -> 
     return profile_people
 
 
-def get_profile_other_identities(profile_people: FabricProfilesPeople = None) -> [ProfilePeopleOtherIdentities]:
+def get_profile_other_identities(profile_people: FabricProfilesPeople) -> [ProfilePeopleOtherIdentities]:
     """
     - identity - identity as string
     - profiles_id - foreignkey link to profiles table
@@ -108,8 +111,8 @@ def get_profile_other_identities(profile_people: FabricProfilesPeople = None) ->
     return data
 
 
-def get_profile_external_pages(profile_people: FabricProfilesPeople = None,
-                               page_type: EnumExternalPageTypes = None) -> [ProfilePeopleProfessional]:
+def get_profile_external_pages(profile_people: FabricProfilesPeople,
+                               page_type: EnumExternalPageTypes) -> [ProfilePeopleProfessional]:
     """
     - page_type - type of page as enum
     - profiles_people_id - foreignkey link to profiles_people table
@@ -127,7 +130,7 @@ def get_profile_external_pages(profile_people: FabricProfilesPeople = None,
     return data
 
 
-def create_profile_projects(fab_project: FabricProjects = None) -> None:
+def create_profile_projects(fab_project: FabricProjects) -> None:
     fab_profile = FabricProfilesProjects()
     fab_profile.uuid = uuid4()
     fab_profile.projects = fab_project
@@ -136,7 +139,21 @@ def create_profile_projects(fab_project: FabricProjects = None) -> None:
     create_profile_projects_preferences(fab_profile=fab_profile)
 
 
-def get_profile_projects(profile_projects_id: int = None, as_owner: bool = False) -> ProfileProjects:
+def delete_profile_projects(fab_project: FabricProjects) -> None:
+    fab_profile = fab_project.profile
+    # delete keywords
+    update_profiles_projects_keywords(fab_profile=fab_profile, keywords=[])
+    # remove notebooks
+    # TODO: define notebooks
+    # delete preferences
+    delete_profile_projects_preferences(fab_profile=fab_profile)
+    # delete references
+    update_profiles_projects_references(fab_profile=fab_profile, references=[])
+    db.session.delete(fab_profile)
+    db.session.commit()
+
+
+def get_profile_projects(profile_projects_id: int, as_owner: bool = False) -> ProfileProjects:
     fab_profile = FabricProfilesProjects.query.filter_by(id=profile_projects_id).one_or_none()
     profile_prefs = {p.key: p.value for p in fab_profile.preferences}
     profile_projects = ProfileProjects()
@@ -144,6 +161,7 @@ def get_profile_projects(profile_projects_id: int = None, as_owner: bool = False
         profile_projects.award_information = fab_profile.award_information
         profile_projects.goals = fab_profile.goals
         profile_projects.keywords = [k.keyword for k in fab_profile.keywords]
+        # TODO: define notebooks
         profile_projects.notebooks = []
         profile_projects.preferences = profile_prefs
         profile_projects.project_status = fab_profile.project_status
@@ -165,7 +183,7 @@ def get_profile_projects(profile_projects_id: int = None, as_owner: bool = False
     return profile_projects
 
 
-def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects = None, keywords: [str] = None) -> None:
+def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects, keywords: [str] = None) -> None:
     kw_orig = [k.keyword for k in fab_profile.keywords]
     kw_new = keywords
     kw_add = array_difference(kw_new, kw_orig)
@@ -187,4 +205,40 @@ def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects = None
         if fab_kw:
             fab_profile.keywords.remove(fab_kw)
             db.session.delete(fab_kw)
+            db.session.commit()
+
+
+def update_profiles_projects_references(
+        fab_profile: FabricProfilesProjects, references: [ProfileProjectsReferences] = None) -> None:
+    ref_orig = references_to_array(fab_profile.references)
+    ref_new = references_to_array(references)
+    ref_add = array_difference(ref_new, ref_orig)
+    ref_remove = array_difference(ref_orig, ref_new)
+    # add new references
+    for ref in ref_add:
+        fab_ref = ProfilesReferences.query.filter(
+            ProfilesReferences.description == ref.get('description'),
+            ProfilesReferences.profiles_projects_id == fab_profile.id,
+            ProfilesReferences.url == ref.get('url')
+        ).one_or_none()
+        if not fab_ref:
+            fab_ref = ProfilesReferences()
+            fab_ref.description = ref.get('description')
+            fab_ref.profiles_projects_id = fab_profile.id
+            fab_ref.url = ref.get('url')
+            db.session.add(fab_ref)
+            db.session.commit()
+            logger.info("CREATE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+                fab_profile.uuid, fab_ref.description, fab_ref.url))
+    # # remove old references
+    for ref in ref_remove:
+        fab_ref = ProfilesReferences.query.filter(
+            ProfilesReferences.description == ref.get('description'),
+            ProfilesReferences.profiles_projects_id == fab_profile.id,
+            ProfilesReferences.url == ref.get('url')
+        ).one_or_none()
+        if fab_ref:
+            logger.info("DELETE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+                fab_profile.uuid, fab_ref.description, fab_ref.url))
+            db.session.delete(fab_ref)
             db.session.commit()

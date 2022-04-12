@@ -1,5 +1,3 @@
-from typing import Union
-
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
@@ -24,7 +22,7 @@ FabricPreferences model (* denotes required)
 """
 
 
-def create_people_preferences(fab_person: FabricPeople = None) -> None:
+def create_people_preferences(fab_person: FabricPeople) -> None:
     pref_type = EnumPreferenceTypes.people
     for option in PEOPLE_PREFERENCES.options:
         pref = FabricPreferences()
@@ -38,7 +36,7 @@ def create_people_preferences(fab_person: FabricPeople = None) -> None:
     db.session.commit()
 
 
-def get_people_preferences(fab_person: FabricPeople = None) -> Preferences:
+def get_people_preferences(fab_person: FabricPeople) -> Preferences:
     """
     People Preferences - default = True
     - show_email - show/hide email in all interfaces
@@ -55,7 +53,7 @@ def get_people_preferences(fab_person: FabricPeople = None) -> Preferences:
     return preferences
 
 
-def create_profile_people_preferences(fab_profile: FabricProfilesPeople = None) -> None:
+def create_profile_people_preferences(fab_profile: FabricProfilesPeople) -> None:
     pref_type = EnumPreferenceTypes.profiles_people
     for option in PEOPLE_PROFILE_PREFERENCES.options:
         pref = FabricPreferences()
@@ -69,21 +67,29 @@ def create_profile_people_preferences(fab_profile: FabricProfilesPeople = None) 
     db.session.commit()
 
 
-def create_projects_preferences(fab_project: FabricProjects = None) -> None:
+def create_projects_preferences(fab_project: FabricProjects) -> None:
     pref_type = EnumPreferenceTypes.projects
     for option in PROJECTS_PREFERENCES.options:
         pref = FabricPreferences()
         pref.key = option
         pref.value = True
         pref.type = pref_type
-        pref.people_id = fab_project.id
+        pref.projects_id = fab_project.id
         db.session.add(pref)
         db.session.commit()
         fab_project.preferences.append(pref)
     db.session.commit()
 
 
-def create_profile_projects_preferences(fab_profile: FabricProfilesProjects = None) -> None:
+def delete_projects_preferences(fab_project: FabricProjects) -> None:
+    preferences = fab_project.preferences if fab_project.preferences else []
+    for pref in preferences:
+        fab_project.preferences.remove(pref)
+        db.session.delete(pref)
+    db.session.commit()
+
+
+def create_profile_projects_preferences(fab_profile: FabricProfilesProjects) -> None:
     pref_type = EnumPreferenceTypes.profiles_projects
     for option in PROJECTS_PROFILE_PREFERENCES.options:
         pref = FabricPreferences()
@@ -97,15 +103,15 @@ def create_profile_projects_preferences(fab_profile: FabricProfilesProjects = No
     db.session.commit()
 
 
-def get_fabric_preferences(fab_object: Union[FabricPeople, FabricProjects] = None) -> Preferences:
-    preferences = Preferences()
-    for p in fab_object.preferences:
-        preferences.__setattr__(p.key, p.value)
+def delete_profile_projects_preferences(fab_profile: FabricProfilesProjects) -> None:
+    preferences = fab_profile.preferences if fab_profile.preferences else []
+    for pref in preferences:
+        fab_profile.preferences.remove(pref)
+        db.session.delete(pref)
+    db.session.commit()
 
-    return preferences
 
-
-def get_projects_preferences(fab_project: FabricProjects = None) -> Preferences:
+def get_projects_preferences(fab_project: FabricProjects) -> Preferences:
     """
     Projects Preferences - default = True
     - show_profile - show/hide profile in all interfaces

@@ -10,8 +10,6 @@ info:
     url: https://opensource.org/licenses/mit-license.html
   version: 1.0.0
 servers:
-- url: http://127.0.0.1:5000
-  description: local development server (flask)
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
 - url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.0.0
@@ -484,7 +482,7 @@ paths:
       - name: person_uuid
         in: query
         description: person uuid
-        required: false
+        required: true
         style: form
         explode: true
         schema:
@@ -1355,7 +1353,7 @@ paths:
       - name: person_uuid
         in: query
         description: person uuid
-        required: false
+        required: true
         style: form
         explode: true
         schema:
@@ -1500,7 +1498,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
+                $ref: '#/components/schemas/sshkeys'
         "401":
           description: Unauthorized
           content:
@@ -2477,8 +2475,14 @@ components:
       type: object
       properties:
         comment:
+          maxLength: 100
+          minLength: 5
+          pattern: "^[\\w\\-.@()]+$"
           type: string
         description:
+          maxLength: 255
+          minLength: 5
+          pattern: "^[\\w\\s\\-.@(')/]+$"
           type: string
         keytype:
           type: string
@@ -2870,7 +2874,7 @@ components:
       name: person_uuid
       in: query
       description: person uuid
-      required: false
+      required: true
       style: form
       explode: true
       schema:

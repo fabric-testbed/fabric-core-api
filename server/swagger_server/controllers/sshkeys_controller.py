@@ -34,7 +34,7 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
     return rc.bastionkeys_get(secret, since_date)
 
 
-def sshkeys_get(person_uuid=None):  # noqa: E501
+def sshkeys_get(person_uuid):  # noqa: E501
     """Get active SSH Keys
 
     Get active SSH Keys # noqa: E501
@@ -98,6 +98,6 @@ def sshkeys_uuid_get(uuid):  # noqa: E501
     :param uuid: universally unique identifier
     :type uuid: str
 
-    :rtype: Status200OkNoContent
+    :rtype: Sshkeys
     """
     return rc.sshkeys_uuid_get(uuid)

@@ -19,23 +19,23 @@ from swagger_server import util
 from swagger_server.response_code import projects_controller as rc
 
 
-def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noqa: E501
+def projects_get(person_uuid, search=None, offset=None, limit=None):  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
 
+    :param person_uuid: person uuid
+    :type person_uuid: str
     :param search: search term applied
     :type search: str
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
     :type limit: int
-    :param person_uuid: person uuid
-    :type person_uuid: str
 
     :rtype: Projects
     """
-    return rc.projects_get(search, offset, limit, person_uuid)
+    return rc.projects_get(person_uuid, search, offset, limit)
 
 
 def projects_post(body=None):  # noqa: E501

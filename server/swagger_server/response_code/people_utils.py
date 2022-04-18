@@ -53,8 +53,7 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     fab_person = FabricPeople()
     try:
         if claims.get('sub'):
-            fab_person.bastion_login = FABRICSSHKey.bastion_login(
-                oidc_claim_sub=claims.get('sub'), email=claims.get('email'))
+            fab_person.bastion_login = fab_person.bastion_login()
             fab_person.display_name = claims.get('name')
             fab_person.oidc_claim_email = claims.get('email')
             fab_person.oidc_claim_family_name = claims.get('family_name')
@@ -171,8 +170,7 @@ def update_fabric_person(fab_person: FabricPeople = None):
         # check claims and bastion_login
         claims = vouch_get_custom_claims()
         if claims.get('sub'):
-            fab_person.bastion_login = FABRICSSHKey.bastion_login(
-                oidc_claim_sub=claims.get('sub'), email=claims.get('email'))
+            fab_person.bastion_login = fab_person.bastion_login()
             fab_person.oidc_claim_email = claims.get('email')
             fab_person.oidc_claim_family_name = claims.get('family_name')
             fab_person.oidc_claim_given_name = claims.get('given_name')

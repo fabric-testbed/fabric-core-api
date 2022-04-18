@@ -21,6 +21,7 @@ from swagger_server.response_code.preferences_utils import get_people_preference
 from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
     external_pages_to_array_professional, external_pages_to_array, external_pages_to_array_social
 from swagger_server.response_code.response_utils import is_valid_url, array_difference
+from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         response.offset = offset
         response.total = data_page.total
         response.size = len(response.data)
-
+        response.type = 'people'
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with people_get(): {0}'.format(exc)
@@ -264,7 +265,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         people_one.uuid = fab_person.uuid
         # set remaining attributes for uuid == self
         if as_self and api_user.uuid == uuid:
-            people_one.bastion_login = fab_person.bastion_login
+            people_one.bastion_login = fab_person.bastion_login()
             people_one.cilogon_email = fab_person.oidc_claim_email
             people_one.cilogon_family_name = fab_person.oidc_claim_family_name
             people_one.cilogon_given_name = fab_person.oidc_claim_given_name
@@ -278,7 +279,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
             people_one.publications = []
             people_one.roles = get_people_roles(people_roles=fab_person.roles)
-            people_one.sshkeys = []
+            people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person)
         # set remaining attributes for uuid != self based on user preference
         else:
             people_prefs = {p.key: p.value for p in fab_person.preferences}
@@ -289,7 +290,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.publications = [] if people_prefs.get('show_publications') else None
             people_one.roles = get_people_roles(people_roles=fab_person.roles) if people_prefs.get(
                 'show_roles') else None
-            people_one.sshkeys = [] if people_prefs.get('show_sshkeys') else None
+            people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person) if people_prefs.get('show_sshkeys') else None
 
         # set people_details response
         response = PeopleDetails()

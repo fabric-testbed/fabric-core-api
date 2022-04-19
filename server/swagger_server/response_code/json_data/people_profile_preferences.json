@@ -16,9 +16,8 @@
     "show_cv": "show/hide cv in all interfaces (default: True)",
     "show_job": "show/hide job in all interfaces (default: True)",
     "show_other_identities": "show/hide other_identities in all interfaces (default: True)",
-    "show_professional": "show/hide professional in all interfaces (default: True)",
+    "show_personal_pages": "show/hide personal pages in all interfaces (default: True)",
     "show_pronouns": "show/hide pronouns in all interfaces (default: True)",
-    "show_social": "show/hide social in all interfaces (default: True)",
     "show_website": "show/hide website in all interfaces (default: True)"
   }
 }

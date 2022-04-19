@@ -1,0 +1,28 @@
+{
+  "name": "people.profile.personalpage.types",
+  "description": "Personal Page objects are user defined page or profile entries that reference other platforms",
+  "api_endpoints": [
+    {
+      "endpoint": "/people/profile/personalpage-types",
+      "description": "GET: List of People Profile Personal Page Type options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/people/{uuid}/profile",
+      "description": "PATCH: overwrite People Profile Personal Page Entry when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "bitbucket": "Bitbucket Personal Page - https://bitbucket.org",
+    "facebook": "Facebook Personal Page - https://www.facebook.com",
+    "github": "GitHub Personal Page - https://github.com",
+    "gitlab": "GitLab Personal Page - https://gitlab.com",
+    "google": "Google Personal Page - https://www.google.com",
+    "instagram": "Instagram Personal Page - https://www.instagram.com",
+    "linkedin": "LinkedIn Personal Page - https://www.linkedin.com",
+    "messenger": "Messenger Personal Page - https://www.facebook.com/messenger",
+    "other": "Other Personal Page - generic",
+    "pinterest": "Pinterest Personal Page - https://www.pinterest.com",
+    "twitter": "Twitter Personal Page - https://twitter.com",
+    "youtube": "YouTube Personal Page - https://www.youtube.com"
+  }
+}

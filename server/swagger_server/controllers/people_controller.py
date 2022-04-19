@@ -59,6 +59,19 @@ def people_profile_otheridentity_types_get(search=None):  # noqa: E501
     return rc.people_profile_otheridentity_types_get(search)
 
 
+def people_profile_personalpage_types_get(search=None):  # noqa: E501
+    """List of People Profile Personal Page Type options
+
+    List of People Profile Personal Page Type options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    return rc.people_profile_personalpage_types_get(search)
+
+
 def people_profile_preferences_get(search=None):  # noqa: E501
     """List of People Profile Preference options
 
@@ -70,32 +83,6 @@ def people_profile_preferences_get(search=None):  # noqa: E501
     :rtype: ApiOptions
     """
     return rc.people_profile_preferences_get(search)
-
-
-def people_profile_professionalpage_types_get(search=None):  # noqa: E501
-    """List of People Profile Professional Page Type options
-
-    List of People Profile Professional Page Type options # noqa: E501
-
-    :param search: search term applied
-    :type search: str
-
-    :rtype: ApiOptions
-    """
-    return rc.people_profile_professionalpage_types_get(search)
-
-
-def people_profile_socialpage_types_get(search=None):  # noqa: E501
-    """List of People Profile Social Page Type options
-
-    List of People Profile Social Page Type options # noqa: E501
-
-    :param search: search term applied
-    :type search: str
-
-    :rtype: ApiOptions
-    """
-    return rc.people_profile_socialpage_types_get(search)
 
 
 def people_uuid_get(uuid, as_self=None):  # noqa: E501

@@ -3,10 +3,10 @@ from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.profiles import FabricProfilesPeople, EnumExternalPageTypes, FabricProfilesProjects, \
+from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, \
     ProfilesKeywords, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects
-from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeopleProfessional
+from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeoplePersonalPages
 from swagger_server.models.profile_projects import ProfileProjects, ProfileProjectsReferences
 from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
     create_profile_projects_preferences, delete_profile_projects_preferences
@@ -19,14 +19,12 @@ FabricProfilesPeople model (* denotes required)
 - bio - short bio
 - created - timestamp created (TimestampMixin)
 - cv - Link to a CV or resume. (Later it might be nice if this could be stored on the Portal)
-- external_pages - external links for social and professional pages
-    - professional - Links to professional pages on resources such as LinkedIn, Twitter, Youtube, Github
-    - social - Links to personal pages on resources such as LinkedIn, Twitter, Youtube, Github
 - id - primary key (BaseMixin)
 - identities - IDs from other identity services such as ORCID, Google Scholar
 - job - Role/job/position
 - modified - timestamp modified (TimestampMixin)
 - * people_id - foreignkey link to people table
+- personal_pages - external links for social and professional pages
 - preferences - array of preference booleans
 - pronouns - personal pronouns used
 - uuid - unique universal identifier
@@ -37,16 +35,7 @@ FabricProfilesPeople model (* denotes required)
 def other_identities_to_array(n): return [{'identity': x.identity, 'type': x.type} for x in n]
 
 
-def external_pages_to_array(n):
-    return [{'url': x.url, 'type': x.type} for x in n]
-
-
-def external_pages_to_array_professional(n):
-    return [{'url': x.url, 'type': x.url_type} for x in n if x.page_type == EnumExternalPageTypes.professional]
-
-
-def external_pages_to_array_social(n):
-    return [{'url': x.url, 'type': x.url_type} for x in n if x.page_type == EnumExternalPageTypes.social]
+def personal_pages_to_array(n): return [{'url': x.url, 'type': x.type} for x in n]
 
 
 def references_to_array(n): return [{'description': x.description, 'url': x.url} for x in n]
@@ -70,11 +59,8 @@ def get_profile_people(profile_people_id: int, as_self: bool = False) -> Profile
         profile_people.cv = fab_profile.cv
         profile_people.job = fab_profile.job
         profile_people.other_identities = get_profile_other_identities(profile_people=fab_profile)
-        profile_people.professional = get_profile_external_pages(
-            profile_people=fab_profile, page_type=EnumExternalPageTypes.professional)
+        profile_people.personal_pages = get_profile_personal_pages(profile_people=fab_profile)
         profile_people.pronouns = fab_profile.pronouns
-        profile_people.social = get_profile_external_pages(
-            profile_people=fab_profile, page_type=EnumExternalPageTypes.social)
         profile_people.website = fab_profile.website
         profile_people.preferences = profile_prefs
     else:
@@ -83,13 +69,9 @@ def get_profile_people(profile_people_id: int, as_self: bool = False) -> Profile
         profile_people.job = fab_profile.job if profile_prefs.get('show_job') else None
         profile_people.other_identities = get_profile_other_identities(
             profile_people=fab_profile) if profile_prefs.get('show_other_identities') else None
-        profile_people.professional = get_profile_external_pages(
-            profile_people=fab_profile,
-            page_type=EnumExternalPageTypes.professional) if profile_prefs.get('show_professional') else None
+        profile_people.personal_pages = get_profile_personal_pages(
+            profile_people=fab_profile) if profile_prefs.get('show_personal_pages') else None
         profile_people.pronouns = fab_profile.pronouns if profile_prefs.get('show_pronouns') else None
-        profile_people.social = get_profile_external_pages(
-            profile_people=fab_profile,
-            page_type=EnumExternalPageTypes.social) if profile_prefs.get('show_social') else None
         profile_people.website = fab_profile.website if profile_prefs.get('show_website') else None
 
     return profile_people
@@ -111,8 +93,7 @@ def get_profile_other_identities(profile_people: FabricProfilesPeople) -> [Profi
     return data
 
 
-def get_profile_external_pages(profile_people: FabricProfilesPeople,
-                               page_type: EnumExternalPageTypes) -> [ProfilePeopleProfessional]:
+def get_profile_personal_pages(profile_people: FabricProfilesPeople) -> [ProfilePeoplePersonalPages]:
     """
     - page_type - type of page as enum
     - profiles_people_id - foreignkey link to profiles_people table
@@ -120,12 +101,11 @@ def get_profile_external_pages(profile_people: FabricProfilesPeople,
     - url_type - type of url
     """
     data = []
-    for ep in profile_people.external_pages:
-        ppep = ProfilePeopleProfessional()
-        ppep.url = ep.url
-        ppep.type = ep.url_type
-        if ep.page_type == page_type:
-            data.append(ppep)
+    for p in profile_people.personal_pages:
+        pp = ProfilePeoplePersonalPages()
+        pp.url = p.url
+        pp.type = p.type
+        data.append(pp)
 
     return data
 

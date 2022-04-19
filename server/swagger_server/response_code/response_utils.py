@@ -27,14 +27,32 @@ class CoreApiOptions(ABC):
             self.key_value_pairs = []
             for key in file_dict['key_value_pairs'].keys():
                 self.key_value_pairs.append({key: file_dict['key_value_pairs'][key]})
-            self.options = sorted(list(file_dict['key_value_pairs'].keys()))
+            self.options = sorted(list(file_dict['key_value_pairs'].keys()), key=lambda s: s.casefold())
+
+    def __add__(self, other):
+        combined = CoreApiOptions()
+        # use name, description and endpoints of self object
+        combined.name = self.name
+        combined.description = self.description
+        combined.api_endpoints = self.api_endpoints
+        # combine distinct elements of key_value_pairs for self and other
+        combined.key_value_pairs = self.key_value_pairs
+        combined.options = self.options
+        for pair in other.key_value_pairs:
+            kv = pair.popitem()
+            kvpair = {str(kv[0]): str(kv[1])}
+            if kvpair not in combined.key_value_pairs:
+                combined.key_value_pairs.append(kvpair)
+                combined.options.append(str(kv[0]))
+        combined.options = sorted(combined.options, key=lambda s: s.casefold())
+        return combined
 
     def search(self, pattern: str = None) -> [str]:
         if pattern:
             found = [item for item in self.options if pattern.casefold() in item.casefold()]
         else:
             found = self.options
-        return sorted(found)
+        return sorted(found, key=lambda s: s.casefold())
 
 
 def array_difference(a, b): return [x for x in a if x not in b]

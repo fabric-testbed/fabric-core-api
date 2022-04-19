@@ -17,7 +17,7 @@ from swagger_server.database.models.people import EmailAddresses, Organizations,
     FabricRoles
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, \
-    ProfilesExternalPages, ProfilesKeywords, ProfilesOtherIdentities, ProfilesReferences
+    ProfilesPersonalPages, ProfilesKeywords, ProfilesOtherIdentities, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 """
 -------------------------------------------------------------------------------

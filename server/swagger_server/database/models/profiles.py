@@ -4,12 +4,6 @@ from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
 
-# Enum for external pages type
-class EnumExternalPageTypes(enum.Enum):
-    professional = 1
-    social = 2
-
-
 class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     """
     - bio - short bio
@@ -34,10 +28,10 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
 
     bio = db.Column(db.String(), nullable=True)
     cv = db.Column(db.String(), nullable=True)
-    external_pages = db.relationship('ProfilesExternalPages', backref='profiles_people', lazy=True)
     job = db.Column(db.String(), nullable=True)
     other_identities = db.relationship('ProfilesOtherIdentities', backref='profiles_people', lazy=True)
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
+    personal_pages = db.relationship('ProfilesPersonalPages', backref='profiles_people', lazy=True)
     preferences = db.relationship('FabricPreferences', backref='profiles_people', lazy=True)
     pronouns = db.Column(db.String(), nullable=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
@@ -77,21 +71,19 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
 
-class ProfilesExternalPages(BaseMixin, db.Model):
+class ProfilesPersonalPages(BaseMixin, db.Model):
     """
     - id - primary key (BaseMixin)
-    - page_type - type of page as enum
     - profiles_people_id - foreignkey link to profiles_people table
     - url - url as string
-    - url_type - type of url
+    - type - type of url
     """
     query: db.Query
-    __tablename__ = 'profiles_external_pages'
+    __tablename__ = 'profiles_personal_pages'
 
-    page_type = db.Column(db.Enum(EnumExternalPageTypes), default=EnumExternalPageTypes.professional, nullable=False)
     profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     url = db.Column(db.String(), nullable=False)
-    url_type = db.Column(db.String(), nullable=False)
+    type = db.Column(db.String(), nullable=False)
 
 
 class ProfilesKeywords(BaseMixin, db.Model):

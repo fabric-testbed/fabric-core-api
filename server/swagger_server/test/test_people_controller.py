@@ -63,6 +63,19 @@ class TestPeopleController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_people_profile_personalpage_types_get(self):
+        """Test case for people_profile_personalpage_types_get
+
+        List of People Profile Personal Page Type options
+        """
+        query_string = [('search', 'search_example')]
+        response = self.client.open(
+            '/people/profile/personalpage-types',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_people_profile_preferences_get(self):
         """Test case for people_profile_preferences_get
 
@@ -71,32 +84,6 @@ class TestPeopleController(BaseTestCase):
         query_string = [('search', 'search_example')]
         response = self.client.open(
             '/people/profile/preferences',
-            method='GET',
-            query_string=query_string)
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_people_profile_professionalpage_types_get(self):
-        """Test case for people_profile_professionalpage_types_get
-
-        List of People Profile Professional Page Type options
-        """
-        query_string = [('search', 'search_example')]
-        response = self.client.open(
-            '/people/profile/professionalpage-types',
-            method='GET',
-            query_string=query_string)
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_people_profile_socialpage_types_get(self):
-        """Test case for people_profile_socialpage_types_get
-
-        List of People Profile Social Page Type options
-        """
-        query_string = [('search', 'search_example')]
-        response = self.client.open(
-            '/people/profile/socialpage-types',
             method='GET',
             query_string=query_string)
         self.assert200(response,

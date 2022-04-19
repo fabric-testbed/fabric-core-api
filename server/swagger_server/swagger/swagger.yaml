@@ -376,44 +376,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.people_controller
-  /people/profile/professionalpage-types:
+  /people/profile/personalpage-types:
     get:
       tags:
       - people
-      summary: List of People Profile Professional Page Type options
-      description: List of People Profile Professional Page Type options
-      operationId: people_profile_professionalpage_types_get
-      parameters:
-      - name: search
-        in: query
-        description: search term applied
-        required: false
-        style: form
-        explode: true
-        schema:
-          minLength: 3
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/api_options'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.people_controller
-  /people/profile/socialpage-types:
-    get:
-      tags:
-      - people
-      summary: List of People Profile Social Page Type options
-      description: List of People Profile Social Page Type options
-      operationId: people_profile_socialpage_types_get
+      summary: List of People Profile Personal Page Type options
+      description: List of People Profile Personal Page Type options
+      operationId: people_profile_personalpage_types_get
       parameters:
       - name: search
         in: query
@@ -482,7 +451,7 @@ paths:
       - name: person_uuid
         in: query
         description: person uuid
-        required: true
+        required: false
         style: form
         explode: true
         schema:
@@ -2193,16 +2162,12 @@ components:
             $ref: '#/components/schemas/profile_people_other_identities'
         preferences:
           $ref: '#/components/schemas/preferences'
-        professional:
+        personal_pages:
           type: array
           items:
-            $ref: '#/components/schemas/profile_people_professional'
+            $ref: '#/components/schemas/profile_people_personal_pages'
         pronouns:
           type: string
-        social:
-          type: array
-          items:
-            $ref: '#/components/schemas/profile_people_professional'
         website:
           type: string
     profile_projects:
@@ -2651,7 +2616,7 @@ components:
         type:
           type: string
       example: null
-    profile_people_professional:
+    profile_people_personal_pages:
       type: object
       properties:
         url:
@@ -2874,7 +2839,7 @@ components:
       name: person_uuid
       in: query
       description: person uuid
-      required: true
+      required: false
       style: form
       explode: true
       schema:

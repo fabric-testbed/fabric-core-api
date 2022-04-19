@@ -5,7 +5,7 @@ from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
 from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
 from swagger_server.database.models.profiles import FabricProfilesPeople, ProfilesOtherIdentities, \
-    ProfilesExternalPages, EnumExternalPageTypes
+    ProfilesPersonalPages
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People, Person, Status200OkPaginatedLinks  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails, PeopleOne  # noqa: E501
@@ -13,13 +13,13 @@ from swagger_server.models.people_patch import PeoplePatch
 from swagger_server.models.profile_people import ProfilePeople
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentData  # noqa: E501
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
-    PEOPLE_PROFILE_PREFERENCES, PEOPLE_PROFILE_PROFESSIONAL_TYPES, PEOPLE_PROFILE_SOCIAL_TYPES
+    PEOPLE_PROFILE_PREFERENCES, PEOPLE_PROFILE_PERSONALPAGE_TYPES
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, get_people_roles
 from swagger_server.response_code.preferences_utils import get_people_preferences
 from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
-    external_pages_to_array_professional, external_pages_to_array, external_pages_to_array_social
+    personal_pages_to_array
 from swagger_server.response_code.response_utils import is_valid_url, array_difference
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
 
@@ -179,10 +179,10 @@ def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
-def people_profile_professionalpage_types_get(search=None) -> ApiOptions:  # noqa: E501
-    """List of People Profile Professional Page Type options
+def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E501
+    """List of People Profile Personal Page Type options
 
-    List of People Profile Professional Page Type options # noqa: E501
+    List of People Profile Personal Page Type options # noqa: E501
 
     :param search: search term applied
     :type search: str
@@ -191,45 +191,19 @@ def people_profile_professionalpage_types_get(search=None) -> ApiOptions:  # noq
     """
     try:
         if search:
-            data = [tag for tag in PEOPLE_PROFILE_PROFESSIONAL_TYPES.search(search) if
+            data = [tag for tag in PEOPLE_PROFILE_PERSONALPAGE_TYPES.search(search) if
                     search.casefold() in tag.casefold()]
         else:
-            data = PEOPLE_PROFILE_PROFESSIONAL_TYPES.options
+            data = PEOPLE_PROFILE_PERSONALPAGE_TYPES.options
         response = ApiOptions()
         response.data = data
         response.size = len(data)
         response.status = 200
-        response.type = PEOPLE_PROFILE_PROFESSIONAL_TYPES.name
+        response.type = PEOPLE_PROFILE_PERSONALPAGE_TYPES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("people_profile_professionalpage_types_get(search=None): {0}".format(exc))
-        return cors_500(details='Ooops! something has gone wrong with People.Profile.Professional.Types.Get()')
-
-
-def people_profile_socialpage_types_get(search=None) -> ApiOptions:  # noqa: E501
-    """List of People Profile Social Page Type options
-
-    List of People Profile Social Page Type options # noqa: E501
-
-    :param search: search term applied
-    :type search: str
-
-    :rtype: ApiOptions
-    """
-    try:
-        if search:
-            data = [tag for tag in PEOPLE_PROFILE_SOCIAL_TYPES.search(search) if search.casefold() in tag.casefold()]
-        else:
-            data = PEOPLE_PROFILE_SOCIAL_TYPES.options
-        response = ApiOptions()
-        response.data = data
-        response.size = len(data)
-        response.status = 200
-        response.type = PEOPLE_PROFILE_SOCIAL_TYPES.name
-        return cors_200(response_body=response)
-    except Exception as exc:
-        logger.error("people_profile_socialpage_types_get(search=None): {0}".format(exc))
-        return cors_500(details='Ooops! something has gone wrong with People.Profile.Social.Types.Get()')
+        logger.error("people_profile_personalpage_types_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.PersonalPage.Types.Get()')
 
 
 @login_required
@@ -290,7 +264,8 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.publications = [] if people_prefs.get('show_publications') else None
             people_one.roles = get_people_roles(people_roles=fab_person.roles) if people_prefs.get(
                 'show_roles') else None
-            people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person) if people_prefs.get('show_sshkeys') else None
+            people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person) if people_prefs.get(
+                'show_sshkeys') else None
 
         # set people_details response
         response = PeopleDetails()
@@ -537,55 +512,50 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                         fab_person.uuid, fab_pref.key, fab_pref.value))
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'preferences' - {0}".format(exc))
-        # check for professional pages
+        # check for personal pages
         try:
-            pp_orig = external_pages_to_array_professional(fab_person.profile.external_pages)
-            pp_new = external_pages_to_array(body.professional)
+            pp_orig = personal_pages_to_array(fab_person.profile.personal_pages)
+            pp_new = personal_pages_to_array(body.personal_pages)
             pp_add = array_difference(pp_new, pp_orig)
             pp_remove = array_difference(pp_orig, pp_new)
-            print(pp_add)
-            print(pp_remove)
-            # add new professional pages
+            # add new personal pages
             for pp in pp_add:
-                fab_pp = ProfilesExternalPages.query.filter(
-                    ProfilesExternalPages.page_type == EnumExternalPageTypes.professional,
-                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
-                    ProfilesExternalPages.url == pp.get('url'),
-                    ProfilesExternalPages.url_type == pp.get('type')
+                fab_pp = ProfilesPersonalPages.query.filter(
+                    ProfilesPersonalPages.profiles_people_id == fab_profile.id,
+                    ProfilesPersonalPages.url == pp.get('url'),
+                    ProfilesPersonalPages.type == pp.get('type')
                 ).one_or_none()
                 if not fab_pp:
-                    if pp.get('type') not in PEOPLE_PROFILE_PROFESSIONAL_TYPES.options:
-                        details = "ProfessionalPages: '{0}' is not a valid page type".format(pp.get('type'))
+                    if pp.get('type') not in PEOPLE_PROFILE_PERSONALPAGE_TYPES.options:
+                        details = "PersonalPages: '{0}' is not a valid page type".format(pp.get('type'))
                         logger.error(details)
                         return cors_400(details=details)
                     if not is_valid_url(pp.get('url')):
-                        details = "ProfessionalPages: '{0}' is not a valid URL".format(pp.get('url'))
+                        details = "PersonalPages: '{0}' is not a valid URL".format(pp.get('url'))
                         logger.error(details)
                         return cors_400(details=details)
-                    fab_pp = ProfilesExternalPages()
-                    fab_pp.page_type = EnumExternalPageTypes.professional
+                    fab_pp = ProfilesPersonalPages()
                     fab_pp.profiles_people_id = fab_profile.id
                     fab_pp.url = pp.get('url')
-                    fab_pp.url_type = pp.get('type')
+                    fab_pp.type = pp.get('type')
                     db.session.add(fab_pp)
                     db.session.commit()
-                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'professional_pages.{1}' = '{2}'".format(
-                        fab_person.uuid, fab_pp.url_type, fab_pp.url))
-            # remove old professional pages
+                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_pp.type, fab_pp.url))
+            # remove old personal pages
             for pp in pp_remove:
-                fab_pp = ProfilesExternalPages.query.filter(
-                    ProfilesExternalPages.page_type == EnumExternalPageTypes.professional,
-                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
-                    ProfilesExternalPages.url == pp.get('url'),
-                    ProfilesExternalPages.url_type == pp.get('type')
+                fab_pp = ProfilesPersonalPages.query.filter(
+                    ProfilesPersonalPages.profiles_people_id == fab_profile.id,
+                    ProfilesPersonalPages.url == pp.get('url'),
+                    ProfilesPersonalPages.type == pp.get('type')
                 ).one_or_none()
                 if fab_pp:
-                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'professional_pages.{1}' = '{2}'".format(
-                        fab_person.uuid, fab_pp.url_type, fab_pp.url))
+                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
+                        fab_person.uuid, fab_pp.type, fab_pp.url))
                     db.session.delete(fab_pp)
                     db.session.commit()
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'professional_pages' - {0}".format(exc))
+            logger.info("NOP: people_uuid_profile_patch(): 'personal_pages' - {0}".format(exc))
         # check for pronouns
         try:
             if len(body.pronouns) == 0:
@@ -597,55 +567,6 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 'UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.pronouns))
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'pronouns' - {0}".format(exc))
-        # check for social
-        try:
-            sp_orig = external_pages_to_array_social(fab_person.profile.external_pages)
-            sp_new = external_pages_to_array(body.social)
-            sp_add = array_difference(sp_new, sp_orig)
-            sp_remove = array_difference(sp_orig, sp_new)
-            print(sp_add)
-            print(sp_remove)
-            # add new social pages
-            for sp in sp_add:
-                fab_sp = ProfilesExternalPages.query.filter(
-                    ProfilesExternalPages.page_type == EnumExternalPageTypes.social,
-                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
-                    ProfilesExternalPages.url == sp.get('url'),
-                    ProfilesExternalPages.url_type == sp.get('type')
-                ).one_or_none()
-                if not fab_sp:
-                    if sp.get('type') not in PEOPLE_PROFILE_SOCIAL_TYPES.options:
-                        details = "ProfessionalPages: '{0}' is not a valid page type".format(sp.get('type'))
-                        logger.error(details)
-                        return cors_400(details=details)
-                    if not is_valid_url(sp.get('url')):
-                        details = "ProfessionalPages: '{0}' is not a valid URL".format(sp.get('url'))
-                        logger.error(details)
-                        return cors_400(details=details)
-                    fab_sp = ProfilesExternalPages()
-                    fab_sp.page_type = EnumExternalPageTypes.social
-                    fab_sp.profiles_people_id = fab_profile.id
-                    fab_sp.url = sp.get('url')
-                    fab_sp.url_type = sp.get('type')
-                    db.session.add(fab_sp)
-                    db.session.commit()
-                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'social_pages.{1}' = '{2}'".format(
-                        fab_person.uuid, fab_sp.url_type, fab_sp.url))
-            # remove old social pages
-            for sp in sp_remove:
-                fab_sp = ProfilesExternalPages.query.filter(
-                    ProfilesExternalPages.page_type == EnumExternalPageTypes.social,
-                    ProfilesExternalPages.profiles_people_id == fab_profile.id,
-                    ProfilesExternalPages.url == sp.get('url'),
-                    ProfilesExternalPages.url_type == sp.get('type')
-                ).one_or_none()
-                if fab_sp:
-                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'social_pages.{1}' = '{2}'".format(
-                        fab_person.uuid, fab_sp.url_type, fab_sp.url))
-                    db.session.delete(fab_sp)
-                    db.session.commit()
-        except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'social_pages' - {0}".format(exc))
         # check for website
         try:
             if len(body.website) == 0:

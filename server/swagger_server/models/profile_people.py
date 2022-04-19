@@ -8,7 +8,7 @@ from typing import List, Dict  # noqa: F401
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_people_other_identities import ProfilePeopleOtherIdentities  # noqa: F401,E501
-from swagger_server.models.profile_people_professional import ProfilePeopleProfessional  # noqa: F401,E501
+from swagger_server.models.profile_people_personal_pages import ProfilePeoplePersonalPages  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -17,7 +17,7 @@ class ProfilePeople(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, bio: str=None, cv: str=None, job: str=None, other_identities: List[ProfilePeopleOtherIdentities]=None, preferences: Preferences=None, professional: List[ProfilePeopleProfessional]=None, pronouns: str=None, social: List[ProfilePeopleProfessional]=None, website: str=None):  # noqa: E501
+    def __init__(self, bio: str=None, cv: str=None, job: str=None, other_identities: List[ProfilePeopleOtherIdentities]=None, preferences: Preferences=None, personal_pages: List[ProfilePeoplePersonalPages]=None, pronouns: str=None, website: str=None):  # noqa: E501
         """ProfilePeople - a model defined in Swagger
 
         :param bio: The bio of this ProfilePeople.  # noqa: E501
@@ -30,12 +30,10 @@ class ProfilePeople(Model):
         :type other_identities: List[ProfilePeopleOtherIdentities]
         :param preferences: The preferences of this ProfilePeople.  # noqa: E501
         :type preferences: Preferences
-        :param professional: The professional of this ProfilePeople.  # noqa: E501
-        :type professional: List[ProfilePeopleProfessional]
+        :param personal_pages: The personal_pages of this ProfilePeople.  # noqa: E501
+        :type personal_pages: List[ProfilePeoplePersonalPages]
         :param pronouns: The pronouns of this ProfilePeople.  # noqa: E501
         :type pronouns: str
-        :param social: The social of this ProfilePeople.  # noqa: E501
-        :type social: List[ProfilePeopleProfessional]
         :param website: The website of this ProfilePeople.  # noqa: E501
         :type website: str
         """
@@ -45,9 +43,8 @@ class ProfilePeople(Model):
             'job': str,
             'other_identities': List[ProfilePeopleOtherIdentities],
             'preferences': Preferences,
-            'professional': List[ProfilePeopleProfessional],
+            'personal_pages': List[ProfilePeoplePersonalPages],
             'pronouns': str,
-            'social': List[ProfilePeopleProfessional],
             'website': str
         }
 
@@ -57,9 +54,8 @@ class ProfilePeople(Model):
             'job': 'job',
             'other_identities': 'other_identities',
             'preferences': 'preferences',
-            'professional': 'professional',
+            'personal_pages': 'personal_pages',
             'pronouns': 'pronouns',
-            'social': 'social',
             'website': 'website'
         }
         self._bio = bio
@@ -67,9 +63,8 @@ class ProfilePeople(Model):
         self._job = job
         self._other_identities = other_identities
         self._preferences = preferences
-        self._professional = professional
+        self._personal_pages = personal_pages
         self._pronouns = pronouns
-        self._social = social
         self._website = website
 
     @classmethod
@@ -189,25 +184,25 @@ class ProfilePeople(Model):
         self._preferences = preferences
 
     @property
-    def professional(self) -> List[ProfilePeopleProfessional]:
-        """Gets the professional of this ProfilePeople.
+    def personal_pages(self) -> List[ProfilePeoplePersonalPages]:
+        """Gets the personal_pages of this ProfilePeople.
 
 
-        :return: The professional of this ProfilePeople.
-        :rtype: List[ProfilePeopleProfessional]
+        :return: The personal_pages of this ProfilePeople.
+        :rtype: List[ProfilePeoplePersonalPages]
         """
-        return self._professional
+        return self._personal_pages
 
-    @professional.setter
-    def professional(self, professional: List[ProfilePeopleProfessional]):
-        """Sets the professional of this ProfilePeople.
+    @personal_pages.setter
+    def personal_pages(self, personal_pages: List[ProfilePeoplePersonalPages]):
+        """Sets the personal_pages of this ProfilePeople.
 
 
-        :param professional: The professional of this ProfilePeople.
-        :type professional: List[ProfilePeopleProfessional]
+        :param personal_pages: The personal_pages of this ProfilePeople.
+        :type personal_pages: List[ProfilePeoplePersonalPages]
         """
 
-        self._professional = professional
+        self._personal_pages = personal_pages
 
     @property
     def pronouns(self) -> str:
@@ -229,27 +224,6 @@ class ProfilePeople(Model):
         """
 
         self._pronouns = pronouns
-
-    @property
-    def social(self) -> List[ProfilePeopleProfessional]:
-        """Gets the social of this ProfilePeople.
-
-
-        :return: The social of this ProfilePeople.
-        :rtype: List[ProfilePeopleProfessional]
-        """
-        return self._social
-
-    @social.setter
-    def social(self, social: List[ProfilePeopleProfessional]):
-        """Sets the social of this ProfilePeople.
-
-
-        :param social: The social of this ProfilePeople.
-        :type social: List[ProfilePeopleProfessional]
-        """
-
-        self._social = social
 
     @property
     def website(self) -> str:

@@ -1,6 +1,6 @@
 {
-  "name": "projects.tags",
-  "description": "Project Tags denote project capability and are only configurable by a Facility Operator",
+  "name": "projects.tags.base",
+  "description": "Project Tags (BASE) denote project capability at all levels and are only configurable by a Facility Operator",
   "api_endpoints": [
     {
       "endpoint": "/projects/tags",

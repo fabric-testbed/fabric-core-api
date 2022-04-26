@@ -12,9 +12,7 @@
     }
   ],
   "key_value_pairs": {
-    "alpha.NoLimitCPU": "allows to create VMs with X CPUs or more",
-    "alpha.NoLimitRAM": "allows to create VMs with X GB of RAM or more",
-    "alpha.NoLimitDisk": "allows to create VMs with X GB of disk or more",
-    "alpha.NoLimit": "VM.NoLimitCPU | VM.NoLimitRAM | VM.NoLimitDisk"
+    "Net.FacilityPort.RENCI-GSU": "RENCI Development",
+    "Net.FacilityPort.RENCI-Chameleon": "RENCI Development"
   }
 }

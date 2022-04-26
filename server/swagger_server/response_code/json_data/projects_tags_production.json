@@ -12,9 +12,8 @@
     }
   ],
   "key_value_pairs": {
-    "production.NoLimitCPU": "allows to create VMs with X CPUs or more",
-    "production.NoLimitRAM": "allows to create VMs with X GB of RAM or more",
-    "production.NoLimitDisk": "allows to create VMs with X GB of disk or more",
-    "production.NoLimit": "VM.NoLimitCPU | VM.NoLimitRAM | VM.NoLimitDisk"
+    "Net.FacilityPort.Chameleon-StarLight": "Chameleon-StarLight Production",
+    "Net.FacilityPort.ESnet-StarLight": "ESnet-StarLight Production",
+    "Net.FacilityPort.Internet2-StarLight": "Internet2-StarLight Production"
   }
 }

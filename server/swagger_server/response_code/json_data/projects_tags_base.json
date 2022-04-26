@@ -24,8 +24,7 @@
     "Net.NoLimitBW": "allows to provision links over X Gbps",
     "Net.Peering": "allows to create slices with public peering",
     "Net.PortMirroring": "allows to create slices that include port mirroring",
-    "Net.StitchPort.XXX": "allows to create slices with stitch port with short name XXX",
-    "Net.AllStitchPorts": "allows to create slices with any stitchport",
+    "Net.AllFacilityPorts": "allows to create slices with any stitchport",
     "Slice.Multisite": "allows to create slices spanning multiple sites",
     "Slice.Measurements": "allows to provision measurement VMs",
     "Slice.NoLimitLifetime": "allows to create slices with a lifetime beyond default limit X time units without the need to renew"

@@ -16,11 +16,11 @@ class Bastionkeys(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[BastionkeysOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[BastionkeysOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Bastionkeys - a model defined in Swagger
 
-        :param data: The data of this Bastionkeys.  # noqa: E501
-        :type data: List[BastionkeysOne]
+        :param results: The results of this Bastionkeys.  # noqa: E501
+        :type results: List[BastionkeysOne]
         :param size: The size of this Bastionkeys.  # noqa: E501
         :type size: int
         :param status: The status of this Bastionkeys.  # noqa: E501
@@ -29,19 +29,19 @@ class Bastionkeys(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[BastionkeysOne],
+            'results': List[BastionkeysOne],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class Bastionkeys(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[BastionkeysOne]:
-        """Gets the data of this Bastionkeys.
+    def results(self) -> List[BastionkeysOne]:
+        """Gets the results of this Bastionkeys.
 
 
-        :return: The data of this Bastionkeys.
+        :return: The results of this Bastionkeys.
         :rtype: List[BastionkeysOne]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[BastionkeysOne]):
-        """Sets the data of this Bastionkeys.
+    @results.setter
+    def results(self, results: List[BastionkeysOne]):
+        """Sets the results of this Bastionkeys.
 
 
-        :param data: The data of this Bastionkeys.
-        :type data: List[BastionkeysOne]
+        :param results: The results of this Bastionkeys.
+        :type results: List[BastionkeysOne]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

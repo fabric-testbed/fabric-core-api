@@ -14,11 +14,11 @@ class Status200OkSingle(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[object]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[object]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Status200OkSingle - a model defined in Swagger
 
-        :param data: The data of this Status200OkSingle.  # noqa: E501
-        :type data: List[object]
+        :param results: The results of this Status200OkSingle.  # noqa: E501
+        :type results: List[object]
         :param size: The size of this Status200OkSingle.  # noqa: E501
         :type size: int
         :param status: The status of this Status200OkSingle.  # noqa: E501
@@ -27,19 +27,19 @@ class Status200OkSingle(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[object],
+            'results': List[object],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -56,25 +56,25 @@ class Status200OkSingle(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[object]:
-        """Gets the data of this Status200OkSingle.
+    def results(self) -> List[object]:
+        """Gets the results of this Status200OkSingle.
 
 
-        :return: The data of this Status200OkSingle.
+        :return: The results of this Status200OkSingle.
         :rtype: List[object]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[object]):
-        """Sets the data of this Status200OkSingle.
+    @results.setter
+    def results(self, results: List[object]):
+        """Sets the results of this Status200OkSingle.
 
 
-        :param data: The data of this Status200OkSingle.
-        :type data: List[object]
+        :param results: The results of this Status200OkSingle.
+        :type results: List[object]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

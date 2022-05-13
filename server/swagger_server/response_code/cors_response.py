@@ -12,7 +12,7 @@ from swagger_server.models.projects import Projects
 from swagger_server.models.projects_details import ProjectsDetails
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkeys import Sshkeys
-from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentData
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults
 from swagger_server.models.status400_bad_request import Status400BadRequest, Status400BadRequestErrors
 from swagger_server.models.status401_unauthorized import Status401Unauthorized, Status401UnauthorizedErrors
 from swagger_server.models.status403_forbidden import Status403Forbidden, Status403ForbiddenErrors
@@ -83,14 +83,14 @@ def cors_200_no_content(details: str = None) -> cors_response:
     """
     Return 200 - No Content
     """
-    data = Status200OkNoContentData()
-    data.details = details
-    data_object = Status200OkNoContent([data])
+    results = Status200OkNoContentResults()
+    results.details = details
+    results_object = Status200OkNoContent([results])
     return cors_response(
         req=request,
         status_code=200,
-        body=json.dumps(delete_none(data_object.to_dict()), indent=_INDENT, sort_keys=True)
-        if _INDENT != 0 else json.dumps(delete_none(data_object.to_dict()), sort_keys=True),
+        body=json.dumps(delete_none(results_object.to_dict()), indent=_INDENT, sort_keys=True)
+        if _INDENT != 0 else json.dumps(delete_none(results_object.to_dict()), sort_keys=True),
         x_error=details
     )
 

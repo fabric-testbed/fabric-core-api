@@ -16,11 +16,11 @@ class PeopleDetails(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[PeopleOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[PeopleOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """PeopleDetails - a model defined in Swagger
 
-        :param data: The data of this PeopleDetails.  # noqa: E501
-        :type data: List[PeopleOne]
+        :param results: The results of this PeopleDetails.  # noqa: E501
+        :type results: List[PeopleOne]
         :param size: The size of this PeopleDetails.  # noqa: E501
         :type size: int
         :param status: The status of this PeopleDetails.  # noqa: E501
@@ -29,19 +29,19 @@ class PeopleDetails(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[PeopleOne],
+            'results': List[PeopleOne],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class PeopleDetails(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[PeopleOne]:
-        """Gets the data of this PeopleDetails.
+    def results(self) -> List[PeopleOne]:
+        """Gets the results of this PeopleDetails.
 
 
-        :return: The data of this PeopleDetails.
+        :return: The results of this PeopleDetails.
         :rtype: List[PeopleOne]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[PeopleOne]):
-        """Sets the data of this PeopleDetails.
+    @results.setter
+    def results(self, results: List[PeopleOne]):
+        """Sets the results of this PeopleDetails.
 
 
-        :param data: The data of this PeopleDetails.
-        :type data: List[PeopleOne]
+        :param results: The results of this PeopleDetails.
+        :type results: List[PeopleOne]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

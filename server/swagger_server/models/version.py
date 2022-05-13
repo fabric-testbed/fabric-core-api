@@ -7,7 +7,7 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.status200_ok_single import Status200OkSingle  # noqa: F401,E501
-from swagger_server.models.version_data import VersionData  # noqa: F401,E501
+from swagger_server.models.version_results import VersionResults  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -16,11 +16,11 @@ class Version(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[VersionData]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[VersionResults]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Version - a model defined in Swagger
 
-        :param data: The data of this Version.  # noqa: E501
-        :type data: List[VersionData]
+        :param results: The results of this Version.  # noqa: E501
+        :type results: List[VersionResults]
         :param size: The size of this Version.  # noqa: E501
         :type size: int
         :param status: The status of this Version.  # noqa: E501
@@ -29,19 +29,19 @@ class Version(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[VersionData],
+            'results': List[VersionResults],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class Version(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[VersionData]:
-        """Gets the data of this Version.
+    def results(self) -> List[VersionResults]:
+        """Gets the results of this Version.
 
 
-        :return: The data of this Version.
-        :rtype: List[VersionData]
+        :return: The results of this Version.
+        :rtype: List[VersionResults]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[VersionData]):
-        """Sets the data of this Version.
+    @results.setter
+    def results(self, results: List[VersionResults]):
+        """Sets the results of this Version.
 
 
-        :param data: The data of this Version.
-        :type data: List[VersionData]
+        :param results: The results of this Version.
+        :type results: List[VersionResults]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

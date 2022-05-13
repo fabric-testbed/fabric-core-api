@@ -17,11 +17,11 @@ class People(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[Person]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
+    def __init__(self, results: List[Person]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
         """People - a model defined in Swagger
 
-        :param data: The data of this People.  # noqa: E501
-        :type data: List[Person]
+        :param results: The results of this People.  # noqa: E501
+        :type results: List[Person]
         :param limit: The limit of this People.  # noqa: E501
         :type limit: int
         :param links: The links of this People.  # noqa: E501
@@ -38,7 +38,7 @@ class People(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[Person],
+            'results': List[Person],
             'limit': int,
             'links': Status200OkPaginatedLinks,
             'offset': int,
@@ -49,7 +49,7 @@ class People(Model):
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'limit': 'limit',
             'links': 'links',
             'offset': 'offset',
@@ -58,7 +58,7 @@ class People(Model):
             'total': 'total',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._limit = limit
         self._links = links
         self._offset = offset
@@ -79,25 +79,25 @@ class People(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[Person]:
-        """Gets the data of this People.
+    def results(self) -> List[Person]:
+        """Gets the results of this People.
 
 
-        :return: The data of this People.
+        :return: The results of this People.
         :rtype: List[Person]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[Person]):
-        """Sets the data of this People.
+    @results.setter
+    def results(self, results: List[Person]):
+        """Sets the results of this People.
 
 
-        :param data: The data of this People.
-        :type data: List[Person]
+        :param results: The results of this People.
+        :type results: List[Person]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def limit(self) -> int:

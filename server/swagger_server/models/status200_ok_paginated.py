@@ -15,11 +15,11 @@ class Status200OkPaginated(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[object]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
+    def __init__(self, results: List[object]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
         """Status200OkPaginated - a model defined in Swagger
 
-        :param data: The data of this Status200OkPaginated.  # noqa: E501
-        :type data: List[object]
+        :param results: The results of this Status200OkPaginated.  # noqa: E501
+        :type results: List[object]
         :param limit: The limit of this Status200OkPaginated.  # noqa: E501
         :type limit: int
         :param links: The links of this Status200OkPaginated.  # noqa: E501
@@ -36,7 +36,7 @@ class Status200OkPaginated(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[object],
+            'results': List[object],
             'limit': int,
             'links': Status200OkPaginatedLinks,
             'offset': int,
@@ -47,7 +47,7 @@ class Status200OkPaginated(Model):
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'limit': 'limit',
             'links': 'links',
             'offset': 'offset',
@@ -56,7 +56,7 @@ class Status200OkPaginated(Model):
             'total': 'total',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._limit = limit
         self._links = links
         self._offset = offset
@@ -77,25 +77,25 @@ class Status200OkPaginated(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[object]:
-        """Gets the data of this Status200OkPaginated.
+    def results(self) -> List[object]:
+        """Gets the results of this Status200OkPaginated.
 
 
-        :return: The data of this Status200OkPaginated.
+        :return: The results of this Status200OkPaginated.
         :rtype: List[object]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[object]):
-        """Sets the data of this Status200OkPaginated.
+    @results.setter
+    def results(self, results: List[object]):
+        """Sets the results of this Status200OkPaginated.
 
 
-        :param data: The data of this Status200OkPaginated.
-        :type data: List[object]
+        :param results: The results of this Status200OkPaginated.
+        :type results: List[object]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def limit(self) -> int:

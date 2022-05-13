@@ -15,11 +15,11 @@ class ApiOptions(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[Dict[str, str]]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[Dict[str, str]]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """ApiOptions - a model defined in Swagger
 
-        :param data: The data of this ApiOptions.  # noqa: E501
-        :type data: List[Dict[str, str]]
+        :param results: The results of this ApiOptions.  # noqa: E501
+        :type results: List[Dict[str, str]]
         :param size: The size of this ApiOptions.  # noqa: E501
         :type size: int
         :param status: The status of this ApiOptions.  # noqa: E501
@@ -28,19 +28,19 @@ class ApiOptions(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[Dict[str, str]],
+            'results': List[Dict[str, str]],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -57,25 +57,25 @@ class ApiOptions(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[Dict[str, str]]:
-        """Gets the data of this ApiOptions.
+    def results(self) -> List[Dict[str, str]]:
+        """Gets the results of this ApiOptions.
 
 
-        :return: The data of this ApiOptions.
+        :return: The results of this ApiOptions.
         :rtype: List[Dict[str, str]]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[Dict[str, str]]):
-        """Sets the data of this ApiOptions.
+    @results.setter
+    def results(self, results: List[Dict[str, str]]):
+        """Sets the results of this ApiOptions.
 
 
-        :param data: The data of this ApiOptions.
-        :type data: List[Dict[str, str]]
+        :param results: The results of this ApiOptions.
+        :type results: List[Dict[str, str]]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

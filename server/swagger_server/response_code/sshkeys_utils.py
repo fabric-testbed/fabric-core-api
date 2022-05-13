@@ -5,7 +5,7 @@ from swagger_server.database.db import db
 from collections import defaultdict
 import re
 from datetime import datetime, timedelta, timezone
-from swagger_server.models.sshkey_pair import SshkeyPairData
+from swagger_server.models.sshkey_pair import SshkeyPairResults
 from swagger_server.models.sshkeys_one import SshkeysOne
 from fss_utils.sshkey import FABRICSSHKey
 from swagger_server.models.sshkeys_post import SshkeysPost
@@ -22,7 +22,7 @@ DESCRIPTION_REGEX = r"^[\w\s\-'\.@_()/]{5,255}$"
 COMMENT_LENGTH = 100
 
 
-def create_ssh_key(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairData:
+def create_ssh_key(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResults:
     """
     comment = db.Column(db.String())
     deactivated_on = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -41,7 +41,7 @@ def create_ssh_key(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairDat
         body.keytype, fab_person.display_name, body.comment))
     try:
         sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
-        response = SshkeyPairData()
+        response = SshkeyPairResults()
         if sshkey:
             fab_sshkey = FabricSshKeys()
             fab_sshkey.comment = body.comment

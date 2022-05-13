@@ -11,7 +11,7 @@ from swagger_server.models.people import People, Person, Status200OkPaginatedLin
 from swagger_server.models.people_details import PeopleDetails, PeopleOne  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch
 from swagger_server.models.profile_people import ProfilePeople
-from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentData  # noqa: E501
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
     PEOPLE_PROFILE_PREFERENCES, PEOPLE_PROFILE_PERSONALPAGE_TYPES
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
@@ -55,20 +55,20 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         _page = int((offset + limit) / limit)
         # get paginated search results
         if search:
-            data_page = FabricPeople.query.filter(
+            results_page = FabricPeople.query.filter(
                 (FabricPeople.active.is_(True)) &
                 (FabricPeople.display_name.ilike("%" + search + "%")) |
                 (FabricPeople.preferred_email.ilike("%" + search + "%"))
             ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
         else:
-            data_page = FabricPeople.query.filter(
+            results_page = FabricPeople.query.filter(
                 FabricPeople.active.is_(True)
             ).order_by(FabricPeople.display_name).paginate(
                 page=_page, per_page=limit, error_out=False)
         # set people response
         response = People()
-        response.data = []
-        for item in data_page.items:
+        response.results = []
+        for item in results_page.items:
             # get preferences (show_email)
             prefs = get_people_preferences(fab_person=FabricPeople.query.filter_by(uuid=item.uuid).one_or_none())
             # set person attributes
@@ -76,22 +76,22 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
             person.email = item.preferred_email if prefs.__getattribute__('show_email') else None
             person.name = item.display_name
             person.uuid = item.uuid
-            # add person to people data
-            response.data.append(person)
+            # add person to people results
+            response.results.append(person)
         # set links
         response.links = Status200OkPaginatedLinks()
         _URL_OFFSET_LIMIT = '{0}offset={1}&limit={2}'
         base = '{0}/people?'.format(_SERVER_URL) if not search else '{0}/people?search={1}&'.format(_SERVER_URL, search)
-        response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if data_page.pages > 0 else None
-        response.links.last = _URL_OFFSET_LIMIT.format(base, int((data_page.pages - 1) * limit),
-                                                       limit) if data_page.pages > 0 else None
-        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if data_page.has_next else None
-        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if data_page.has_prev else None
+        response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if results_page.pages > 0 else None
+        response.links.last = _URL_OFFSET_LIMIT.format(base, int((results_page.pages - 1) * limit),
+                                                       limit) if results_page.pages > 0 else None
+        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if results_page.has_next else None
+        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if results_page.has_prev else None
         # set offset, limit and size
         response.limit = limit
         response.offset = offset
-        response.total = data_page.total
-        response.size = len(response.data)
+        response.total = results_page.total
+        response.size = len(response.results)
         response.type = 'people'
         return cors_200(response_body=response)
     except Exception as exc:
@@ -112,12 +112,12 @@ def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """
     try:
         if search:
-            data = [tag for tag in PEOPLE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PEOPLE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
         else:
-            data = PEOPLE_PREFERENCES.options
+            results = PEOPLE_PREFERENCES.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PEOPLE_PREFERENCES.name
         return cors_200(response_body=response)
@@ -138,45 +138,19 @@ def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: 
     """
     try:
         if search:
-            data = [tag for tag in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.search(search) if
+            results = [tag for tag in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.search(search) if
                     search.casefold() in tag.casefold()]
         else:
-            data = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options
+            results = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.name
         return cors_200(response_body=response)
     except Exception as exc:
         logger.error("people_profile_otheridentity_types_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Profile.OtherIdentity.Types.Get()')
-
-
-def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
-    """List of People Profile Preference options
-
-    List of People Profile Preference options # noqa: E501
-
-    :param search: search term applied
-    :type search: str
-
-    :rtype: ApiOptions
-    """
-    try:
-        if search:
-            data = [tag for tag in PEOPLE_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
-        else:
-            data = PEOPLE_PROFILE_PREFERENCES.options
-        response = ApiOptions()
-        response.data = data
-        response.size = len(data)
-        response.status = 200
-        response.type = PEOPLE_PROFILE_PREFERENCES.name
-        return cors_200(response_body=response)
-    except Exception as exc:
-        logger.error("people_profile_preferences_get(search=None): {0}".format(exc))
-        return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
 def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E501
@@ -191,19 +165,45 @@ def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E
     """
     try:
         if search:
-            data = [tag for tag in PEOPLE_PROFILE_PERSONALPAGE_TYPES.search(search) if
+            results = [tag for tag in PEOPLE_PROFILE_PERSONALPAGE_TYPES.search(search) if
                     search.casefold() in tag.casefold()]
         else:
-            data = PEOPLE_PROFILE_PERSONALPAGE_TYPES.options
+            results = PEOPLE_PROFILE_PERSONALPAGE_TYPES.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PEOPLE_PROFILE_PERSONALPAGE_TYPES.name
         return cors_200(response_body=response)
     except Exception as exc:
         logger.error("people_profile_personalpage_types_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Profile.PersonalPage.Types.Get()')
+
+
+def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
+    """List of People Profile Preference options
+
+    List of People Profile Preference options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    try:
+        if search:
+            results = [tag for tag in PEOPLE_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+        else:
+            results = PEOPLE_PROFILE_PREFERENCES.options
+        response = ApiOptions()
+        response.results = results
+        response.size = len(results)
+        response.status = 200
+        response.type = PEOPLE_PROFILE_PREFERENCES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        logger.error("people_profile_preferences_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
 @login_required
@@ -269,8 +269,8 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
 
         # set people_details response
         response = PeopleDetails()
-        response.data = [people_one]
-        response.size = len(response.data)
+        response.results = [people_one]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'people.details'
         return cors_200(response_body=response)
@@ -363,11 +363,11 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
         except Exception as exc:
             logger.info("NOP: people_uuid_patch(): 'preferences' - {0}".format(exc))
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "User: '{0}' has been successfully updated".format(fab_person.display_name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)
@@ -584,11 +584,11 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
         except Exception as exc:
             logger.info("NOP: people_uuid_profile_patch(): 'website' - {0}".format(exc))
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "Profile for User: '{0}' has been successfully updated".format(fab_person.display_name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)

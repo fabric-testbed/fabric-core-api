@@ -60,8 +60,8 @@ def sshkeys_get(person_uuid=None):  # noqa: E501
         people_prefs = {p.key: p.value for p in fab_person.preferences}
         # create response
         response = Sshkeys()
-        response.data = sshkeys_from_fab_person(fab_person=fab_person) if api_user is fab_person or people_prefs.get('show_sshkeys') else []
-        response.size = len(response.data)
+        response.results = sshkeys_from_fab_person(fab_person=fab_person) if api_user is fab_person or people_prefs.get('show_sshkeys') else []
+        response.size = len(response.results)
         response.status = 200
         response.type = 'sshkeys'
         return cors_200(response_body=response)
@@ -99,11 +99,11 @@ def sshkeys_post(body: SshkeysPost = None) -> SshkeyPair:  # noqa: E501
                 api_user.display_name, body.keytype))
         # create SSH Key Pair
         fab_sshkey = create_ssh_key(body=body, fab_person=api_user)
-        data = [fab_sshkey]
+        results = [fab_sshkey]
         # create response
         response = SshkeyPair()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = 'sshkeys.keypair'
         return cors_200(response_body=response)
@@ -165,11 +165,11 @@ def sshkeys_uuid_get(uuid: str) -> Sshkeys:  # noqa: E501
         fab_sshkey = FabricSshKeys.query.filter_by(uuid=uuid).one_or_none()
         if not fab_sshkey:
             return cors_404(details="No match for SSH Key with uuid = '{0}'".format(uuid))
-        data = [sshkey_from_fab_sshkey(fab_sshkey=fab_sshkey)]
+        results = [sshkey_from_fab_sshkey(fab_sshkey=fab_sshkey)]
         # create response
         response = Sshkeys()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = 'sshkeys.detail'
         return cors_200(response_body=response)

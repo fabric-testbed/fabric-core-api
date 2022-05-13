@@ -1816,7 +1816,7 @@ components:
     status_200_ok_single:
       type: object
       properties:
-        data:
+        results:
           type: array
           items:
             type: object
@@ -1831,7 +1831,7 @@ components:
     status_200_ok_paginated:
       type: object
       properties:
-        data:
+        results:
           type: array
           items:
             type: object
@@ -1853,10 +1853,10 @@ components:
     status_200_ok_no_content:
       type: object
       properties:
-        data:
+        results:
           type: array
           items:
-            $ref: '#/components/schemas/status_200_ok_no_content_data'
+            $ref: '#/components/schemas/status_200_ok_no_content_results'
         type:
           type: string
           default: no_content
@@ -1867,13 +1867,13 @@ components:
           type: integer
           default: 200
       example:
-        data:
-        - details: details
-          message: No Content
-        - details: details
-          message: No Content
         size: 0
         type: no_content
+        results:
+        - details: details
+          message: No Content
+        - details: details
+          message: No Content
         status: 6
     status_400_bad_request:
       type: object
@@ -1964,7 +1964,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_paginated'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/person'
@@ -1974,7 +1974,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/people_one'
@@ -2064,7 +2064,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_paginated'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/project'
@@ -2074,7 +2074,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/projects_one'
@@ -2207,17 +2207,17 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
-              $ref: '#/components/schemas/sshkey_pair_data'
+              $ref: '#/components/schemas/sshkey_pair_results'
     sshkeys:
       type: object
       allOf:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/sshkeys_one'
@@ -2259,7 +2259,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/bastionkeys_one'
@@ -2285,7 +2285,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/facility_update'
@@ -2318,27 +2318,27 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
-              $ref: '#/components/schemas/version_data'
+              $ref: '#/components/schemas/version_results'
     whoami:
       type: object
       allOf:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
-              $ref: '#/components/schemas/whoami_data'
+              $ref: '#/components/schemas/whoami_results'
     api_options_details:
       type: object
       allOf:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               $ref: '#/components/schemas/api_options_one'
@@ -2365,7 +2365,7 @@ components:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
-          data:
+          results:
             type: array
             items:
               type: object
@@ -2535,7 +2535,7 @@ components:
         prev:
           type: string
       example: null
-    status_200_ok_no_content_data:
+    status_200_ok_no_content_results:
       type: object
       properties:
         message:
@@ -2632,7 +2632,7 @@ components:
         url:
           type: string
       example: null
-    sshkey_pair_data:
+    sshkey_pair_results:
       type: object
       properties:
         private_openssh:
@@ -2640,7 +2640,7 @@ components:
         public_openssh:
           type: string
       example: null
-    version_data:
+    version_results:
       required:
       - reference
       - version
@@ -2652,7 +2652,7 @@ components:
           type: string
           example: 1.0.0
       example: null
-    whoami_data:
+    whoami_results:
       required:
       - active
       - email

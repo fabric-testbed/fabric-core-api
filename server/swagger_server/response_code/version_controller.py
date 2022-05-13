@@ -1,8 +1,8 @@
 import logging
 
 from swagger_server import __API_VERSION__, __API_REFERENCE__
-from swagger_server.models.version import Version, VersionData  # noqa: E501
-from swagger_server.response_code.cors_response import cors_500
+from swagger_server.models.version import Version, VersionResults  # noqa: E501
+from swagger_server.response_code.cors_response import cors_200, cors_500
 
 logger = logging.getLogger(__name__)
 
@@ -16,15 +16,15 @@ def version_get() -> Version:  # noqa: E501
     :rtype: Version
     """
     try:
-        version = VersionData()
+        version = VersionResults()
         version.reference = __API_REFERENCE__
         version.version = __API_VERSION__
         response = Version()
-        response.data = [version]
-        response.size = len(response.data)
+        response.results = [version]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'version'
-        return response
+        return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with version_get(): {0}'.format(exc)
         logger.error(details)

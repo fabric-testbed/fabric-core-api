@@ -14,7 +14,7 @@ from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
-from swagger_server.models.status200_ok_no_content import Status200OkNoContentData, Status200OkNoContent  # noqa: E501
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
 from swagger_server.response_code.comanage_utils import update_comanage_group, \
@@ -86,13 +86,13 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
         # get paginated results
         if not search and not person_uuid:
             base = '{0}/projects?'.format(_SERVER_URL)
-            data_page = FabricProjects.query.filter(
+            results_page = FabricProjects.query.filter(
                 FabricProjects.active.is_(True)
             ).order_by(FabricProjects.name).paginate(
                 page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
             base = '{0}/projects?search={1}&'.format(_SERVER_URL, search)
-            data_page = FabricProjects.query.filter(
+            results_page = FabricProjects.query.filter(
                 (FabricProjects.active.is_(True)) &
                 (FabricProjects.name.ilike("%" + search + "%")) |
                 (FabricProjects.description.ilike("%" + search + "%"))
@@ -100,13 +100,13 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&'.format(_SERVER_URL, person_uuid)
             if api_user.uuid == person_uuid:
-                data_page = FabricProjects.query.filter(
+                results_page = FabricProjects.query.filter(
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
                 ).order_by(FabricProjects.name).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
-                data_page = FabricProjects.query.filter(
+                results_page = FabricProjects.query.filter(
                     FabricProjects.active.is_(True) &
                     FabricProjects.is_public.is_(True) &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
@@ -115,13 +115,13 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
         else:
             base = '{0}/projects?search={1}&person_uuid={2}&'.format(_SERVER_URL, search, person_uuid)
             if api_user.uuid == person_uuid:
-                data_page = FabricProjects.query.filter(
+                results_page = FabricProjects.query.filter(
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
                 ).order_by(FabricProjects.name).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
-                data_page = FabricProjects.query.filter(
+                results_page = FabricProjects.query.filter(
                     FabricProjects.active.is_(True) &
                     FabricProjects.is_public.is_(True) &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
@@ -131,8 +131,8 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
                     page=_page, per_page=limit, error_out=False)
         # set projects response
         response = Projects()
-        response.data = []
-        for item in data_page.items:
+        response.results = []
+        for item in results_page.items:
             project = Project()
             # set project attributes
             project.created = str(item.created)
@@ -145,21 +145,21 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
                 project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
             project.name = item.name
             project.uuid = item.uuid
-            # add project to projects data
-            response.data.append(project)
+            # add project to projects results
+            response.results.append(project)
         # set links
         response.links = Status200OkPaginatedLinks()
         _URL_OFFSET_LIMIT = '{0}offset={1}&limit={2}'
-        response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if data_page.pages > 0 else None
-        response.links.last = _URL_OFFSET_LIMIT.format(base, int((data_page.pages - 1) * limit),
-                                                       limit) if data_page.pages > 0 else None
-        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if data_page.has_next else None
-        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if data_page.has_prev else None
+        response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if results_page.pages > 0 else None
+        response.links.last = _URL_OFFSET_LIMIT.format(base, int((results_page.pages - 1) * limit),
+                                                       limit) if results_page.pages > 0 else None
+        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if results_page.has_next else None
+        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if results_page.has_prev else None
         # set offset, limit and size
         response.limit = limit
         response.offset = offset
-        response.total = data_page.total
-        response.size = len(response.data)
+        response.total = results_page.total
+        response.size = len(response.results)
         response.type = 'projects'
         return cors_200(response_body=response)
     except Exception as exc:
@@ -222,12 +222,12 @@ def projects_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """
     try:
         if search:
-            data = [tag for tag in PROJECTS_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PROJECTS_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
         else:
-            data = PROJECTS_PREFERENCES.options
+            results = PROJECTS_PREFERENCES.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PROJECTS_PREFERENCES.name
         return cors_200(response_body=response)
@@ -248,12 +248,12 @@ def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """
     try:
         if search:
-            data = [tag for tag in PROJECTS_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PROJECTS_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
         else:
-            data = PROJECTS_PROFILE_PREFERENCES.options
+            results = PROJECTS_PROFILE_PREFERENCES.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PROJECTS_PROFILE_PREFERENCES.name
         return cors_200(response_body=response)
@@ -274,12 +274,12 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
     """
     try:
         if search:
-            data = [tag for tag in PROJECTS_TAGS.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PROJECTS_TAGS.search(search) if search.casefold() in tag.casefold()]
         else:
-            data = PROJECTS_TAGS.options
+            results = PROJECTS_TAGS.options
         response = ApiOptions()
-        response.data = data
-        response.size = len(data)
+        response.results = results
+        response.size = len(results)
         response.status = 200
         response.type = PROJECTS_TAGS.name
         return cors_200(response_body=response)
@@ -335,11 +335,11 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         db.session.delete(fab_project)
         db.session.commit()
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = details
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)
@@ -421,8 +421,8 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.tags = [t.tag for t in fab_project.tags]
         # set project_details response
         response = ProjectsDetails()
-        response.data = [project_one]
-        response.size = len(response.data)
+        response.results = [project_one]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'projects.details'
         return cors_200(response_body=response)
@@ -526,11 +526,11 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
             logger.info("NOP: projects_uuid_patch(): 'preferences' - {0}".format(exc))
 
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)
@@ -572,25 +572,26 @@ def projects_uuid_personnel_patch(uuid: str = None,
         try:
             if len(body.project_members) == 0:
                 body.project_members = []
+            # add project_members
+            update_projects_personnel(fab_project=fab_project, personnel=body.project_members, personnel_type='members')
         except Exception as exc:
             logger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
-        # add project_members
-        update_projects_personnel(fab_project=fab_project, personnel=body.project_members, personnel_type='members')
+
         # check for project_owners
         try:
             if len(body.project_owners) == 0:
                 body.project_owners = []
+            # add project_owners
+            update_projects_personnel(fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
         except Exception as exc:
             logger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
-        # add project_owners
-        update_projects_personnel(fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
 
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)
@@ -728,11 +729,11 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             logger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
 
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "Profile for Project: '{0}' has been successfully updated".format(fab_project.name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)
@@ -781,11 +782,11 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         except Exception as exc:
             logger.info("NOP: projects_uuid_tags_patch(): 'tags' - {0}".format(exc))
         # create response
-        patch_info = Status200OkNoContentData()
+        patch_info = Status200OkNoContentResults()
         patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
         response = Status200OkNoContent()
-        response.data = [patch_info]
-        response.size = len(response.data)
+        response.results = [patch_info]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
         return cors_200(response_body=response)

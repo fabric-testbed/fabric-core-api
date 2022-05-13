@@ -16,11 +16,11 @@ class ApiOptionsDetails(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[ApiOptionsOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[ApiOptionsOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """ApiOptionsDetails - a model defined in Swagger
 
-        :param data: The data of this ApiOptionsDetails.  # noqa: E501
-        :type data: List[ApiOptionsOne]
+        :param results: The results of this ApiOptionsDetails.  # noqa: E501
+        :type results: List[ApiOptionsOne]
         :param size: The size of this ApiOptionsDetails.  # noqa: E501
         :type size: int
         :param status: The status of this ApiOptionsDetails.  # noqa: E501
@@ -29,19 +29,19 @@ class ApiOptionsDetails(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[ApiOptionsOne],
+            'results': List[ApiOptionsOne],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class ApiOptionsDetails(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[ApiOptionsOne]:
-        """Gets the data of this ApiOptionsDetails.
+    def results(self) -> List[ApiOptionsOne]:
+        """Gets the results of this ApiOptionsDetails.
 
 
-        :return: The data of this ApiOptionsDetails.
+        :return: The results of this ApiOptionsDetails.
         :rtype: List[ApiOptionsOne]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[ApiOptionsOne]):
-        """Sets the data of this ApiOptionsDetails.
+    @results.setter
+    def results(self, results: List[ApiOptionsOne]):
+        """Sets the results of this ApiOptionsDetails.
 
 
-        :param data: The data of this ApiOptionsDetails.
-        :type data: List[ApiOptionsOne]
+        :param results: The results of this ApiOptionsDetails.
+        :type results: List[ApiOptionsOne]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

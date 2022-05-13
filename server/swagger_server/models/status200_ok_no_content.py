@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
-from swagger_server.models.status200_ok_no_content_data import Status200OkNoContentData  # noqa: F401,E501
+from swagger_server.models.status200_ok_no_content_results import Status200OkNoContentResults  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -15,11 +15,11 @@ class Status200OkNoContent(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[Status200OkNoContentData]=None, type: str='no_content', size: int=1, status: int=200):  # noqa: E501
+    def __init__(self, results: List[Status200OkNoContentResults]=None, type: str='no_content', size: int=1, status: int=200):  # noqa: E501
         """Status200OkNoContent - a model defined in Swagger
 
-        :param data: The data of this Status200OkNoContent.  # noqa: E501
-        :type data: List[Status200OkNoContentData]
+        :param results: The results of this Status200OkNoContent.  # noqa: E501
+        :type results: List[Status200OkNoContentResults]
         :param type: The type of this Status200OkNoContent.  # noqa: E501
         :type type: str
         :param size: The size of this Status200OkNoContent.  # noqa: E501
@@ -28,19 +28,19 @@ class Status200OkNoContent(Model):
         :type status: int
         """
         self.swagger_types = {
-            'data': List[Status200OkNoContentData],
+            'results': List[Status200OkNoContentResults],
             'type': str,
             'size': int,
             'status': int
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'type': 'type',
             'size': 'size',
             'status': 'status'
         }
-        self._data = data
+        self._results = results
         self._type = type
         self._size = size
         self._status = status
@@ -57,25 +57,25 @@ class Status200OkNoContent(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[Status200OkNoContentData]:
-        """Gets the data of this Status200OkNoContent.
+    def results(self) -> List[Status200OkNoContentResults]:
+        """Gets the results of this Status200OkNoContent.
 
 
-        :return: The data of this Status200OkNoContent.
-        :rtype: List[Status200OkNoContentData]
+        :return: The results of this Status200OkNoContent.
+        :rtype: List[Status200OkNoContentResults]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[Status200OkNoContentData]):
-        """Sets the data of this Status200OkNoContent.
+    @results.setter
+    def results(self, results: List[Status200OkNoContentResults]):
+        """Sets the results of this Status200OkNoContent.
 
 
-        :param data: The data of this Status200OkNoContent.
-        :type data: List[Status200OkNoContentData]
+        :param results: The results of this Status200OkNoContent.
+        :type results: List[Status200OkNoContentResults]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def type(self) -> str:

@@ -16,11 +16,11 @@ class ProjectsDetails(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[ProjectsOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[ProjectsOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """ProjectsDetails - a model defined in Swagger
 
-        :param data: The data of this ProjectsDetails.  # noqa: E501
-        :type data: List[ProjectsOne]
+        :param results: The results of this ProjectsDetails.  # noqa: E501
+        :type results: List[ProjectsOne]
         :param size: The size of this ProjectsDetails.  # noqa: E501
         :type size: int
         :param status: The status of this ProjectsDetails.  # noqa: E501
@@ -29,19 +29,19 @@ class ProjectsDetails(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[ProjectsOne],
+            'results': List[ProjectsOne],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class ProjectsDetails(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[ProjectsOne]:
-        """Gets the data of this ProjectsDetails.
+    def results(self) -> List[ProjectsOne]:
+        """Gets the results of this ProjectsDetails.
 
 
-        :return: The data of this ProjectsDetails.
+        :return: The results of this ProjectsDetails.
         :rtype: List[ProjectsOne]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[ProjectsOne]):
-        """Sets the data of this ProjectsDetails.
+    @results.setter
+    def results(self, results: List[ProjectsOne]):
+        """Sets the results of this ProjectsDetails.
 
 
-        :param data: The data of this ProjectsDetails.
-        :type data: List[ProjectsOne]
+        :param results: The results of this ProjectsDetails.
+        :type results: List[ProjectsOne]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

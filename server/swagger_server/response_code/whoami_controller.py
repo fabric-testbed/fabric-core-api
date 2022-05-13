@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from swagger_server.models.whoami import Whoami, WhoamiData  # noqa: E501
+from swagger_server.models.whoami import Whoami, WhoamiResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
@@ -27,8 +27,8 @@ def whoami_get() -> Whoami:  # noqa: E501
         if person.updated.timestamp() + int(os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
             logger.info('UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
             update_fabric_person(fab_person=person)
-        # set WhoamiData object
-        whoami = WhoamiData()
+        # set WhoamiResults object
+        whoami = WhoamiResults()
         whoami.active = person.active if person.active else False
         whoami.email = person.preferred_email if person.preferred_email else ''
         whoami.enrolled = True if person.co_person_id else False
@@ -36,8 +36,8 @@ def whoami_get() -> Whoami:  # noqa: E501
         whoami.uuid = person.uuid if person.uuid else ''
         # set Whoami object and return
         response = Whoami()
-        response.data = [whoami]
-        response.size = len(response.data)
+        response.results = [whoami]
+        response.size = len(response.results)
         response.status = 200
         response.type = 'whoami'
         return cors_200(response_body=response)

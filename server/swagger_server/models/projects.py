@@ -17,11 +17,11 @@ class Projects(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[Project]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
+    def __init__(self, results: List[Project]=None, limit: int=None, links: Status200OkPaginatedLinks=None, offset: int=None, size: int=None, status: int=200, total: int=None, type: str=None):  # noqa: E501
         """Projects - a model defined in Swagger
 
-        :param data: The data of this Projects.  # noqa: E501
-        :type data: List[Project]
+        :param results: The results of this Projects.  # noqa: E501
+        :type results: List[Project]
         :param limit: The limit of this Projects.  # noqa: E501
         :type limit: int
         :param links: The links of this Projects.  # noqa: E501
@@ -38,7 +38,7 @@ class Projects(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[Project],
+            'results': List[Project],
             'limit': int,
             'links': Status200OkPaginatedLinks,
             'offset': int,
@@ -49,7 +49,7 @@ class Projects(Model):
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'limit': 'limit',
             'links': 'links',
             'offset': 'offset',
@@ -58,7 +58,7 @@ class Projects(Model):
             'total': 'total',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._limit = limit
         self._links = links
         self._offset = offset
@@ -79,25 +79,25 @@ class Projects(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[Project]:
-        """Gets the data of this Projects.
+    def results(self) -> List[Project]:
+        """Gets the results of this Projects.
 
 
-        :return: The data of this Projects.
+        :return: The results of this Projects.
         :rtype: List[Project]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[Project]):
-        """Sets the data of this Projects.
+    @results.setter
+    def results(self, results: List[Project]):
+        """Sets the results of this Projects.
 
 
-        :param data: The data of this Projects.
-        :type data: List[Project]
+        :param results: The results of this Projects.
+        :type results: List[Project]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def limit(self) -> int:

@@ -16,11 +16,11 @@ class Updates(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[FacilityUpdate]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[FacilityUpdate]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Updates - a model defined in Swagger
 
-        :param data: The data of this Updates.  # noqa: E501
-        :type data: List[FacilityUpdate]
+        :param results: The results of this Updates.  # noqa: E501
+        :type results: List[FacilityUpdate]
         :param size: The size of this Updates.  # noqa: E501
         :type size: int
         :param status: The status of this Updates.  # noqa: E501
@@ -29,19 +29,19 @@ class Updates(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[FacilityUpdate],
+            'results': List[FacilityUpdate],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class Updates(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[FacilityUpdate]:
-        """Gets the data of this Updates.
+    def results(self) -> List[FacilityUpdate]:
+        """Gets the results of this Updates.
 
 
-        :return: The data of this Updates.
+        :return: The results of this Updates.
         :rtype: List[FacilityUpdate]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[FacilityUpdate]):
-        """Sets the data of this Updates.
+    @results.setter
+    def results(self, results: List[FacilityUpdate]):
+        """Sets the results of this Updates.
 
 
-        :param data: The data of this Updates.
-        :type data: List[FacilityUpdate]
+        :param results: The results of this Updates.
+        :type results: List[FacilityUpdate]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

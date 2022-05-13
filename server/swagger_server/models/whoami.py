@@ -7,7 +7,7 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.status200_ok_single import Status200OkSingle  # noqa: F401,E501
-from swagger_server.models.whoami_data import WhoamiData  # noqa: F401,E501
+from swagger_server.models.whoami_results import WhoamiResults  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -16,11 +16,11 @@ class Whoami(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[WhoamiData]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[WhoamiResults]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Whoami - a model defined in Swagger
 
-        :param data: The data of this Whoami.  # noqa: E501
-        :type data: List[WhoamiData]
+        :param results: The results of this Whoami.  # noqa: E501
+        :type results: List[WhoamiResults]
         :param size: The size of this Whoami.  # noqa: E501
         :type size: int
         :param status: The status of this Whoami.  # noqa: E501
@@ -29,19 +29,19 @@ class Whoami(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[WhoamiData],
+            'results': List[WhoamiResults],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class Whoami(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[WhoamiData]:
-        """Gets the data of this Whoami.
+    def results(self) -> List[WhoamiResults]:
+        """Gets the results of this Whoami.
 
 
-        :return: The data of this Whoami.
-        :rtype: List[WhoamiData]
+        :return: The results of this Whoami.
+        :rtype: List[WhoamiResults]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[WhoamiData]):
-        """Sets the data of this Whoami.
+    @results.setter
+    def results(self, results: List[WhoamiResults]):
+        """Sets the results of this Whoami.
 
 
-        :param data: The data of this Whoami.
-        :type data: List[WhoamiData]
+        :param results: The results of this Whoami.
+        :type results: List[WhoamiResults]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

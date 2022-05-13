@@ -34,13 +34,13 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.sshkey_pair import SshkeyPair
-from swagger_server.models.sshkey_pair_data import SshkeyPairData
+from swagger_server.models.sshkey_pair_results import SshkeyPairResults
 from swagger_server.models.sshkeys import Sshkeys
 from swagger_server.models.sshkeys_one import SshkeysOne
 from swagger_server.models.sshkeys_post import SshkeysPost
 from swagger_server.models.sshkeys_put import SshkeysPut
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent
-from swagger_server.models.status200_ok_no_content_data import Status200OkNoContentData
+from swagger_server.models.status200_ok_no_content_results import Status200OkNoContentResults
 from swagger_server.models.status200_ok_paginated import Status200OkPaginated
 from swagger_server.models.status200_ok_paginated_links import Status200OkPaginatedLinks
 from swagger_server.models.status200_ok_single import Status200OkSingle
@@ -56,6 +56,6 @@ from swagger_server.models.status500_internal_server_error import Status500Inter
 from swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
 from swagger_server.models.updates import Updates
 from swagger_server.models.version import Version
-from swagger_server.models.version_data import VersionData
+from swagger_server.models.version_results import VersionResults
 from swagger_server.models.whoami import Whoami
-from swagger_server.models.whoami_data import WhoamiData
+from swagger_server.models.whoami_results import WhoamiResults

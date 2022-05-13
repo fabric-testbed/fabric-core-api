@@ -16,11 +16,11 @@ class Sshkeys(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[SshkeysOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[SshkeysOne]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """Sshkeys - a model defined in Swagger
 
-        :param data: The data of this Sshkeys.  # noqa: E501
-        :type data: List[SshkeysOne]
+        :param results: The results of this Sshkeys.  # noqa: E501
+        :type results: List[SshkeysOne]
         :param size: The size of this Sshkeys.  # noqa: E501
         :type size: int
         :param status: The status of this Sshkeys.  # noqa: E501
@@ -29,19 +29,19 @@ class Sshkeys(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[SshkeysOne],
+            'results': List[SshkeysOne],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class Sshkeys(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[SshkeysOne]:
-        """Gets the data of this Sshkeys.
+    def results(self) -> List[SshkeysOne]:
+        """Gets the results of this Sshkeys.
 
 
-        :return: The data of this Sshkeys.
+        :return: The results of this Sshkeys.
         :rtype: List[SshkeysOne]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[SshkeysOne]):
-        """Sets the data of this Sshkeys.
+    @results.setter
+    def results(self, results: List[SshkeysOne]):
+        """Sets the results of this Sshkeys.
 
 
-        :param data: The data of this Sshkeys.
-        :type data: List[SshkeysOne]
+        :param results: The results of this Sshkeys.
+        :type results: List[SshkeysOne]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

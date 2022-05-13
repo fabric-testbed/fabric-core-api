@@ -6,7 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
-from swagger_server.models.sshkey_pair_data import SshkeyPairData  # noqa: F401,E501
+from swagger_server.models.sshkey_pair_results import SshkeyPairResults  # noqa: F401,E501
 from swagger_server.models.status200_ok_single import Status200OkSingle  # noqa: F401,E501
 from swagger_server import util
 
@@ -16,11 +16,11 @@ class SshkeyPair(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, data: List[SshkeyPairData]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
+    def __init__(self, results: List[SshkeyPairResults]=None, size: int=1, status: int=200, type: str=None):  # noqa: E501
         """SshkeyPair - a model defined in Swagger
 
-        :param data: The data of this SshkeyPair.  # noqa: E501
-        :type data: List[SshkeyPairData]
+        :param results: The results of this SshkeyPair.  # noqa: E501
+        :type results: List[SshkeyPairResults]
         :param size: The size of this SshkeyPair.  # noqa: E501
         :type size: int
         :param status: The status of this SshkeyPair.  # noqa: E501
@@ -29,19 +29,19 @@ class SshkeyPair(Model):
         :type type: str
         """
         self.swagger_types = {
-            'data': List[SshkeyPairData],
+            'results': List[SshkeyPairResults],
             'size': int,
             'status': int,
             'type': str
         }
 
         self.attribute_map = {
-            'data': 'data',
+            'results': 'results',
             'size': 'size',
             'status': 'status',
             'type': 'type'
         }
-        self._data = data
+        self._results = results
         self._size = size
         self._status = status
         self._type = type
@@ -58,25 +58,25 @@ class SshkeyPair(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def data(self) -> List[SshkeyPairData]:
-        """Gets the data of this SshkeyPair.
+    def results(self) -> List[SshkeyPairResults]:
+        """Gets the results of this SshkeyPair.
 
 
-        :return: The data of this SshkeyPair.
-        :rtype: List[SshkeyPairData]
+        :return: The results of this SshkeyPair.
+        :rtype: List[SshkeyPairResults]
         """
-        return self._data
+        return self._results
 
-    @data.setter
-    def data(self, data: List[SshkeyPairData]):
-        """Sets the data of this SshkeyPair.
+    @results.setter
+    def results(self, results: List[SshkeyPairResults]):
+        """Sets the results of this SshkeyPair.
 
 
-        :param data: The data of this SshkeyPair.
-        :type data: List[SshkeyPairData]
+        :param results: The results of this SshkeyPair.
+        :type results: List[SshkeyPairResults]
         """
 
-        self._data = data
+        self._results = results
 
     @property
     def size(self) -> int:

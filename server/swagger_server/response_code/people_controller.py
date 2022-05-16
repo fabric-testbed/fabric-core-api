@@ -402,7 +402,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
         if not fab_person:
             return cors_404(details="No match for Person with uuid = '{0}'".format(uuid))
         # check that api_user.uuid == fab_person.uuid
-        if not api_user.uuid == fab_person.uuid:
+        if api_user.uuid != fab_person.uuid:
             return cors_403(
                 details="User: '{0}' is not permitted to update the requested User".format(api_user.display_name))
         fab_profile = FabricProfilesPeople.query.filter_by(id=fab_person.profile.id).one_or_none()
@@ -452,17 +452,17 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 fab_oi = ProfilesOtherIdentities.query.filter(
                     ProfilesOtherIdentities.identity == oi.get('identity'),
                     ProfilesOtherIdentities.profiles_id == fab_profile.id,
-                    ProfilesOtherIdentities.type == oi.get('type')
+                    ProfilesOtherIdentities.type == oi.get('type').casefold()
                 ).one_or_none()
                 if not fab_oi:
-                    if oi.get('type') not in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options:
+                    if oi.get('type').casefold() not in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options:
                         details = "OtherIdentities: '{0}' is not a valid identity type".format(oi.get('type'))
                         logger.error(details)
                         return cors_400(details=details)
                     fab_oi = ProfilesOtherIdentities()
                     fab_oi.identity = oi.get('identity')
                     fab_oi.profiles_id = fab_profile.id
-                    fab_oi.type = oi.get('type')
+                    fab_oi.type = oi.get('type').casefold()
                     db.session.add(fab_oi)
                     db.session.commit()
                     logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
@@ -472,7 +472,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 fab_oi = ProfilesOtherIdentities.query.filter(
                     ProfilesOtherIdentities.identity == oi.get('identity'),
                     ProfilesOtherIdentities.profiles_id == fab_profile.id,
-                    ProfilesOtherIdentities.type == oi.get('type')
+                    ProfilesOtherIdentities.type == oi.get('type').casefold()
                 ).one_or_none()
                 if fab_oi:
                     logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
@@ -523,10 +523,10 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 fab_pp = ProfilesPersonalPages.query.filter(
                     ProfilesPersonalPages.profiles_people_id == fab_profile.id,
                     ProfilesPersonalPages.url == pp.get('url'),
-                    ProfilesPersonalPages.type == pp.get('type')
+                    ProfilesPersonalPages.type == pp.get('type').casefold()
                 ).one_or_none()
                 if not fab_pp:
-                    if pp.get('type') not in PEOPLE_PROFILE_PERSONALPAGE_TYPES.options:
+                    if pp.get('type').casefold() not in PEOPLE_PROFILE_PERSONALPAGE_TYPES.options:
                         details = "PersonalPages: '{0}' is not a valid page type".format(pp.get('type'))
                         logger.error(details)
                         return cors_400(details=details)
@@ -537,7 +537,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     fab_pp = ProfilesPersonalPages()
                     fab_pp.profiles_people_id = fab_profile.id
                     fab_pp.url = pp.get('url')
-                    fab_pp.type = pp.get('type')
+                    fab_pp.type = pp.get('type').casefold()
                     db.session.add(fab_pp)
                     db.session.commit()
                     logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
@@ -547,7 +547,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 fab_pp = ProfilesPersonalPages.query.filter(
                     ProfilesPersonalPages.profiles_people_id == fab_profile.id,
                     ProfilesPersonalPages.url == pp.get('url'),
-                    ProfilesPersonalPages.type == pp.get('type')
+                    ProfilesPersonalPages.type == pp.get('type').casefold()
                 ).one_or_none()
                 if fab_pp:
                     logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(

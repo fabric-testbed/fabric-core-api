@@ -20,3 +20,4 @@ else:
     PROJECTS_TAGS = PROJECTS_TAGS + CoreApiOptions('projects_tags_alpha.json')
 
 # Publications Options
+PUBLICATIONS_CLASSIFICATION_TERMS = CoreApiOptions('publications_classification_terms.json')

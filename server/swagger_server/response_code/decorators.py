@@ -25,3 +25,22 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def secret_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            secret = request.args.get('secret')
+        except Exception as exc:
+            details = 'Exception: {0}'.format(exc)
+            logger.info("login_required(): {0}".format(details))
+            return cors_401(details=details)
+        if secret != os.getenv('SSH_KEY_SECRET'):
+            details = 'Secret required: incorrect secret provided'
+            logger.info("login_required(): {0}".format(details))
+            return cors_401(details=details)
+
+        return f(*args, **kwargs)
+
+    return decorated_function

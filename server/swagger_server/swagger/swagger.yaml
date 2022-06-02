@@ -2463,6 +2463,9 @@ components:
       type: object
       properties:
         description:
+          maxLength: 255
+          minLength: 5
+          pattern: "^[\\w\\s\\-.@(')/]+$"
           type: string
         keytype:
           type: string

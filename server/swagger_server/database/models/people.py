@@ -129,7 +129,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
             '',  # Building, room number
             '',  # Office telephone
             '',  # Home telephone
-            self.email.strip() if self.email else self.eppn.strip() if self.eppn else ''
+            self.oidc_claim_email.strip() if self.oidc_claim_email else self.eppn.strip() if self.eppn else ''
             # external email or other contact info
         ])
 

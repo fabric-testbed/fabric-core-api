@@ -48,6 +48,7 @@ class FabricSshKeys(BaseMixin, TimestampMixin, db.Model):
     # When received from user or returned to them
     # SSH public key has name, public_key and label in that order
     # e.g. 'ssh-dss <base 64 encoded public key> mykey'
+    active = db.Column(db.Boolean, default=True, nullable=False)
     comment = db.Column(db.String())
     deactivated_on = db.Column(db.DateTime(timezone=True), nullable=True)
     deactivated_reason = db.Column(db.String())

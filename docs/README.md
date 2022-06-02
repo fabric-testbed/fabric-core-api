@@ -4,12 +4,13 @@
 
 - [API endpoints](#endpoints)
     - People: [Overview](#people), [Details](./core-api-people.md)
+    - Projects: [Overview](#projects), [Details](./core-api-projects.md)
 
 - [Pagination](./core-api-pagination.md)
 - [HTTP Status Codes](./core-api-status-codes.md)
 
 
-## API endpoints
+## <a name="endpoints"></a>API endpoints
 
 ### <a name="people"></a>People
 
@@ -47,9 +48,11 @@ PATCH `/people/{uuid}/profile`
 - params: `uuid`
 - body: `bio`, `cv`, `job`, `other_identities`, `personal_pages`, `preferences`, `pronouns`, `website`
 
-### Projects
+### <a name="projects"></a>Projects
 
 GET `/projects`
+
+- params: `search`, `limit`, `offset`
 
 POST `/projects`
 

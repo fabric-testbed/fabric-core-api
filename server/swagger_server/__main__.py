@@ -2,10 +2,12 @@
 import os
 
 import connexion
+from connexion.exceptions import BadRequestProblem, Unauthorized, Forbidden
 from flask_migrate import Migrate
 
 from swagger_server import encoder
 from swagger_server.database.db import db
+from swagger_server.response_code.cors_response import cors_400, cors_401, cors_403
 
 """
 ---------------------------------------------------------------------------------
@@ -25,9 +27,25 @@ END: Imports needed for alembic and flask using multiple model definition files
 -------------------------------------------------------------------------------
 """
 
+
+def flask_bad_request(exception):
+    return cors_400(details='Validation error or other malformed request type: {0}'.format(exception))
+
+
+def flask_unauthorized(exception):
+    return cors_401(details='Not authorized to access this endpoint: {0}'.format(exception))
+
+
+def flask_forbidden(exception):
+    return cors_403(details='Forbidden to access this endpoint: {0}'.format(exception))
+
+
 connex_app = connexion.App(__name__, specification_dir='./swagger/')
 connex_app.app.json_encoder = encoder.JSONEncoder
 connex_app.add_api('swagger.yaml', arguments={'title': 'FABRIC Core API'}, pythonic_params=True)
+connex_app.add_error_handler(BadRequestProblem, flask_bad_request)
+connex_app.add_error_handler(Unauthorized, flask_unauthorized)
+connex_app.add_error_handler(Forbidden, flask_forbidden)
 
 app = connex_app.app
 

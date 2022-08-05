@@ -14,6 +14,7 @@ from swagger_server.response_code.cors_response import cors_400, cors_401, cors_
 BEGIN: Imports needed for alembic and flask using multiple model definition files
 ---------------------------------------------------------------------------------
 """
+from swagger_server.database.models.announcements import FabricAnnouncements
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
 from swagger_server.database.models.people import EmailAddresses, Organizations, FabricGroups, FabricPeople, \
     FabricRoles

@@ -3,15 +3,16 @@
 # flake8: noqa
 from __future__ import absolute_import
 # import models into model package
+from swagger_server.models.announcement_one import AnnouncementOne
+from swagger_server.models.announcements import Announcements
+from swagger_server.models.announcements_patch import AnnouncementsPatch
+from swagger_server.models.announcements_post import AnnouncementsPost
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.api_options_details import ApiOptionsDetails
 from swagger_server.models.api_options_one import ApiOptionsOne
 from swagger_server.models.api_options_one_api_endpoints import ApiOptionsOneApiEndpoints
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.bastionkeys_one import BastionkeysOne
-from swagger_server.models.facility_update import FacilityUpdate
-from swagger_server.models.facility_update_patch import FacilityUpdatePatch
-from swagger_server.models.facility_update_post import FacilityUpdatePost
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.people_one import PeopleOne
@@ -54,7 +55,6 @@ from swagger_server.models.status404_not_found import Status404NotFound
 from swagger_server.models.status404_not_found_errors import Status404NotFoundErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
-from swagger_server.models.updates import Updates
 from swagger_server.models.version import Version
 from swagger_server.models.version_results import VersionResults
 from swagger_server.models.whoami import Whoami

@@ -4,6 +4,7 @@ from typing import Union
 
 from flask import request, Response
 
+from swagger_server.models.announcements import Announcements
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.people import People
@@ -19,7 +20,6 @@ from swagger_server.models.status403_forbidden import Status403Forbidden, Status
 from swagger_server.models.status404_not_found import Status404NotFound, Status404NotFoundErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError, \
     Status500InternalServerErrorErrors
-from swagger_server.models.updates import Updates
 from swagger_server.models.version import Version
 from swagger_server.models.whoami import Whoami
 
@@ -67,7 +67,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 def cors_200(response_body: Union[
     ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
-    Status200OkNoContent, Updates, Version, Whoami
+    Status200OkNoContent, Announcements, Version, Whoami
 ] = None) -> cors_response:
     """
     Return 200 - OK

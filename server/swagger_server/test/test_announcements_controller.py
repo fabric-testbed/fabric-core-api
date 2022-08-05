@@ -5,76 +5,80 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
-from swagger_server.models.facility_update_patch import FacilityUpdatePatch  # noqa: E501
-from swagger_server.models.facility_update_post import FacilityUpdatePost  # noqa: E501
+from swagger_server.models.announcements import Announcements  # noqa: E501
+from swagger_server.models.announcements_patch import AnnouncementsPatch  # noqa: E501
+from swagger_server.models.announcements_post import AnnouncementsPost  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
 from swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
 from swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
-from swagger_server.models.updates import Updates  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
-class TestUpdatesController(BaseTestCase):
-    """UpdatesController integration test stubs"""
+class TestAnnouncementsController(BaseTestCase):
+    """AnnouncementsController integration test stubs"""
 
-    def test_updates_get(self):
-        """Test case for updates_get
+    def test_announcements_get(self):
+        """Test case for announcements_get
 
-        Facility Updates (placeholder)
+        Search for FABRIC Announcements
         """
+        query_string = [('type', 'type_example'),
+                        ('is_active', true),
+                        ('search', 'search_example')]
         response = self.client.open(
-            '/updates',
-            method='GET')
+            '/announcements',
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_updates_post(self):
-        """Test case for updates_post
+    def test_announcements_post(self):
+        """Test case for announcements_post
 
-        Facility Updates (placeholder)
+        Create a new FABRIC Announcement
         """
-        body = FacilityUpdatePost()
+        body = AnnouncementsPost()
         response = self.client.open(
-            '/updates',
+            '/announcements',
             method='POST',
             data=json.dumps(body),
             content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_updates_uuid_delete(self):
-        """Test case for updates_uuid_delete
+    def test_announcments_uuid_delete(self):
+        """Test case for announcments_uuid_delete
 
-        Facility Updates (placeholder)
+        Delete Announcement as Portal Admin
         """
         response = self.client.open(
-            '/updates/{uuid}'.format(uuid='uuid_example'),
+            '/announcments/{uuid}'.format(uuid='uuid_example'),
             method='DELETE')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_updates_uuid_get(self):
-        """Test case for updates_uuid_get
+    def test_announcments_uuid_get(self):
+        """Test case for announcments_uuid_get
 
-        Facility Updates (placeholder)
+        Announcement details by UUID
         """
         response = self.client.open(
-            '/updates/{uuid}'.format(uuid='uuid_example'),
+            '/announcments/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_updates_uuid_patch(self):
-        """Test case for updates_uuid_patch
+    def test_announcments_uuid_patch(self):
+        """Test case for announcments_uuid_patch
 
-        Facility Updates (placeholder)
+        Update Announcement details as Portal Admin
         """
-        body = FacilityUpdatePatch()
+        body = AnnouncementsPatch()
         response = self.client.open(
-            '/updates/{uuid}'.format(uuid='uuid_example'),
+            '/announcments/{uuid}'.format(uuid='uuid_example'),
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')

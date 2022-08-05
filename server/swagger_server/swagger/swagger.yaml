@@ -15,6 +15,8 @@ servers:
 - url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.0.0
   description: SwaggerHub API Auto Mocking
 tags:
+- name: announcements
+  description: FABRIC Facility & Maintenance Announcements
 - name: people
   description: FABRIC People
 - name: projects
@@ -23,13 +25,263 @@ tags:
   description: FABRIC Publications
 - name: sshkeys
   description: FABRIC Public SSH Keys
-- name: updates
-  description: FABRIC Facility Updates
 - name: version
   description: Core API Version
 - name: whoami
   description: Who am I authenticated as
 paths:
+  /announcements:
+    get:
+      tags:
+      - announcements
+      summary: Search for FABRIC Announcements
+      description: Search for FABRIC Announcements
+      operationId: announcements_get
+      parameters:
+      - name: type
+        in: query
+        description: announcement type
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - facility
+          - maintenance
+      - name: is_active
+        in: query
+        description: is active
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/announcements'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.announcements_controller
+    post:
+      tags:
+      - announcements
+      summary: Create a new FABRIC Announcement
+      description: Create a new FABRIC Announcement
+      operationId: announcements_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_announcements_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/announcements'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.announcements_controller
+  /announcments/{uuid}:
+    get:
+      tags:
+      - announcements
+      summary: Announcement details by UUID
+      description: Announcement details by UUID
+      operationId: announcments_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/announcements'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.announcements_controller
+    delete:
+      tags:
+      - announcements
+      summary: Delete Announcement as Portal Admin
+      description: Delete Announcement as Portal Admin
+      operationId: announcments_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.announcements_controller
+    patch:
+      tags:
+      - announcements
+      summary: Update Announcement details as Portal Admin
+      description: Update Announcement details as Portal Admin
+      operationId: announcments_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_announcements_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.announcements_controller
   /people:
     get:
       tags:
@@ -1540,229 +1792,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
-  /updates:
-    get:
-      tags:
-      - updates
-      summary: Facility Updates (placeholder)
-      description: Facility Updates (placeholder)
-      operationId: updates_get
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/updates'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.updates_controller
-    post:
-      tags:
-      - updates
-      summary: Facility Updates (placeholder)
-      description: Facility Updates (placeholder)
-      operationId: updates_post
-      requestBody:
-        $ref: '#/components/requestBodies/payload_facility_update_post'
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/updates'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_400_bad_request'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.updates_controller
-  /updates/{uuid}:
-    get:
-      tags:
-      - updates
-      summary: Facility Updates (placeholder)
-      description: Facility Updates (placeholder)
-      operationId: updates_uuid_get
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/updates'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.updates_controller
-    delete:
-      tags:
-      - updates
-      summary: Facility Updates (placeholder)
-      description: Facility Updates (placeholder)
-      operationId: updates_uuid_delete
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.updates_controller
-    patch:
-      tags:
-      - updates
-      summary: Facility Updates (placeholder)
-      description: Facility Updates (placeholder)
-      operationId: updates_uuid_patch
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      requestBody:
-        $ref: '#/components/requestBodies/payload_facility_update_patch'
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_400_bad_request'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.updates_controller
   /version:
     get:
       tags:
@@ -1813,6 +1842,47 @@ paths:
       x-openapi-router-controller: swagger_server.controllers.whoami_controller
 components:
   schemas:
+    announcements:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/announcement_one'
+    announcement_one:
+      required:
+      - content
+      - date
+      - id
+      - title
+      type: object
+      properties:
+        button:
+          type: string
+        content:
+          type: string
+        display_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        is_active:
+          type: boolean
+        link:
+          type: string
+        start_date:
+          type: string
+          format: date
+        title:
+          type: string
+        type:
+          type: string
+        uuid:
+          type: string
     status_200_ok_single:
       type: object
       properties:
@@ -2279,39 +2349,6 @@ components:
           - deactivated
           - expired
           default: active
-    updates:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/status_200_ok_single'
-      - type: object
-        properties:
-          results:
-            type: array
-            items:
-              $ref: '#/components/schemas/facility_update'
-    facility_update:
-      required:
-      - content
-      - date
-      - id
-      - title
-      type: object
-      properties:
-        button:
-          type: string
-        content:
-          type: string
-        date:
-          type: string
-          format: date
-        id:
-          type: integer
-        link:
-          type: string
-        title:
-          type: string
-        uuid:
-          type: string
     version:
       type: object
       allOf:
@@ -2475,57 +2512,70 @@ components:
           default: sliver
         public_openssh:
           type: string
-    facility_update_post:
+    announcements_post:
       required:
       - content
-      - date
-      - end_date
-      - id
+      - is_active
       - start_date
       - title
+      - type
       type: object
       properties:
         button:
           type: string
         content:
           type: string
-        date:
+        display_date:
           type: string
-          format: date
         end_date:
           type: string
-          format: date-time
-        id:
-          type: integer
+        is_active:
+          type: boolean
+          default: true
         link:
           type: string
         start_date:
           type: string
-          format: date-time
         title:
           type: string
-    facility_update_patch:
+        type:
+          type: string
+          enum:
+          - facility
+          - maintenance
+          default: facility
+    announcements_patch:
+      required:
+      - content
+      - is_active
+      - start_date
+      - title
+      - type
       type: object
       properties:
         button:
           type: string
         content:
           type: string
-        date:
+        display_date:
           type: string
-          format: date
         end_date:
           type: string
-          format: date-time
-        id:
-          type: integer
+        is_active:
+          type: boolean
+          default: true
         link:
           type: string
         start_date:
           type: string
-          format: date-time
         title:
           type: string
+        type:
+          type: string
+          enum:
+          - facility
+          - maintenance
+          default: facility
     status_200_ok_paginated_links:
       type: object
       properties:
@@ -2738,12 +2788,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/whoami'
-    "200_updates":
+    "200_announcements":
       description: OK
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/updates'
+            $ref: '#/components/schemas/announcements'
     "200_api_options_details":
       description: OK
       content:
@@ -2847,6 +2897,27 @@ components:
       explode: true
       schema:
         type: string
+    announcement_is_active:
+      name: is_active
+      in: query
+      description: is active
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+    announcement_type:
+      name: type
+      in: query
+      description: announcement type
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        enum:
+        - facility
+        - maintenance
     operation:
       name: operation
       in: query
@@ -2944,16 +3015,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sshkeys_put'
-    payload_facility_update_post:
-      description: Create a facility update
+    payload_announcements_post:
+      description: Create an announcement
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/facility_update_post'
-    payload_facility_update_patch:
-      description: Update an existing facility update
+            $ref: '#/components/schemas/announcements_post'
+    payload_announcements_patch:
+      description: Update an existing announcement
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/facility_update_patch'
+            $ref: '#/components/schemas/announcements_patch'
 

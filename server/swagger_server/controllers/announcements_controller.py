@@ -2,6 +2,7 @@ import connexion
 import six
 
 from swagger_server.models.announcements import Announcements  # noqa: E501
+from swagger_server.models.announcements_details import AnnouncementsDetails  # noqa: E501
 from swagger_server.models.announcements_patch import AnnouncementsPatch  # noqa: E501
 from swagger_server.models.announcements_post import AnnouncementsPost  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
@@ -14,21 +15,25 @@ from swagger_server import util
 from swagger_server.response_code import announcements_controller as rc
 
 
-def announcements_get(type=None, is_active=None, search=None):  # noqa: E501
+def announcements_get(announcement_type=None, is_active=None, search=None, offset=None, limit=None):  # noqa: E501
     """Search for FABRIC Announcements
 
     Search for FABRIC Announcements # noqa: E501
 
-    :param type: announcement type
-    :type type: str
+    :param announcement_type: announcement type
+    :type announcement_type: str
     :param is_active: is active
     :type is_active: bool
     :param search: search term applied
     :type search: str
+    :param offset: number of items to skip before starting to collect the result set
+    :type offset: int
+    :param limit: maximum number of results to return per page (1 or more)
+    :type limit: int
 
     :rtype: Announcements
     """
-    return rc.announcements_get(type, is_active, search)
+    return rc.announcements_get(announcement_type, is_active, search, offset, limit)
 
 
 def announcements_post(body=None):  # noqa: E501
@@ -39,14 +44,14 @@ def announcements_post(body=None):  # noqa: E501
     :param body: Create an announcement
     :type body: dict | bytes
 
-    :rtype: Announcements
+    :rtype: AnnouncementsDetails
     """
     if connexion.request.is_json:
         body = AnnouncementsPost.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.announcements_post(body)
 
 
-def announcments_uuid_delete(uuid):  # noqa: E501
+def announcements_uuid_delete(uuid):  # noqa: E501
     """Delete Announcement as Portal Admin
 
     Delete Announcement as Portal Admin # noqa: E501
@@ -56,10 +61,10 @@ def announcments_uuid_delete(uuid):  # noqa: E501
 
     :rtype: Status200OkNoContent
     """
-    return rc.announcments_uuid_delete(uuid)
+    return rc.announcements_uuid_delete(uuid)
 
 
-def announcments_uuid_get(uuid):  # noqa: E501
+def announcements_uuid_get(uuid):  # noqa: E501
     """Announcement details by UUID
 
     Announcement details by UUID # noqa: E501
@@ -67,12 +72,12 @@ def announcments_uuid_get(uuid):  # noqa: E501
     :param uuid: universally unique identifier
     :type uuid: str
 
-    :rtype: Announcements
+    :rtype: AnnouncementsDetails
     """
-    return rc.announcments_uuid_get(uuid)
+    return rc.announcements_uuid_get(uuid)
 
 
-def announcments_uuid_patch(uuid, body=None):  # noqa: E501
+def announcements_uuid_patch(uuid, body=None):  # noqa: E501
     """Update Announcement details as Portal Admin
 
     Update Announcement details as Portal Admin # noqa: E501
@@ -86,4 +91,4 @@ def announcments_uuid_patch(uuid, body=None):  # noqa: E501
     """
     if connexion.request.is_json:
         body = AnnouncementsPatch.from_dict(connexion.request.get_json())  # noqa: E501
-    return rc.announcments_uuid_patch(uuid, body)
+    return rc.announcements_uuid_patch(uuid, body)

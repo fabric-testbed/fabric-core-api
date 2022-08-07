@@ -1,22 +1,24 @@
-import re
 import logging
 import os
+import re
+from datetime import datetime, timezone
 
-from datetime import datetime, timedelta, timezone
+from fss_utils.sshkey import FABRICSSHKey
+
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.sshkeys import FabricSshKeys, EnumSshKeyTypes
+from swagger_server.database.models.sshkeys import EnumSshKeyTypes, FabricSshKeys
 from swagger_server.models.bastionkeys import Bastionkeys  # noqa: E501
 from swagger_server.models.sshkey_pair import SshkeyPair
-from swagger_server.models.sshkeys import Sshkeys, SshkeysOne  # noqa: E501
+from swagger_server.models.sshkeys import Sshkeys  # noqa: E501
 from swagger_server.models.sshkeys_post import SshkeysPost  # noqa: E501
 from swagger_server.models.sshkeys_put import SshkeysPut
-from fss_utils.sshkey import FABRICSSHKey
-from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults  # noqa: E501
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
+    Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required, secret_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.sshkeys_utils import create_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, \
-    sskeys_count_by_fabric_key_type, bastionkeys_by_since_date, delete_sshkey, put_sshkey
+from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, delete_sshkey, \
+    put_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, sskeys_count_by_fabric_key_type
 
 logger = logging.getLogger(__name__)
 

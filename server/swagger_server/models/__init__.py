@@ -5,6 +5,7 @@ from __future__ import absolute_import
 # import models into model package
 from swagger_server.models.announcement_one import AnnouncementOne
 from swagger_server.models.announcements import Announcements
+from swagger_server.models.announcements_details import AnnouncementsDetails
 from swagger_server.models.announcements_patch import AnnouncementsPatch
 from swagger_server.models.announcements_post import AnnouncementsPost
 from swagger_server.models.api_options import ApiOptions

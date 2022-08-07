@@ -2,7 +2,7 @@
 import os
 
 import connexion
-from connexion.exceptions import BadRequestProblem, Unauthorized, Forbidden
+from connexion.exceptions import BadRequestProblem, Unauthorized, Forbidden, ValidationError
 from flask_migrate import Migrate
 
 from swagger_server import encoder
@@ -45,6 +45,7 @@ connex_app = connexion.App(__name__, specification_dir='./swagger/')
 connex_app.app.json_encoder = encoder.JSONEncoder
 connex_app.add_api('swagger.yaml', arguments={'title': 'FABRIC Core API'}, pythonic_params=True)
 connex_app.add_error_handler(BadRequestProblem, flask_bad_request)
+connex_app.add_error_handler(ValidationError, flask_bad_request)
 connex_app.add_error_handler(Unauthorized, flask_unauthorized)
 connex_app.add_error_handler(Forbidden, flask_forbidden)
 

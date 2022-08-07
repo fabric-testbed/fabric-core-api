@@ -3,30 +3,30 @@ import os
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
+from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesProjects
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
-from swagger_server.models.projects_details import ProjectsOne, ProjectsDetails  # noqa: E501
+from swagger_server.models.projects_details import ProjectsDetails, ProjectsOne  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
-from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults  # noqa: E501
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
+    Status200OkNoContentResults  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
-from swagger_server.response_code.comanage_utils import update_comanage_group, \
-    delete_comanage_group
+from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
-from swagger_server.response_code.profiles_utils import get_profile_projects, update_profiles_projects_keywords, \
-    delete_profile_projects, update_profiles_projects_references
-from swagger_server.response_code.projects_utils import get_project_membership, get_projects_personnel, \
-    update_projects_personnel, update_projects_tags, create_fabric_project_from_api
+from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
+    update_profiles_projects_keywords, update_profiles_projects_references
+from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
+    get_projects_personnel, update_projects_personnel, update_projects_tags
 from swagger_server.response_code.response_utils import is_valid_url
 
 logger = logging.getLogger(__name__)
@@ -153,8 +153,10 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
         response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if results_page.pages > 0 else None
         response.links.last = _URL_OFFSET_LIMIT.format(base, int((results_page.pages - 1) * limit),
                                                        limit) if results_page.pages > 0 else None
-        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if results_page.has_next else None
-        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if results_page.has_prev else None
+        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit),
+                                                       limit) if results_page.has_next else None
+        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit),
+                                                       limit) if results_page.has_prev else None
         # set offset, limit and size
         response.limit = limit
         response.offset = offset
@@ -248,7 +250,8 @@ def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """
     try:
         if search:
-            results = [tag for tag in PROJECTS_PROFILE_PREFERENCES.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PROJECTS_PROFILE_PREFERENCES.search(search) if
+                       search.casefold() in tag.casefold()]
         else:
             results = PROJECTS_PROFILE_PREFERENCES.options
         response = ApiOptions()

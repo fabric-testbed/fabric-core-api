@@ -1,5 +1,3 @@
-import enum
-
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 

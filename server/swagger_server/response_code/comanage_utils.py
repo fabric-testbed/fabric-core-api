@@ -5,8 +5,7 @@ from datetime import datetime
 from comanage_api import ComanageApi
 
 from swagger_server.database.db import db
-from swagger_server.database.models.people import EmailAddresses
-from swagger_server.database.models.people import FabricGroups, FabricRoles, FabricPeople, Organizations
+from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
 
 logger = logging.getLogger(__name__)
 

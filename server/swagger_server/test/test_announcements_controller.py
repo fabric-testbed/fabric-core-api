@@ -6,6 +6,7 @@ from flask import json
 from six import BytesIO
 
 from swagger_server.models.announcements import Announcements  # noqa: E501
+from swagger_server.models.announcements_details import AnnouncementsDetails  # noqa: E501
 from swagger_server.models.announcements_patch import AnnouncementsPatch  # noqa: E501
 from swagger_server.models.announcements_post import AnnouncementsPost  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
@@ -25,9 +26,11 @@ class TestAnnouncementsController(BaseTestCase):
 
         Search for FABRIC Announcements
         """
-        query_string = [('type', 'type_example'),
+        query_string = [('announcement_type', 'announcement_type_example'),
                         ('is_active', true),
-                        ('search', 'search_example')]
+                        ('search', 'search_example'),
+                        ('offset', 1),
+                        ('limit', 20)]
         response = self.client.open(
             '/announcements',
             method='GET',
@@ -49,36 +52,36 @@ class TestAnnouncementsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_announcments_uuid_delete(self):
-        """Test case for announcments_uuid_delete
+    def test_announcements_uuid_delete(self):
+        """Test case for announcements_uuid_delete
 
         Delete Announcement as Portal Admin
         """
         response = self.client.open(
-            '/announcments/{uuid}'.format(uuid='uuid_example'),
+            '/announcements/{uuid}'.format(uuid='uuid_example'),
             method='DELETE')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_announcments_uuid_get(self):
-        """Test case for announcments_uuid_get
+    def test_announcements_uuid_get(self):
+        """Test case for announcements_uuid_get
 
         Announcement details by UUID
         """
         response = self.client.open(
-            '/announcments/{uuid}'.format(uuid='uuid_example'),
+            '/announcements/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_announcments_uuid_patch(self):
-        """Test case for announcments_uuid_patch
+    def test_announcements_uuid_patch(self):
+        """Test case for announcements_uuid_patch
 
         Update Announcement details as Portal Admin
         """
         body = AnnouncementsPatch()
         response = self.client.open(
-            '/announcments/{uuid}'.format(uuid='uuid_example'),
+            '/announcements/{uuid}'.format(uuid='uuid_example'),
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')

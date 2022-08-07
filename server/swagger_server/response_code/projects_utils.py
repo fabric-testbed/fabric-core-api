@@ -3,13 +3,13 @@ import os
 from uuid import uuid4
 
 from swagger_server.database.db import db
-from swagger_server.database.models.people import FabricGroups, FabricRoles, FabricPeople
+from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
-from swagger_server.response_code.comanage_utils import create_comanage_role, delete_comanage_role, \
-    create_comanage_group
+from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
+    delete_comanage_role
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference

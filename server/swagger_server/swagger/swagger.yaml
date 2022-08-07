@@ -38,7 +38,7 @@ paths:
       description: Search for FABRIC Announcements
       operationId: announcements_get
       parameters:
-      - name: type
+      - name: announcement_type
         in: query
         description: announcement type
         required: false
@@ -66,6 +66,30 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: offset
+        in: query
+        description: number of items to skip before starting to collect the result
+          set
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        description: maximum number of results to return per page (1 or more)
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 20
+          minimum: 1
+          type: integer
+          format: int32
+          default: 5
       responses:
         "200":
           description: OK
@@ -106,7 +130,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/announcements'
+                $ref: '#/components/schemas/announcements_details'
         "400":
           description: Bad Request
           content:
@@ -132,13 +156,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.announcements_controller
-  /announcments/{uuid}:
+  /announcements/{uuid}:
     get:
       tags:
       - announcements
       summary: Announcement details by UUID
       description: Announcement details by UUID
-      operationId: announcments_uuid_get
+      operationId: announcements_uuid_get
       parameters:
       - name: uuid
         in: path
@@ -154,7 +178,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/announcements'
+                $ref: '#/components/schemas/announcements_details'
         "401":
           description: Unauthorized
           content:
@@ -185,7 +209,7 @@ paths:
       - announcements
       summary: Delete Announcement as Portal Admin
       description: Delete Announcement as Portal Admin
-      operationId: announcments_uuid_delete
+      operationId: announcements_uuid_delete
       parameters:
       - name: uuid
         in: path
@@ -232,7 +256,7 @@ paths:
       - announcements
       summary: Update Announcement details as Portal Admin
       description: Update Announcement details as Portal Admin
-      operationId: announcments_uuid_patch
+      operationId: announcements_uuid_patch
       parameters:
       - name: uuid
         in: path
@@ -1845,6 +1869,16 @@ components:
     announcements:
       type: object
       allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/announcement_one'
+    announcements_details:
+      type: object
+      allOf:
       - $ref: '#/components/schemas/status_200_ok_single'
       - type: object
         properties:
@@ -1854,12 +1888,15 @@ components:
               $ref: '#/components/schemas/announcement_one'
     announcement_one:
       required:
+      - announcement_type
       - content
-      - date
-      - id
+      - is_active
+      - start_date
       - title
       type: object
       properties:
+        announcement_type:
+          type: string
         button:
           type: string
         content:
@@ -1878,8 +1915,6 @@ components:
           type: string
           format: date
         title:
-          type: string
-        type:
           type: string
         uuid:
           type: string
@@ -2514,13 +2549,19 @@ components:
           type: string
     announcements_post:
       required:
+      - announcement_type
       - content
       - is_active
       - start_date
       - title
-      - type
       type: object
       properties:
+        announcement_type:
+          type: string
+          enum:
+          - facility
+          - maintenance
+          default: facility
         button:
           type: string
         content:
@@ -2538,21 +2579,15 @@ components:
           type: string
         title:
           type: string
-        type:
-          type: string
-          enum:
-          - facility
-          - maintenance
-          default: facility
     announcements_patch:
-      required:
-      - content
-      - is_active
-      - start_date
-      - title
-      - type
       type: object
       properties:
+        announcement_type:
+          type: string
+          enum:
+          - facility
+          - maintenance
+          default: facility
         button:
           type: string
         content:
@@ -2570,12 +2605,6 @@ components:
           type: string
         title:
           type: string
-        type:
-          type: string
-          enum:
-          - facility
-          - maintenance
-          default: facility
     status_200_ok_paginated_links:
       type: object
       properties:
@@ -2794,6 +2823,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/announcements'
+    "200_announcements_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/announcements_details'
     "200_api_options_details":
       description: OK
       content:
@@ -2907,7 +2942,7 @@ components:
       schema:
         type: boolean
     announcement_type:
-      name: type
+      name: announcement_type
       in: query
       description: announcement type
       required: false

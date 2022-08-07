@@ -1,19 +1,19 @@
-import os
 import logging
-from uuid import uuid4
-from swagger_server.database.db import db
-from collections import defaultdict
-import re
+import os
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
+
+from fss_utils.sshkey import FABRICSSHKey
+
+from swagger_server.database.db import db
+from swagger_server.database.models.people import FabricPeople
+from swagger_server.database.models.sshkeys import EnumSshKeyStatus, EnumSshKeyTypes, FabricSshKeys
+from swagger_server.models.bastionkeys import BastionkeysOne
 from swagger_server.models.sshkey_pair import SshkeyPairResults
 from swagger_server.models.sshkeys_one import SshkeysOne
-from fss_utils.sshkey import FABRICSSHKey
 from swagger_server.models.sshkeys_post import SshkeysPost
 from swagger_server.models.sshkeys_put import SshkeysPut
-from swagger_server.database.models.people import FabricPeople
 from swagger_server.response_code.cors_response import cors_400, cors_500
-from swagger_server.database.models.sshkeys import FabricSshKeys, EnumSshKeyTypes, EnumSshKeyStatus
-from swagger_server.models.bastionkeys import BastionkeysOne
 
 logger = logging.getLogger(__name__)
 

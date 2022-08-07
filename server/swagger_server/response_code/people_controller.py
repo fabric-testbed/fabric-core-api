@@ -3,7 +3,7 @@ import os
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
-from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
+from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, ProfilesOtherIdentities, \
     ProfilesPersonalPages
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
@@ -11,16 +11,17 @@ from swagger_server.models.people import People, Person, Status200OkPaginatedLin
 from swagger_server.models.people_details import PeopleDetails, PeopleOne  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch
 from swagger_server.models.profile_people import ProfilePeople
-from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults  # noqa: E501
+from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
+    Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
-    PEOPLE_PROFILE_PREFERENCES, PEOPLE_PROFILE_PERSONALPAGE_TYPES
+    PEOPLE_PROFILE_PERSONALPAGE_TYPES, PEOPLE_PROFILE_PREFERENCES
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
-from swagger_server.response_code.people_utils import get_person_by_login_claims, get_people_roles
+from swagger_server.response_code.people_utils import get_people_roles, get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import get_people_preferences
 from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
     personal_pages_to_array
-from swagger_server.response_code.response_utils import is_valid_url, array_difference
+from swagger_server.response_code.response_utils import array_difference, is_valid_url
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
 
 logger = logging.getLogger(__name__)
@@ -85,8 +86,10 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if results_page.pages > 0 else None
         response.links.last = _URL_OFFSET_LIMIT.format(base, int((results_page.pages - 1) * limit),
                                                        limit) if results_page.pages > 0 else None
-        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit), limit) if results_page.has_next else None
-        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit), limit) if results_page.has_prev else None
+        response.links.next = _URL_OFFSET_LIMIT.format(base, int(offset + limit),
+                                                       limit) if results_page.has_next else None
+        response.links.prev = _URL_OFFSET_LIMIT.format(base, int(offset - limit),
+                                                       limit) if results_page.has_prev else None
         # set offset, limit and size
         response.limit = limit
         response.offset = offset
@@ -139,7 +142,7 @@ def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: 
     try:
         if search:
             results = [tag for tag in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.search(search) if
-                    search.casefold() in tag.casefold()]
+                       search.casefold() in tag.casefold()]
         else:
             results = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options
         response = ApiOptions()
@@ -166,7 +169,7 @@ def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E
     try:
         if search:
             results = [tag for tag in PEOPLE_PROFILE_PERSONALPAGE_TYPES.search(search) if
-                    search.casefold() in tag.casefold()]
+                       search.casefold() in tag.casefold()]
         else:
             results = PEOPLE_PROFILE_PERSONALPAGE_TYPES.options
         response = ApiOptions()

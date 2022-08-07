@@ -5,6 +5,7 @@ from typing import Union
 from flask import request, Response
 
 from swagger_server.models.announcements import Announcements
+from swagger_server.models.announcements_details import AnnouncementsDetails
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.people import People
@@ -67,7 +68,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 def cors_200(response_body: Union[
     ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
-    Status200OkNoContent, Announcements, Version, Whoami
+    Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails
 ] = None) -> cors_response:
     """
     Return 200 - OK

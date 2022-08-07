@@ -1,7 +1,7 @@
 import json
 import os
-import re
 from abc import ABC
+
 import validators
 from validators import ValidationFailure
 

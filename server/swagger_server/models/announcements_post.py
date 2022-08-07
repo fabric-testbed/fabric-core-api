@@ -14,9 +14,11 @@ class AnnouncementsPost(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, button: str=None, content: str=None, display_date: str=None, end_date: str=None, is_active: bool=True, link: str=None, start_date: str=None, title: str=None, type: str='facility'):  # noqa: E501
+    def __init__(self, announcement_type: str='facility', button: str=None, content: str=None, display_date: str=None, end_date: str=None, is_active: bool=True, link: str=None, start_date: str=None, title: str=None):  # noqa: E501
         """AnnouncementsPost - a model defined in Swagger
 
+        :param announcement_type: The announcement_type of this AnnouncementsPost.  # noqa: E501
+        :type announcement_type: str
         :param button: The button of this AnnouncementsPost.  # noqa: E501
         :type button: str
         :param content: The content of this AnnouncementsPost.  # noqa: E501
@@ -33,10 +35,9 @@ class AnnouncementsPost(Model):
         :type start_date: str
         :param title: The title of this AnnouncementsPost.  # noqa: E501
         :type title: str
-        :param type: The type of this AnnouncementsPost.  # noqa: E501
-        :type type: str
         """
         self.swagger_types = {
+            'announcement_type': str,
             'button': str,
             'content': str,
             'display_date': str,
@@ -44,11 +45,11 @@ class AnnouncementsPost(Model):
             'is_active': bool,
             'link': str,
             'start_date': str,
-            'title': str,
-            'type': str
+            'title': str
         }
 
         self.attribute_map = {
+            'announcement_type': 'announcement_type',
             'button': 'button',
             'content': 'content',
             'display_date': 'display_date',
@@ -56,9 +57,9 @@ class AnnouncementsPost(Model):
             'is_active': 'is_active',
             'link': 'link',
             'start_date': 'start_date',
-            'title': 'title',
-            'type': 'type'
+            'title': 'title'
         }
+        self._announcement_type = announcement_type
         self._button = button
         self._content = content
         self._display_date = display_date
@@ -67,7 +68,6 @@ class AnnouncementsPost(Model):
         self._link = link
         self._start_date = start_date
         self._title = title
-        self._type = type
 
     @classmethod
     def from_dict(cls, dikt) -> 'AnnouncementsPost':
@@ -79,6 +79,33 @@ class AnnouncementsPost(Model):
         :rtype: AnnouncementsPost
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def announcement_type(self) -> str:
+        """Gets the announcement_type of this AnnouncementsPost.
+
+
+        :return: The announcement_type of this AnnouncementsPost.
+        :rtype: str
+        """
+        return self._announcement_type
+
+    @announcement_type.setter
+    def announcement_type(self, announcement_type: str):
+        """Sets the announcement_type of this AnnouncementsPost.
+
+
+        :param announcement_type: The announcement_type of this AnnouncementsPost.
+        :type announcement_type: str
+        """
+        allowed_values = ["facility", "maintenance"]  # noqa: E501
+        if announcement_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `announcement_type` ({0}), must be one of {1}"
+                .format(announcement_type, allowed_values)
+            )
+
+        self._announcement_type = announcement_type
 
     @property
     def button(self) -> str:
@@ -255,30 +282,3 @@ class AnnouncementsPost(Model):
             raise ValueError("Invalid value for `title`, must not be `None`")  # noqa: E501
 
         self._title = title
-
-    @property
-    def type(self) -> str:
-        """Gets the type of this AnnouncementsPost.
-
-
-        :return: The type of this AnnouncementsPost.
-        :rtype: str
-        """
-        return self._type
-
-    @type.setter
-    def type(self, type: str):
-        """Sets the type of this AnnouncementsPost.
-
-
-        :param type: The type of this AnnouncementsPost.
-        :type type: str
-        """
-        allowed_values = ["facility", "maintenance"]  # noqa: E501
-        if type not in allowed_values:
-            raise ValueError(
-                "Invalid value for `type` ({0}), must be one of {1}"
-                .format(type, allowed_values)
-            )
-
-        self._type = type

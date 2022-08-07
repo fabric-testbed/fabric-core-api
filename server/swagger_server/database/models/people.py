@@ -1,7 +1,8 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy.schema import Index
 from typing import Optional
+
+from sqlalchemy.schema import Index
 
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
@@ -138,6 +139,9 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
 
     def is_project_lead(self) -> bool:
         return os.getenv('COU_NAME_PROJECT_LEADS').casefold() in [r.name.casefold() for r in self.roles]
+
+    def is_portal_admin(self) -> bool:
+        return os.getenv('COU_NAME_PORTAL_ADMINS').casefold() in [r.name.casefold() for r in self.roles]
 
     def is_facility_operator(self) -> bool:
         return os.getenv('COU_NAME_FACILITY_OPERATORS').casefold() in [r.name.casefold() for r in self.roles]

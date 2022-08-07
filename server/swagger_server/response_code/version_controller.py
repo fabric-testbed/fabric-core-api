@@ -1,6 +1,6 @@
 import logging
 
-from swagger_server import __API_VERSION__, __API_REFERENCE__
+from swagger_server import __API_REFERENCE__, __API_VERSION__
 from swagger_server.models.version import Version, VersionResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_500
 

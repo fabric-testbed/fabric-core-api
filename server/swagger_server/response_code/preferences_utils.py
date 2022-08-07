@@ -1,6 +1,6 @@
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.preferences import FabricPreferences, EnumPreferenceTypes
+from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.preferences import Preferences

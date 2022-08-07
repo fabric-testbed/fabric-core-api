@@ -1,15 +1,12 @@
 import logging
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
-
-from fss_utils.sshkey import FABRICSSHKey
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
-from swagger_server.response_code.comanage_utils import api
-from swagger_server.response_code.comanage_utils import update_email_addresses, update_people_roles, \
-    update_people_identifiers, update_org_affiliation
+from swagger_server.response_code.comanage_utils import api, update_email_addresses, update_org_affiliation, \
+    update_people_identifiers, update_people_roles
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims

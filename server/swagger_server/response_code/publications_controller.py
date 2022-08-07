@@ -1,22 +1,11 @@
-import re
-
-import connexion
-import six
-from swagger_server.response_code.decorators import login_required
 import logging
 import os
 
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
-from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
-from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
-from swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
-from swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
-from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
-from swagger_server import util
-from swagger_server.response_code import publications_controller as rc
-from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code import PUBLICATIONS_CLASSIFICATION_TERMS
+from swagger_server.response_code.cors_response import cors_200, cors_500
+from swagger_server.response_code.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +25,8 @@ def publications_classification_terms_get(search=None) -> ApiOptions:  # noqa: E
     """
     try:
         if search:
-            results = [tag for tag in PUBLICATIONS_CLASSIFICATION_TERMS.search(search) if search.casefold() in tag.casefold()]
+            results = [tag for tag in PUBLICATIONS_CLASSIFICATION_TERMS.search(search) if
+                       search.casefold() in tag.casefold()]
         else:
             results = PUBLICATIONS_CLASSIFICATION_TERMS.options
         response = ApiOptions()

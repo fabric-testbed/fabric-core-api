@@ -14,9 +14,11 @@ class AnnouncementOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, button: str=None, content: str=None, display_date: date=None, end_date: date=None, is_active: bool=None, link: str=None, start_date: date=None, title: str=None, type: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, announcement_type: str=None, button: str=None, content: str=None, display_date: date=None, end_date: date=None, is_active: bool=None, link: str=None, start_date: date=None, title: str=None, uuid: str=None):  # noqa: E501
         """AnnouncementOne - a model defined in Swagger
 
+        :param announcement_type: The announcement_type of this AnnouncementOne.  # noqa: E501
+        :type announcement_type: str
         :param button: The button of this AnnouncementOne.  # noqa: E501
         :type button: str
         :param content: The content of this AnnouncementOne.  # noqa: E501
@@ -33,12 +35,11 @@ class AnnouncementOne(Model):
         :type start_date: date
         :param title: The title of this AnnouncementOne.  # noqa: E501
         :type title: str
-        :param type: The type of this AnnouncementOne.  # noqa: E501
-        :type type: str
         :param uuid: The uuid of this AnnouncementOne.  # noqa: E501
         :type uuid: str
         """
         self.swagger_types = {
+            'announcement_type': str,
             'button': str,
             'content': str,
             'display_date': date,
@@ -47,11 +48,11 @@ class AnnouncementOne(Model):
             'link': str,
             'start_date': date,
             'title': str,
-            'type': str,
             'uuid': str
         }
 
         self.attribute_map = {
+            'announcement_type': 'announcement_type',
             'button': 'button',
             'content': 'content',
             'display_date': 'display_date',
@@ -60,9 +61,9 @@ class AnnouncementOne(Model):
             'link': 'link',
             'start_date': 'start_date',
             'title': 'title',
-            'type': 'type',
             'uuid': 'uuid'
         }
+        self._announcement_type = announcement_type
         self._button = button
         self._content = content
         self._display_date = display_date
@@ -71,7 +72,6 @@ class AnnouncementOne(Model):
         self._link = link
         self._start_date = start_date
         self._title = title
-        self._type = type
         self._uuid = uuid
 
     @classmethod
@@ -84,6 +84,29 @@ class AnnouncementOne(Model):
         :rtype: AnnouncementOne
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def announcement_type(self) -> str:
+        """Gets the announcement_type of this AnnouncementOne.
+
+
+        :return: The announcement_type of this AnnouncementOne.
+        :rtype: str
+        """
+        return self._announcement_type
+
+    @announcement_type.setter
+    def announcement_type(self, announcement_type: str):
+        """Sets the announcement_type of this AnnouncementOne.
+
+
+        :param announcement_type: The announcement_type of this AnnouncementOne.
+        :type announcement_type: str
+        """
+        if announcement_type is None:
+            raise ValueError("Invalid value for `announcement_type`, must not be `None`")  # noqa: E501
+
+        self._announcement_type = announcement_type
 
     @property
     def button(self) -> str:
@@ -189,6 +212,8 @@ class AnnouncementOne(Model):
         :param is_active: The is_active of this AnnouncementOne.
         :type is_active: bool
         """
+        if is_active is None:
+            raise ValueError("Invalid value for `is_active`, must not be `None`")  # noqa: E501
 
         self._is_active = is_active
 
@@ -231,6 +256,8 @@ class AnnouncementOne(Model):
         :param start_date: The start_date of this AnnouncementOne.
         :type start_date: date
         """
+        if start_date is None:
+            raise ValueError("Invalid value for `start_date`, must not be `None`")  # noqa: E501
 
         self._start_date = start_date
 
@@ -256,27 +283,6 @@ class AnnouncementOne(Model):
             raise ValueError("Invalid value for `title`, must not be `None`")  # noqa: E501
 
         self._title = title
-
-    @property
-    def type(self) -> str:
-        """Gets the type of this AnnouncementOne.
-
-
-        :return: The type of this AnnouncementOne.
-        :rtype: str
-        """
-        return self._type
-
-    @type.setter
-    def type(self, type: str):
-        """Sets the type of this AnnouncementOne.
-
-
-        :param type: The type of this AnnouncementOne.
-        :type type: str
-        """
-
-        self._type = type
 
     @property
     def uuid(self) -> str:

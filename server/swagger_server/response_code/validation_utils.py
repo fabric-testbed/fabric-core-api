@@ -3,7 +3,7 @@ from datetime import datetime
 _datetime_formats = ['%A, %B %d, %Y', '%A, %B %d, %Y %I:%M:%S %p %Z', '%A, %d %B %Y', '%B %d %Y', '%B %d, %Y',
                      '%H:%M:%S', '%H:%M:%S,%f', '%H:%M:%S.%f', '%Y %b %d %H:%M:%S.%f', '%Y %b %d %H:%M:%S.%f %Z',
                      '%Y %b %d %H:%M:%S.%f*%Z', '%Y%m%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S %z', '%Y-%m-%d %H:%M:%S%z',
-                     '%Y-%m-%d %H:%M:%S,%f', '%Y-%m-%d %H:%M:%S,%f%z', '%Y-%m-%d %H:%M:%S.%f',
+                     '%Y-%m-%d', '%Y-%m-%d %H:%M:%S,%f', '%Y-%m-%d %H:%M:%S,%f%z', '%Y-%m-%d %H:%M:%S.%f',
                      '%Y-%m-%d %H:%M:%S.%f%z', '%Y-%m-%d %I:%M %p', '%Y-%m-%d %I:%M:%S %p', '%Y-%m-%d*%H:%M:%S',
                      '%Y-%m-%d*%H:%M:%S:%f', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S%Z', '%Y-%m-%dT%H:%M:%S%z',
                      '%Y-%m-%dT%H:%M:%S*%f%z', '%Y-%m-%dT%H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S.%f%z', '%Y/%m/%d',

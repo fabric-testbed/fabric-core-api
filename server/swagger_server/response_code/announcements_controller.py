@@ -110,7 +110,25 @@ def announcements_get(
         # # set links
         response.links = Status200OkPaginatedLinks()
         _URL_OFFSET_LIMIT = '{0}offset={1}&limit={2}'
-        base = '{0}/people?'.format(_SERVER_URL) if not search else '{0}/people?search={1}&'.format(_SERVER_URL, search)
+        if announcement_type and type(is_active) == bool and search:
+            base = '{0}/announcements?announcement_type={1}&is_active={2}&search={3}&'.format(_SERVER_URL,
+                                                                                              announcement_type,
+                                                                                              is_active, search)
+        elif announcement_type and type(is_active) == bool:
+            base = '{0}/announcements?announcement_type={1}&is_active={2}&'.format(_SERVER_URL, announcement_type,
+                                                                                   is_active)
+        elif announcement_type and search:
+            base = '{0}/announcements?announcement_type={1}&search={2}&'.format(_SERVER_URL, announcement_type, search)
+        elif type(is_active) == bool and search:
+            base = '{0}/announcements?is_active={1}&search={2}&'.format(_SERVER_URL, is_active, search)
+        elif announcement_type:
+            base = '{0}/announcements?announcement_type={1}&'.format(_SERVER_URL, announcement_type)
+        elif type(is_active) == bool:
+            base = '{0}/announcements?is_active={1}&'.format(_SERVER_URL, is_active)
+        elif search:
+            base = '{0}/announcements?search={1}&'.format(_SERVER_URL, search)
+        else:
+            base = '{0}/announcements?'.format(_SERVER_URL)
         response.links.first = _URL_OFFSET_LIMIT.format(base, 0, limit) if results_page.pages > 0 else None
         response.links.last = _URL_OFFSET_LIMIT.format(base, int((results_page.pages - 1) * limit),
                                                        limit) if results_page.pages > 0 else None

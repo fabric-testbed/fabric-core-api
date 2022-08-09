@@ -116,7 +116,9 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
             base = '{0}/projects?search={1}&person_uuid={2}&'.format(_SERVER_URL, search, person_uuid)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
-                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
+                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &
+                    (FabricProjects.name.ilike("%" + search + "%") |
+                     FabricProjects.description.ilike("%" + search + "%"))
                 ).order_by(FabricProjects.name).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:

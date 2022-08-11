@@ -2161,6 +2161,10 @@ components:
           $ref: '#/components/schemas/project_membership'
         name:
           type: string
+        tags:
+          type: array
+          items:
+            type: string
         uuid:
           type: string
     projects:

@@ -26,7 +26,7 @@ from swagger_server.response_code.preferences_utils import delete_projects_prefe
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
     update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_projects_personnel, update_projects_personnel, update_projects_tags
+    get_project_tags, get_projects_personnel, update_projects_personnel, update_projects_tags
 from swagger_server.response_code.response_utils import is_valid_url
 
 logger = logging.getLogger(__name__)
@@ -146,6 +146,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
             else:
                 project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
             project.name = item.name
+            project.tags = get_project_tags(fab_project=item, fab_person=api_user)
             project.uuid = item.uuid
             # add project to projects results
             response.results.append(project)
@@ -423,7 +424,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                                                                 personnel_type='owners') if project_prefs.get(
                 'show_project_owners') else None
             project_one.publications = []
-            project_one.tags = [t.tag for t in fab_project.tags]
+            project_one.tags = get_project_tags(fab_project=fab_project, fab_person=api_user)
         # set project_details response
         response = ProjectsDetails()
         response.results = [project_one]

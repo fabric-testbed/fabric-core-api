@@ -184,6 +184,12 @@ def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople
     return membership
 
 
+def get_project_tags(fab_project: FabricProjects, fab_person: FabricPeople) -> [str]:
+    tags = [t.tag for t in fab_project.tags]
+
+    return tags
+
+
 # Creators, Owners and Members - Projects
 def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: str = None) -> [Person]:
     """

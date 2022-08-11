@@ -15,7 +15,7 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, created: str=None, description: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, created: str=None, description: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
         """Project - a model defined in Swagger
 
         :param created: The created of this Project.  # noqa: E501
@@ -30,6 +30,8 @@ class Project(Model):
         :type memberships: ProjectMembership
         :param name: The name of this Project.  # noqa: E501
         :type name: str
+        :param tags: The tags of this Project.  # noqa: E501
+        :type tags: List[str]
         :param uuid: The uuid of this Project.  # noqa: E501
         :type uuid: str
         """
@@ -40,6 +42,7 @@ class Project(Model):
             'is_public': bool,
             'memberships': ProjectMembership,
             'name': str,
+            'tags': List[str],
             'uuid': str
         }
 
@@ -50,6 +53,7 @@ class Project(Model):
             'is_public': 'is_public',
             'memberships': 'memberships',
             'name': 'name',
+            'tags': 'tags',
             'uuid': 'uuid'
         }
         self._created = created
@@ -58,6 +62,7 @@ class Project(Model):
         self._is_public = is_public
         self._memberships = memberships
         self._name = name
+        self._tags = tags
         self._uuid = uuid
 
     @classmethod
@@ -208,6 +213,27 @@ class Project(Model):
             raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
+
+    @property
+    def tags(self) -> List[str]:
+        """Gets the tags of this Project.
+
+
+        :return: The tags of this Project.
+        :rtype: List[str]
+        """
+        return self._tags
+
+    @tags.setter
+    def tags(self, tags: List[str]):
+        """Sets the tags of this Project.
+
+
+        :param tags: The tags of this Project.
+        :type tags: List[str]
+        """
+
+        self._tags = tags
 
     @property
     def uuid(self) -> str:

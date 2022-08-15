@@ -196,15 +196,15 @@ docker cp uis-api-server:/code/uis_sshkeys.json ./uis_sshkeys.json
 {
   "uis_people": [
     {
-      "id": 1,
-      "registered_on": "2021-08-31 20:12:00.014547+00:00",
-      "uuid": "62f2b063-d9f6-46e9-87b1-c0b94899d711",
-      "oidc_claim_sub": "http://cilogon.org/serverT/users/2604273",
-      "name": "Scott Koranda ",
-      "email": "skoranda@gmail.com",
-      "eppn": "skoranda@wisc.edu",
-      "bastion_login": null,
-      "co_person_id": null
+      "id": 2,
+      "registered_on": "2021-08-31 20:12:00.590417+00:00",
+      "uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/242181",
+      "name": "Michael Stealey ",
+      "email": "stealey@unc.edu",
+      "eppn": "stealey@unc.edu",
+      "bastion_login": "stealey_0000242181",
+      "co_person_id": 1522
     },
     ...
   ]

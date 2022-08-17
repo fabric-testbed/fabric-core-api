@@ -60,7 +60,7 @@ def delete_comanage_group(co_cou_id: int) -> bool:
                 logger.info(
                     "DELETE: entry in 'groups' table for co_cou_id: {0}".format(
                         co_cou.co_cou_id))
-                db.session.delete(co_cou)
+                FabricGroups.query.filter_by(id=co_cou.id).delete()
                 db.session.commit()
             return is_deleted
     except Exception as exc:
@@ -93,7 +93,7 @@ def update_comanage_group(co_cou_id: int, name: str = None, description: str = N
         else:
             return False
     except Exception as exc:
-        details = 'Oops! something went wrong with create_comanage_group(): {0}'.format(exc)
+        details = 'Oops! something went wrong with update_comanage_group(): {0}'.format(exc)
         logger.error(details)
         return False
 
@@ -136,7 +136,7 @@ def delete_comanage_role(co_person_role_id: int) -> bool:
                 logger.info(
                     "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(
                         co_person_role.co_person_role_id))
-                db.session.delete(co_person_role)
+                FabricRoles.query.filter_by(id=co_person_role.id).delete()
                 db.session.commit()
             return is_deleted
     except Exception as exc:
@@ -225,7 +225,7 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                     if fab_role.status == 'Deleted':
                         logger.info(
                             "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
-                        db.session.delete(fab_role)
+                        FabricRoles.query.filter_by(id=fab_role.id).delete()
                         db.session.commit()
             else:
                 logger.warning(
@@ -305,7 +305,7 @@ def update_groups():
                 logger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
                 if fab_group.deleted:
                     logger.info("DELETE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
-                    db.session.delete(fab_group)
+                    FabricGroups.query.filter_by(id=fab_group.id).delete()
                     db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with update_groups(): {0}'.format(exc)

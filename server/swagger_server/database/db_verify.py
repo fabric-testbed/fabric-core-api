@@ -1,3 +1,32 @@
+"""
+Database structure (2022-08-17)
+$ docker exec -u postgres api-database psql -c '\dt;'
+                   List of relations
+ Schema |           Name            | Type  |  Owner
+--------+---------------------------+-------+----------
+ public | alembic_version           | table | postgres
+ public | announcements             | table | postgres
+ public | groups                    | table | postgres  <-- verify 2nd
+ public | people                    | table | postgres  <-- verify 3rd
+ public | people_email_addresses    | table | postgres
+ public | people_organizations      | table | postgres
+ public | people_roles              | table | postgres  <-- verify 1st
+ public | preferences               | table | postgres
+ public | profiles_keywords         | table | postgres
+ public | profiles_other_identities | table | postgres
+ public | profiles_people           | table | postgres
+ public | profiles_personal_pages   | table | postgres
+ public | profiles_projects         | table | postgres
+ public | profiles_references       | table | postgres
+ public | projects                  | table | postgres  <-- verify 4th
+ public | projects_creators         | table | postgres
+ public | projects_members          | table | postgres
+ public | projects_owners           | table | postgres
+ public | projects_tags             | table | postgres
+ public | sshkeys                   | table | postgres
+(20 rows)
+"""
+
 import os
 from datetime import datetime
 from uuid import uuid4
@@ -14,6 +43,7 @@ from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_PREF
 from swagger_server.response_code.comanage_utils import update_groups, update_organizations
 from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id, update_fabric_person
 from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
+from swagger_server.response_code.comanage_utils import delete_comanage_role
 
 app.app_context().push()
 
@@ -525,13 +555,154 @@ def load_projects_from_groups():
         uuid = cou.name.rsplit('-', 1)[0]
         create_fabric_project_from_uuid(uuid=uuid)
 
+# ------ #
+
+
+def date_parser(text) -> datetime:
+    # format: 2022-05-11 17:19:00+00:00 or 2021-09-10 21:03:22.730968+00:00
+    for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    raise ValueError('No valid date format found')
+
+
+def compare_group_to_cou(fab_group: FabricGroups, co_cou: dict) -> bool:
+    compare = [
+        str(fab_group.co_cou_id) == co_cou.get('Id', 'None'),
+        str(fab_group.co_parent_cou_id) == co_cou.get('ParentId', 'None'),
+        fab_group.name == co_cou.get('Name', None),
+        fab_group.description == co_cou.get('Description', None),
+        fab_group.deleted == co_cou.get('Deleted', None)
+    ]
+    return all(i for i in compare)
+
+
+def verify_groups():
+    """
+    __tablename__ = 'groups'
+
+    co_cou_id = db.Column(db.Integer)
+    co_parent_cou_id = db.Column(db.Integer, nullable=True)
+    name = db.Column(db.String())
+    description = db.Column(db.Text)
+    deleted = db.Column(db.Boolean, default=False)
+    """
+    fab_groups = FabricGroups.query.order_by('id').all()
+
+    for fab_group in fab_groups:
+        # get COmanage COU
+        try:
+            co_cou = api.cous_view_one(cou_id=fab_group.co_cou_id)
+            co_cou = co_cou.get('Cous')[0]
+            logger.info("FOUND: COU for entry in 'groups' table - co_cou_id: {0}".format(fab_group.co_cou_id))
+            if compare_group_to_cou(fab_group=fab_group, co_cou=co_cou) and \
+                    str(co_cou.get('Deleted')).casefold() != 'true':
+                logger.info("- PASS: all fields match")
+            else:
+                # check for Deleted = True
+                if str(co_cou.get('Deleted')).casefold() == 'true':
+                    logger.info("- FAIL: field mismatch - delete - {0}".format(co_cou.name))
+                    logger.info("- fields: deleted: {0}".format(str(co_cou.get('Deleted'))))
+                    FabricGroups.query.filter_by(id=fab_group.id).delete()
+                    db.session.commit()
+                # otherwise update group to match COU
+                else:
+                    logger.info("- FAIL: field mismatch - update - {0}".format(co_cou.name))
+                    fab_group.co_cou_id = co_cou.get('Id')
+                    fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
+                    fab_group.name = co_cou.get('Name')
+                    fab_group.description = co_cou.get('Description')
+                    fab_group.deleted = co_cou.get('Deleted')
+                    db.session.commit()
+        except Exception as exc:
+            # cannot find corresponding COU - delete
+            logger.info("NOT FOUND: delete FABRIC reference {0}".format(exc))
+            FabricGroups.query.filter_by(id=fab_group.id).delete()
+            db.session.commit()
+
+
+def compare_role_to_coperson_role(fab_role: FabricRoles, co_role: dict) -> bool:
+    """
+    Check for parity
+    - affiliation - role affiliation type
+    - co_cou_id - COmanage COU Id
+    - co_person_id - CoPerson Id
+    - name - COU name
+    - description - COU description
+    - status - role status
+    """
+    fab_group = FabricGroups.query.filter_by(co_cou_id=co_role.get('CouId')).one_or_none()
+    compare = [
+        fab_role.affiliation == co_role.get('Affiliation', 'member'),
+        str(fab_role.co_cou_id) == co_role.get('CouId', 'None'),
+        str(fab_role.co_person_id) == co_role.get('Person').get('Id'),
+        str(fab_role.co_person_role_id) == co_role.get('Id'),
+        fab_role.name == fab_group.name,
+        fab_role.description == fab_group.description,
+        fab_role.status == co_role.get('Status', 'Pending')
+    ]
+    return all(i for i in compare)
+
+
+def verify_roles():
+    """
+    __tablename__ = 'people_roles'
+
+    CoPersonRoles - from COmanage
+    - affiliation - role affiliation type
+    - co_cou_id - COmanage COU Id
+    - co_person_id - CoPerson Id
+    - co_person_role_id - CoPersonRoles Id
+    - id - primary key (BaseMixin)
+    - name - COU name
+    - description - COU description
+    - people_id - foreignkey link to people table
+    - status - role status
+    """
+    fab_roles = FabricRoles.query.order_by('id').all()
+    for fab_role in fab_roles:
+        try:
+            co_role = api.coperson_roles_view_one(
+                coperson_role_id=fab_role.co_person_role_id).get('CoPersonRoles', [])[0]
+            logger.info("FOUND: CoPersonRole {0} for entry in 'people_roles' table".format(fab_role.co_person_role_id))
+            if compare_role_to_coperson_role(fab_role=fab_role, co_role=co_role) and str(co_role.get('Deleted')).casefold() != 'true':
+                logger.info("- PASS: all fields match - status {0}".format(co_role.get('Status')))
+            else:
+                # check for Deleted = True
+                if str(co_role.get('Deleted')).casefold() == 'true':
+                    logger.info("- FAIL: field mismatch - delete - {0}".format(fab_role.name))
+                    logger.info("- fields: status: {0}, deleted: {1}".format(co_role.get('Status'), str(co_role.get('Deleted'))))
+                    FabricRoles.query.filter_by(id=fab_role.id).delete()
+                    db.session.commit()
+                # otherwise update role to match CoPersonRole
+                else:
+                    logger.info("- FAIL: field mismatch - update - {0}".format(fab_role.name))
+                    fab_group = FabricGroups.query.filter_by(co_cou_id=co_role.get('CouId')).one_or_none()
+                    fab_role.affiliation = co_role.get('Affiliation', 'member')
+                    fab_role.co_cou_id = co_role.get('CouId')
+                    fab_role.co_person_id = co_role.get('Person').get('Id')
+                    fab_role.co_person_role_id = co_role.get('Id')
+                    fab_role.name = fab_group.name
+                    fab_role.description = fab_group.description
+                    fab_role.status = co_role.get('Status', 'Pending')
+                    db.session.commit()
+        except Exception as exc:
+            # cannot find corresponding CoPersonRole - delete
+            logger.info("NOT FOUND: delete FABRIC reference {0}".format(exc))
+            FabricRoles.query.filter_by(id=fab_role.id).delete()
+            db.session.commit()
+
 
 if __name__ == '__main__':
-    logger.info("--- Load database table 'groups' as FabricGroups ---")
-    update_groups()
-    logger.info("--- Load database table 'organizations' as Organizations ---")
-    update_organizations()
-    logger.info("--- Load database table 'people' as FabricPeople ---")
-    load_people_from_comanage()
-    logger.info("--- Load database table 'projects' as FabricProjects ---")
-    load_projects_from_groups()
+    logger.info("--- Verify database table 'people_roles' as CoPersonRoles in COmanage ---")
+    verify_roles()
+    logger.info("--- Verify database table 'groups' as FabricGroups ---")
+    verify_groups()
+    # logger.info("--- Verify database table 'organizations' as Organizations ---")
+    # update_organizations()
+    # logger.info("--- Verify database table 'people' as FabricPeople ---")
+    # load_people_from_comanage()
+    # logger.info("--- Verify database table 'projects' as FabricProjects ---")
+    # load_projects_from_groups()

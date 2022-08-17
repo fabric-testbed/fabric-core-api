@@ -242,6 +242,8 @@ docker cp uis-api-server:/code/uis_sshkeys.json ./uis_sshkeys.json
 
 Output files from PR and UIS need to be copied into the fabric-core-api repository at `server/swagger_server/pr-uis-migration/data`
 
+### ensure the files are on the host
+
 ```console
 $ ls -1 server/swagger_server/pr-uis-migration/data
 pr_people.json    # from PR
@@ -249,6 +251,22 @@ pr_projects.json  # from PR
 pr_tags.json      # from PR
 uis_people.json   # from UIS
 uis_sshkeys.json  # from UIS
+```
+
+**NOTE**: May need to change permissions to that of the service account as the `root` user
+
+```
+chown -R 20049:10000 /home/nrig-service/fabric-core-api/server/swagger_server/pr-uis-migration/data/
+```
+
+### copy the files to the docker container (if needed)
+
+```
+docker cp server/swagger_server/pr-uis-migration/data/pr_people.json api-flask-server:/code/server/swagger_server/pr-uis-migration/data/
+docker cp server/swagger_server/pr-uis-migration/data/pr_projects.json api-flask-server:/code/server/swagger_server/pr-uis-migration/data/
+docker cp server/swagger_server/pr-uis-migration/data/pr_tags.json api-flask-server:/code/server/swagger_server/pr-uis-migration/data/
+docker cp server/swagger_server/pr-uis-migration/data/uis_people.json api-flask-server:/code/server/swagger_server/pr-uis-migration/data/
+docker cp server/swagger_server/pr-uis-migration/data/uis_sshkeys.json api-flask-server:/code/server/swagger_server/pr-uis-migration/data/
 ```
 
 ## <a name="deploy"></a>Deploy fabric-core-api and allow it to self-populate based on COmanage data
@@ -261,5 +279,32 @@ See deployment docs for production in: [fabric-core-api](https://github.com/fabr
 
 ### fabric-core-api (core-api)
 
+From the running `api-flask-server` container run the migration scripts
+
+```
+docker exec -ti api-flask-server /bin/bash
+```
+
+Verify the data files are present
+
+```console
+ls -lh server/swagger_server/pr-uis-migration/data/
+total 32K
+-rw-r--r-- 1 20049 10000 3.5K Aug 17 15:23 pr_people.json
+-rw-r--r-- 1 20049 10000 5.5K Aug 17 15:23 pr_projects.json
+-rw-r--r-- 1 20049 10000 7.3K Aug 17 15:23 pr_tags.json
+-rw-r--r-- 1 20049 10000 4.4K Aug 17 15:22 uis_people.json
+-rw-r--r-- 1 20049 10000 2.3K Aug 17 15:23 uis_sshkeys.json
+```
+
+Execute the migration scripts
+
+```
+source .env
+source .venv/bin/activate
+cd server/swagger_server/pr-uis-migration/
+python -m migrate_uis
+python -m migrate_pr
+```
 
 ## <a name="verify"></a>Verify migrated data

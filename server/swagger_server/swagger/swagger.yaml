@@ -85,7 +85,7 @@ paths:
         style: form
         explode: true
         schema:
-          maximum: 20
+          maximum: 200
           minimum: 1
           type: integer
           format: int32
@@ -342,7 +342,7 @@ paths:
         style: form
         explode: true
         schema:
-          maximum: 20
+          maximum: 200
           minimum: 1
           type: integer
           format: int32
@@ -719,7 +719,7 @@ paths:
         style: form
         explode: true
         schema:
-          maximum: 20
+          maximum: 200
           minimum: 1
           type: integer
           format: int32
@@ -1263,7 +1263,7 @@ paths:
         style: form
         explode: true
         schema:
-          maximum: 20
+          maximum: 200
           minimum: 1
           type: integer
           format: int32
@@ -2902,7 +2902,7 @@ components:
       style: form
       explode: true
       schema:
-        maximum: 20
+        maximum: 200
         minimum: 1
         type: integer
         format: int32

@@ -29,7 +29,7 @@ class TestPeopleController(BaseTestCase):
         """
         query_string = [('search', 'search_example'),
                         ('offset', 1),
-                        ('limit', 20)]
+                        ('limit', 200)]
         response = self.client.open(
             '/people',
             method='GET',

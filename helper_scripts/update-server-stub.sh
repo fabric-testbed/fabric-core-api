@@ -19,6 +19,7 @@ FILES_TO_COPY=(
 DIRS_TO_COPY=(
     swagger_server/response_code
     swagger_server/database
+    swagger_server/pr-uis-migration
 )
 
 # check for STUB_DIR directory

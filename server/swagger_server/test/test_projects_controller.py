@@ -32,7 +32,7 @@ class TestProjectsController(BaseTestCase):
         """
         query_string = [('search', 'search_example'),
                         ('offset', 1),
-                        ('limit', 20),
+                        ('limit', 200),
                         ('person_uuid', 'person_uuid_example')]
         response = self.client.open(
             '/projects',

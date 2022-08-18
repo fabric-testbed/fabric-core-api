@@ -273,8 +273,6 @@ docker cp server/swagger_server/pr-uis-migration/data/uis_sshkeys.json api-flask
 
 See deployment docs for production in: [fabric-core-api](https://github.com/fabric-testbed/fabric-core-api)
 
-### fabric-core-api (core-api)
-
 ## <a name="migrate"></a>Run fabric-core-api migration script
 
 ### fabric-core-api (core-api)
@@ -308,3 +306,33 @@ python -m migrate_pr
 ```
 
 ## <a name="verify"></a>Verify migrated data
+
+From the running `api-flask-server` container run the verify script
+
+```
+docker exec -ti api-flask-server /bin/bash
+```
+
+Execute the verify script
+
+```
+source .env
+source .venv/bin/activate
+python -m server.swagger_server.database.db_verify
+```
+
+### Note about loading data from `db_load.py`
+
+Whenever you intend to re-run the `db_load.py` script beyond initial creation of the application you should always run the `db_verify.py` script first. 
+
+Both scripts are idempotent, but it's possible to have accumulated stale data in the core-api application that should be verified prior to searching for new data to load.
+
+A common pattern would look like
+
+```
+source .env
+source .venv/bin/activate
+python -m server.swagger_server.database.db_verify
+python -m server.swagger_server.database.db_load
+python -m server.swagger_server.database.db_verify
+```

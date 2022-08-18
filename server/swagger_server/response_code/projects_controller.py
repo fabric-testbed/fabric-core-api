@@ -415,8 +415,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
                 'show_profile') else None
             project_one.project_creators = get_projects_personnel(fab_project=fab_project,
-                                                                  personnel_type='creators') if project_prefs.get(
-                'show_project_creators') else None
+                                                                  personnel_type='creators')
             project_one.project_members = get_projects_personnel(fab_project=fab_project,
                                                                  personnel_type='members') if project_prefs.get(
                 'show_project_members') else None

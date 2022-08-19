@@ -36,7 +36,7 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
 @login_required
-def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noqa: E501
+def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
@@ -49,6 +49,10 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
     :type limit: int
     :param person_uuid: person uuid
     :type person_uuid: str
+    :param sort_by: sort by
+    :type sort_by: str
+    :param order_by: order by
+    :type order_by: str
 
     :rtype: Projects
 
@@ -83,26 +87,51 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
             fab_person = None
         # set page to retrieve
         _page = int((offset + limit) / limit)
+        # set sort_by and order_by
+        if sort_by.casefold() == 'created_time':
+            if order_by.casefold() == 'asc':
+                _sort_order_query = FabricProjects.created.asc()
+                _sort_order_path = 'sort_by=created_time&order_by=asc&'
+            else:
+                _sort_order_query = FabricProjects.created.desc()
+                _sort_order_path = 'sort_by=created_time&order_by=desc&'
+        elif sort_by.casefold() == 'modified_time':
+            if order_by.casefold() == 'asc':
+                _sort_order_query = FabricProjects.modified.asc()
+                _sort_order_path = 'sort_by=modified_time&order_by=asc&'
+            else:
+                _sort_order_query = FabricProjects.modified.desc()
+                _sort_order_path = 'sort_by=modified_time&order_by=desc&'
+        elif sort_by.casefold() == 'name':
+            if order_by.casefold() == 'asc':
+                _sort_order_query = FabricProjects.name.asc()
+                _sort_order_path = 'sort_by=name&order_by=asc&'
+            else:
+                _sort_order_query = FabricProjects.name.desc()
+                _sort_order_path = 'sort_by=name&order_by=desc&'
+        else:
+            _sort_order_query = FabricProjects.name.asc()
+            _sort_order_path = 'sort_by=name&order_by=asc&'
         # get paginated results
         if not search and not person_uuid:
-            base = '{0}/projects?'.format(_SERVER_URL)
+            base = '{0}/projects?{1}'.format(_SERVER_URL, _sort_order_path)
             results_page = FabricProjects.query.filter(
                 FabricProjects.active.is_(True)
-            ).order_by(FabricProjects.name).paginate(
+            ).order_by(_sort_order_query).paginate(
                 page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
-            base = '{0}/projects?search={1}&'.format(_SERVER_URL, search)
+            base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
             results_page = FabricProjects.query.filter(
                 (FabricProjects.active.is_(True)) &
                 (FabricProjects.name.ilike("%" + search + "%")) |
                 (FabricProjects.description.ilike("%" + search + "%"))
-            ).order_by(FabricProjects.name).paginate(page=_page, per_page=limit, error_out=False)
+            ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
         elif not search and person_uuid:
-            base = '{0}/projects?person_uuid={1}&'.format(_SERVER_URL, person_uuid)
+            base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
-                ).order_by(FabricProjects.name).paginate(
+                ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
@@ -110,16 +139,16 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
                     FabricProjects.active.is_(True) &
                     FabricProjects.is_public.is_(True) &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
-                ).order_by(FabricProjects.name).paginate(
+                ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
         else:
-            base = '{0}/projects?search={1}&person_uuid={2}&'.format(_SERVER_URL, search, person_uuid)
+            base = '{0}/projects?search={1}&person_uuid={2}&{3}'.format(_SERVER_URL, search, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &
                     (FabricProjects.name.ilike("%" + search + "%") |
                      FabricProjects.description.ilike("%" + search + "%"))
-                ).order_by(FabricProjects.name).paginate(
+                ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
@@ -129,7 +158,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
                     (FabricProjects.name.ilike("%" + search + "%") |
                      FabricProjects.description.ilike("%" + search + "%"))
-                ).order_by(FabricProjects.name).paginate(
+                ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
         # set projects response
         response = Projects()

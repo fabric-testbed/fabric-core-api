@@ -33,7 +33,9 @@ class TestProjectsController(BaseTestCase):
         query_string = [('search', 'search_example'),
                         ('offset', 1),
                         ('limit', 200),
-                        ('person_uuid', 'person_uuid_example')]
+                        ('person_uuid', 'person_uuid_example'),
+                        ('sort_by', 'name'),
+                        ('order_by', 'asc')]
         response = self.client.open(
             '/projects',
             method='GET',

@@ -19,7 +19,7 @@ from swagger_server import util
 from swagger_server.response_code import projects_controller as rc
 
 
-def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noqa: E501
+def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
@@ -32,10 +32,14 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None):  # noq
     :type limit: int
     :param person_uuid: person uuid
     :type person_uuid: str
+    :param sort_by: sort by
+    :type sort_by: str
+    :param order_by: order by
+    :type order_by: str
 
     :rtype: Projects
     """
-    return rc.projects_get(search, offset, limit, person_uuid)
+    return rc.projects_get(search, offset, limit, person_uuid, sort_by, order_by)
 
 
 def projects_post(body=None):  # noqa: E501

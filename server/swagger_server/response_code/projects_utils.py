@@ -170,6 +170,8 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
         else:
             logger.warning(
                 "NOT FOUND: create_fabric_project_from_uuid(): Unable to find cou with uuid: '{0}'".format(uuid))
+    else:
+        logger.info('FOUND FabricProject: name={0}, uuid={1}'.format(fab_project.name, fab_project.uuid))
 
     return fab_project
 

@@ -114,10 +114,16 @@ def create_comanage_role(fab_person: FabricPeople, fab_group: FabricGroups) -> b
             fab_role.description = fab_group.description
             fab_role.people_id = fab_person.id
             fab_role.status = status
-            db.session.add(fab_role)
-            db.session.commit()
-            logger.info(
-                "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role.get('Id')))
+            try:
+                db.session.add(fab_role)
+                db.session.commit()
+                logger.info(
+                    "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role.get('Id')))
+            except Exception as exc:
+                logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                db.session.rollback()
+                return False
+
             return True
     except Exception as exc:
         details = 'Oops! something went wrong with create_comanage_role(): {0}'.format(exc)
@@ -210,10 +216,15 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                     fab_role.description = fab_group.description
                     fab_role.people_id = fab_person_id
                     fab_role.status = co_role.get('Status', 'Pending')
-                    db.session.add(fab_role)
-                    db.session.commit()
-                    logger.info(
-                        "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
+                    try:
+                        db.session.add(fab_role)
+                        db.session.commit()
+                        logger.info(
+                            "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
+                    except Exception as exc:
+                        logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                        db.session.rollback()
+                        continue
                 else:
                     fab_role.affiliation = co_role.get('Affiliation', 'member')
                     fab_role.name = fab_group.name

@@ -306,8 +306,6 @@ def load_people_roles():
                     fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
                     if not fab_role:
                         if fab_group:
-                            logger.info(
-                                "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
                             fab_role = FabricRoles()
                             fab_role.affiliation = co_role.get('Affiliation', 'member')
                             fab_role.co_cou_id = co_cou_id
@@ -317,8 +315,16 @@ def load_people_roles():
                             fab_role.description = fab_group.description
                             fab_role.people_id = fab_person.id
                             fab_role.status = co_role.get('Status', 'Pending')
-                            db.session.add(fab_role)
-                            db.session.commit()
+                            try:
+                                db.session.add(fab_role)
+                                db.session.commit()
+                                logger.info(
+                                    "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(
+                                        co_person_role_id))
+                            except Exception as exc:
+                                logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                                db.session.rollback()
+                                continue
                         else:
                             logger.warning(
                                 "ERROR: unable to locate co_cou_id {0} in the 'groups' table".format(co_cou_id))

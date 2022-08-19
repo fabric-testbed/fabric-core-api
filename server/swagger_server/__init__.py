@@ -1,5 +1,5 @@
-__API_VERSION__ = '1.0.0'
-__API_REFERENCE__ = 'https://github.com/fabric-testbed/core-api'
+__API_VERSION__ = '1.3.0'
+__API_REFERENCE__ = 'https://github.com/fabric-testbed/fabric-core-api'
 
 from logging.config import dictConfig
 from pathlib import Path

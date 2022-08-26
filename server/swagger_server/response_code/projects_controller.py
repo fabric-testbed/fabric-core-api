@@ -417,8 +417,8 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
         project_one.name = fab_project.name
         project_one.uuid = fab_project.uuid
-        # set remaining attributes for project_creators and project_owners
-        if project_one.memberships.is_creator or project_one.memberships.is_owner:
+        # set remaining attributes for project_creators, project_owners and project_members
+        if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member:
             project_one.active = fab_project.active
             project_one.modified = str(fab_project.modified)
             project_one.preferences = {p.key: p.value for p in fab_project.preferences}
@@ -433,7 +433,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.tags = [t.tag for t in fab_project.tags]
         # set remaining attributes for everyone else
         else:
-            if not fab_project.is_public and not project_one.memberships.is_member:
+            if not fab_project.is_public:
                 return cors_403(
                     details="User: '{0}' does not have access to this private project".format(api_user.display_name))
             project_prefs = {p.key: p.value for p in fab_project.preferences}

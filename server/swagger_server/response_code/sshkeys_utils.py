@@ -168,8 +168,8 @@ def sshkeys_from_fab_person(fab_person: FabricPeople, is_self: bool = False) -> 
     fab_key_status = [EnumSshKeyStatus.active]
     if is_self:
         fab_key_types.append(EnumSshKeyTypes.bastion)
-        fab_key_status.append(EnumSshKeyStatus.deactivated)
-        fab_key_status.append(EnumSshKeyStatus.expired)
+        # fab_key_status.append(EnumSshKeyStatus.deactivated)
+        # fab_key_status.append(EnumSshKeyStatus.expired)
     for k in fab_person.sshkeys:
         if k.fabric_key_type in fab_key_types and k.status in fab_key_status:
             sshkey = SshkeysOne()

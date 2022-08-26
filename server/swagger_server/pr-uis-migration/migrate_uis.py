@@ -11,11 +11,11 @@ SshKeys (match by person_uuid)
 """
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from swagger_server.__main__ import app, db
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.sshkeys import FabricSshKeys
+from swagger_server.database.models.sshkeys import FabricSshKeys, EnumSshKeyStatus
 
 logger = logging.getLogger(__name__)
 app.app_context().push()
@@ -99,7 +99,6 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
     - * fabric_key_type: [bastion, sliver]
     - fingerprint:
     - * id - primary key (BaseMixin)
-    - key_uuid:
     - modified - timestamp modified (TimestampMixin)
     - * people_id - foreignkey link to people table
     - public_key:
@@ -107,6 +106,25 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
     - * ssh_key_type:
     - * status: [active, deactivated, expired]
     - * uuid - unique universal identifier
+
+    Key format from UIS
+    {
+      "id": 97,
+      "key_uuid": "94c3b362-a3c6-4dff-a639-71469e3d60da",
+      "comment": "ibaldin@Ilyas-Fancy-MacBook-Pro-2020.local",
+      "description": "test sliver key with comment",
+      "ssh_key_type": "ecdsa-sha2-nistp256",
+      "fabric_key_type": "sliver",
+      "fingerprint": "MD5:d7:cd:ae:8c:77:71:1a:8e:d9:c4:f7:87:7a:77:8a:f6",
+      "created_on": "2022-06-08 20:49:30.187183+00:00",
+      "expires_on": "2024-06-07 20:49:30.187183+00:00",
+      "active": false,
+      "deactivation_reason": "Deactivated by owner on 2022-06-08 20:49:35.425290+00:00Z",
+      "deactivated_on": "2022-06-08 20:49:35.425318+00:00",
+      "owner_uuid": "a5bab5f3-7725-48e2-aac2-705e553e0766",
+      "public_key": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbml...R6cMLEGEOiroSh/52tt30+c=",
+      "comanage_key_id": null
+    }
     """
     sshkeys = [cdict for cdict in uis_sshkeys if cdict['owner_uuid'] == uis_person.get('uuid')]
     if sshkeys:
@@ -114,11 +132,35 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
             # check for duplicate key
             if sshkey.get('fingerprint') in [k.fingerprint for k in fab_person.sshkeys]:
                 logger.info('- sshkeys: DUPLICATE {0}'.format(sshkey.get('fingerprint')))
+                fab_sshkey = FabricSshKeys.query.filter_by(fingerprint=sshkey.get('fingerprint')).one_or_none()
+                if fab_sshkey:
+                    fab_sshkey.comment = sshkey.get('comment')
+                    fab_sshkey.created = date_parser(sshkey.get('created_on'))
+                    fab_sshkey.deactivated_on = sshkey.get('deactivated_on', None)
+                    fab_sshkey.deactivated_reason = sshkey.get('deactivated_reason', None)
+                    fab_sshkey.description = sshkey.get('description')
+                    fab_sshkey.expires_on = date_parser(sshkey.get('expires_on'))
+                    fab_sshkey.fabric_key_type = sshkey.get('fabric_key_type')
+                    fab_sshkey.fingerprint = sshkey.get('fingerprint')
+                    fab_sshkey.people_id = fab_person.id
+                    fab_sshkey.public_key = sshkey.get('public_key')
+                    fab_sshkey.ssh_key_type = sshkey.get('ssh_key_type')
+                    if datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") <= datetime.now(timezone.utc):
+                        fab_sshkey.status = EnumSshKeyStatus.expired
+                    elif str(sshkey.get('active', None)).casefold() == 'true' and datetime.strptime(
+                            sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") > datetime.now(timezone.utc):
+                        fab_sshkey.status = EnumSshKeyStatus.active
+                    else:
+                        fab_sshkey.status = EnumSshKeyStatus.deactivated
+                    fab_sshkey.uuid = sshkey.get('key_uuid')
+                    db.session.commit()
             # create new fabric key object
             else:
                 fab_sshkey = FabricSshKeys()
                 fab_sshkey.comment = sshkey.get('comment')
                 fab_sshkey.created = date_parser(sshkey.get('created_on'))
+                fab_sshkey.deactivated_on = sshkey.get('deactivated_on', None)
+                fab_sshkey.deactivated_reason = sshkey.get('deactivated_reason', None)
                 fab_sshkey.description = sshkey.get('description')
                 fab_sshkey.expires_on = date_parser(sshkey.get('expires_on'))
                 fab_sshkey.fabric_key_type = sshkey.get('fabric_key_type')
@@ -126,6 +168,12 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
                 fab_sshkey.people_id = fab_person.id
                 fab_sshkey.public_key = sshkey.get('public_key')
                 fab_sshkey.ssh_key_type = sshkey.get('ssh_key_type')
+                if datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") <= datetime.now(timezone.utc):
+                    fab_sshkey.status = EnumSshKeyStatus.expired
+                elif str(sshkey.get('active', None)).casefold() == 'true' and datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") > datetime.now(timezone.utc):
+                    fab_sshkey.status = EnumSshKeyStatus.active
+                else:
+                    fab_sshkey.status = EnumSshKeyStatus.deactivated
                 fab_sshkey.uuid = sshkey.get('key_uuid')
                 db.session.add(fab_sshkey)
                 db.session.commit()

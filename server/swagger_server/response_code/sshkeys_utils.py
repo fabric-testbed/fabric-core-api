@@ -47,6 +47,7 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
         if sshkey:
             fab_sshkey = FabricSshKeys()
             fab_sshkey.comment = sshkey.comment
+            fab_sshkey.created = datetime.now(timezone.utc)
             fab_sshkey.description = body.description
             if body.keytype == EnumSshKeyTypes.sliver.name:
                 fab_sshkey.expires_on = datetime.now(timezone.utc) + \
@@ -191,6 +192,7 @@ def sshkeys_from_fab_person(fab_person: FabricPeople, is_self: bool = False) -> 
 def sskeys_count_by_fabric_key_type(fab_person: FabricPeople, keytype: EnumSshKeyTypes) -> int:
     key_count = FabricSshKeys.query.filter(
         FabricSshKeys.fabric_key_type == keytype,
+        FabricSshKeys.status == EnumSshKeyStatus.active,
         FabricSshKeys.people_id == fab_person.id
     ).count()
     return key_count

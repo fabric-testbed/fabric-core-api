@@ -1573,7 +1573,7 @@ paths:
         explode: true
         schema:
           type: string
-          format: date-time
+          example: 2017-07-21 17:32:28 +00:00
       responses:
         "200":
           description: OK
@@ -3014,7 +3014,7 @@ components:
       explode: true
       schema:
         type: string
-        format: date-time
+        example: 2017-07-21 17:32:28 +00:00
     sort_by:
       name: sort_by
       in: query

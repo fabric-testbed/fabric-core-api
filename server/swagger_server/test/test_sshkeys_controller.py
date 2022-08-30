@@ -28,7 +28,7 @@ class TestSshkeysController(BaseTestCase):
         Get active SSH Keys
         """
         query_string = [('secret', 'secret_example'),
-                        ('since_date', '2013-10-20T19:20:30+01:00')]
+                        ('since_date', 'since_date_example')]
         response = self.client.open(
             '/bastionkeys',
             method='GET',

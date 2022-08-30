@@ -89,6 +89,7 @@ def put_sshkey(body: SshkeysPut, fab_person: FabricPeople) -> FabricSshKeys:
         # create new fabric key object
         fab_sshkey = FabricSshKeys()
         fab_sshkey.comment = fssh.comment
+        fab_sshkey.created = datetime.now(timezone.utc)
         fab_sshkey.description = body.description
         if body.keytype == EnumSshKeyTypes.sliver.name:
             fab_sshkey.expires_on = datetime.now(timezone.utc) + \

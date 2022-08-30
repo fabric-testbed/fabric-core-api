@@ -51,6 +51,7 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     try:
         if claims.get('sub'):
             fab_person.bastion_login = fab_person.bastion_login()
+            fab_person.created = datetime.now(timezone.utc)
             fab_person.display_name = claims.get('name')
             fab_person.oidc_claim_email = claims.get('email')
             fab_person.oidc_claim_family_name = claims.get('family_name')
@@ -96,6 +97,7 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
     fab_person = FabricPeople()
     try:
         fab_person.co_person_id = co_person_id
+        co_person = api.copeople_view_one(coperson_id=co_person_id).get('CoPeople', [])
         co_names = api.names_view_per_person(
             person_type='copersonid',
             person_id=co_person_id
@@ -113,7 +115,13 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
             if e.get('Type', None) == 'official':
                 fab_person.preferred_email = e.get('Mail', '')
                 break
-        fab_person.registered_on = datetime.now(timezone.utc)
+        if co_person:
+            co_person_created = datetime.strptime(co_person[0].get('Created'), "%Y-%m-%d %H:%M:%S")
+            fab_person.created = co_person_created
+            fab_person.registered_on = co_person_created
+        else:
+            fab_person.created = datetime.now(timezone.utc)
+            fab_person.registered_on = datetime.now(timezone.utc)
         fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
             os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
         fab_person.uuid = uuid4()

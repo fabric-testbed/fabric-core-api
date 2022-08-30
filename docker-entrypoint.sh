@@ -15,9 +15,9 @@ if [[ "$1" == 'run_server' ]]; then
     fi
 
     # setup database
-    python -m flask db init
-    python -m flask db migrate
-    python -m flask db upgrade
+#    python -m flask db init
+#    python -m flask db migrate
+#    python -m flask db upgrade
 
     # load / verify database against COmanage
     # TODO: db_load and db_verify scripts

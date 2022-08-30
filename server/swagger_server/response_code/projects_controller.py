@@ -36,7 +36,8 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
 @login_required
-def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None) -> Projects:  # noqa: E501
+def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None,
+                 order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
@@ -142,7 +143,8 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
                 ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
         else:
-            base = '{0}/projects?search={1}&person_uuid={2}&{3}'.format(_SERVER_URL, search, person_uuid, _sort_order_path)
+            base = '{0}/projects?search={1}&person_uuid={2}&{3}'.format(_SERVER_URL, search, person_uuid,
+                                                                        _sort_order_path)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &

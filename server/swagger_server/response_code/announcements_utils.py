@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from swagger_server.database.db import db
@@ -45,6 +46,7 @@ def create_fabric_announcement_from_api(body: AnnouncementsPost, creator: Fabric
     fab_announcement.announcement_type = body.announcement_type
     fab_announcement.button = body.button
     fab_announcement.content = body.content
+    fab_announcement.created = datetime.now(timezone.utc)
     fab_announcement.created_by_uuid = str(creator.uuid)
     fab_announcement.display_date = body.display_date
     fab_announcement.end_date = body.end_date

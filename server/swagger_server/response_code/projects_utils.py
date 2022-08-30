@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from swagger_server.database.db import db
@@ -52,6 +53,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     # create Project
     fab_project = FabricProjects()
     fab_project.active = False
+    fab_project.created = datetime.now(timezone.utc)
     fab_project.description = body.description
     fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
     fab_project.is_public = body.is_public

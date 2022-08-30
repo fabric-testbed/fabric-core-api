@@ -2548,7 +2548,7 @@ components:
         description:
           maxLength: 255
           minLength: 5
-          pattern: "^[\\w\\s\\-.@(')/]+$"
+          pattern: "^[\\w\\s\\-.,@(')/]+$"
           type: string
         keytype:
           type: string
@@ -2566,7 +2566,7 @@ components:
         description:
           maxLength: 255
           minLength: 5
-          pattern: "^[\\w\\s\\-.@(')/]+$"
+          pattern: "^[\\w\\s\\-.,@(')/]+$"
           type: string
         keytype:
           type: string

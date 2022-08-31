@@ -800,12 +800,11 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify creator or owner role
-        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
-                uuid + '-po' not in [r.name for r in api_user.roles]:
+        # check api_user active flag and verify facility-operators role
+        if not api_user.active or os.getenv('COU_NAME_FACILITY_OPERATORS') not in [r.name for r in api_user.roles]:
             return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
+                details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
+                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
         # check for tags
         try:
             if len(body.tags) == 0:

@@ -177,12 +177,36 @@ def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
             identity_id=co_person_id
         ).get('CoOrgIdentityLinks', [])
         for org_link in co_orgidentity_links:
-            org = Organizations.query.filter_by(org_identity_id=org_link.get('OrgIdentityId')).one_or_none()
-            if org:
-                fab_person.org_affiliation = org.id
+            org_identity_id = org_link.get('OrgIdentityId')
+            fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
+            if not fab_org:
+                org_identity = api.org_identities_view_one(org_identity_id=org_identity_id).get('OrgIdentities', [])
+                for oi in org_identity:
+                    organization = oi.get('O', None)
+                    affiliation = oi.get('Affiliation', None)
+                    if org_identity_id and organization and affiliation and not oi.get('Deleted'):
+                        try:
+                            fab_org = Organizations()
+                            fab_org.org_identity_id = org_identity_id
+                            fab_org.organization = organization
+                            fab_org.affiliation = affiliation
+                            db.session.add(fab_org)
+                            db.session.commit()
+                            fab_person.org_affiliation = fab_org.id
+                            db.session.commit()
+                            logger.info(
+                                "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(oi.get('Id', None)))
+                        except Exception as exc:
+                            logger.error(exc)
+                            continue
+                    else:
+                        logger.warning('[NEEDS REVIEW] org_identity_id = {0}'.format(org_identity_id))
+            else:
+                fab_person.org_affiliation = fab_org.id
                 db.session.commit()
+
     except Exception as exc:
-        details = 'Oops! something went wrong with update_people_identifiers(): {0}'.format(exc)
+        details = 'Oops! something went wrong with update_org_affiliation(): {0}'.format(exc)
         logger.error(details)
 
 

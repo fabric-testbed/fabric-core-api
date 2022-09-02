@@ -192,7 +192,7 @@ def update_fabric_person(fab_person: FabricPeople = None):
         # commit changes
         db.session.commit()
     except Exception as exc:
-        details = 'Oops! something went wrong with update_people_roles(): {0}'.format(exc)
+        details = 'Oops! something went wrong with update_fabric_person(): {0}'.format(exc)
         logger.error(details)
 
 

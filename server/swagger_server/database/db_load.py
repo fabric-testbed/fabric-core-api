@@ -106,12 +106,16 @@ def load_organizations() -> None:
         if org_identity_id and organization and affiliation and not org.get('Deleted'):
             fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
             if not fab_org:
-                logger.info("CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
-                fab_org = Organizations()
-                fab_org.org_identity_id = org_identity_id
-                fab_org.organization = organization
-                fab_org.affiliation = affiliation
-                db.session.add(fab_org)
+                try:
+                    fab_org = Organizations()
+                    fab_org.org_identity_id = org_identity_id
+                    fab_org.organization = organization
+                    fab_org.affiliation = affiliation
+                    db.session.add(fab_org)
+                    logger.info("CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
+                except Exception as exc:
+                    logger.error(exc)
+                    continue
     db.session.commit()
 
 

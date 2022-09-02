@@ -23,6 +23,7 @@ from swagger_server.response_code.profiles_utils import get_profile_people, othe
     personal_pages_to_array
 from swagger_server.response_code.response_utils import array_difference, is_valid_url
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
+from swagger_server.response_code.comanage_utils import update_org_affiliation
 
 logger = logging.getLogger(__name__)
 
@@ -233,6 +234,9 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         fab_person = FabricPeople.query.filter_by(uuid=uuid).one_or_none()
         if not fab_person:
             return cors_404(details="No match for Person with uuid = '{0}'".format(uuid))
+        # check for organizational affiliation (may not be set)
+        if not fab_person.org_affiliation:
+            update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
         # set PeopleOne object
         people_one = PeopleOne()
         # set required attributes for any uuid

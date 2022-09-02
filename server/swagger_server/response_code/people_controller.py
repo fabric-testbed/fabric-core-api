@@ -240,7 +240,12 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         # set PeopleOne object
         people_one = PeopleOne()
         # set required attributes for any uuid
-        people_one.affiliation = Organizations.query.filter_by(id=fab_person.org_affiliation).one_or_none().organization
+        try:
+            people_one.affiliation = Organizations.query.filter_by(
+                id=fab_person.org_affiliation).one_or_none().organization
+        except Exception as exc:
+            logger.warning(exc)
+            people_one.affiliation = 'Unknown'
         people_one.name = fab_person.display_name
         people_one.registered_on = str(fab_person.registered_on)
         people_one.uuid = fab_person.uuid

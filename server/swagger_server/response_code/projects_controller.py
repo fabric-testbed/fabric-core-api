@@ -114,15 +114,24 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             _sort_order_query = FabricProjects.name.asc()
             _sort_order_path = 'sort_by=name&order_by=asc&'
         # get paginated results
+        is_public_check = (
+                FabricProjects.is_public.is_(True) |
+                FabricProjects.project_creators.any(FabricPeople.id == api_user.id) |
+                FabricProjects.project_owners.any(FabricPeople.id == api_user.id) |
+                FabricProjects.project_members.any(FabricPeople.id == api_user.id) |
+                api_user.is_facility_operator()
+        )
         if not search and not person_uuid:
             base = '{0}/projects?{1}'.format(_SERVER_URL, _sort_order_path)
             results_page = FabricProjects.query.filter(
+                is_public_check &
                 FabricProjects.active.is_(True)
             ).order_by(_sort_order_query).paginate(
                 page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
             base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
             results_page = FabricProjects.query.filter(
+                is_public_check &
                 (FabricProjects.active.is_(True)) &
                 (FabricProjects.name.ilike("%" + search + "%")) |
                 (FabricProjects.description.ilike("%" + search + "%"))
@@ -131,12 +140,14 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
+                    is_public_check &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
                 ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
                 results_page = FabricProjects.query.filter(
+                    is_public_check &
                     FabricProjects.active.is_(True) &
                     FabricProjects.is_public.is_(True) &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
@@ -147,6 +158,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
                                                                         _sort_order_path)
             if api_user.uuid == person_uuid:
                 results_page = FabricProjects.query.filter(
+                    is_public_check &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &
                     (FabricProjects.name.ilike("%" + search + "%") |
                      FabricProjects.description.ilike("%" + search + "%"))
@@ -155,6 +167,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             else:
                 as_self = False
                 results_page = FabricProjects.query.filter(
+                    is_public_check &
                     FabricProjects.active.is_(True) &
                     FabricProjects.is_public.is_(True) &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
@@ -179,7 +192,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             project.name = item.name
             project.tags = get_project_tags(fab_project=item, fab_person=api_user)
             project.uuid = item.uuid
-            # add project to projects results
+            # add project to results
             response.results.append(project)
         # set links
         response.links = Status200OkPaginatedLinks()
@@ -420,7 +433,8 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         project_one.name = fab_project.name
         project_one.uuid = fab_project.uuid
         # set remaining attributes for project_creators, project_owners and project_members
-        if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member:
+        if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
+                or api_user.is_facility_operator():
             project_one.active = fab_project.active
             project_one.modified = str(fab_project.modified)
             project_one.preferences = {p.key: p.value for p in fab_project.preferences}

@@ -195,7 +195,8 @@ def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
                             fab_person.org_affiliation = fab_org.id
                             db.session.commit()
                             logger.info(
-                                "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(oi.get('Id', None)))
+                                "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(
+                                    oi.get('Id', None)))
                         except Exception as exc:
                             logger.error(exc)
                             continue
@@ -371,6 +372,9 @@ def update_organizations() -> None:
                     fab_org.affiliation = affiliation
                     db.session.add(fab_org)
                     db.session.commit()
+                else:
+                    logger.info(
+                        "FOUND: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
     except Exception as exc:
         details = 'Oops! something went wrong with update_organizations(): {0}'.format(exc)
         logger.error(details)

@@ -75,6 +75,24 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     return fab_person
 
 
+def find_fabric_person_by_oidcsub_identifier(co_person_id: int = None) -> FabricPeople | None:
+    identity = dict()
+    co_identifiers = api.identifiers_view_per_entity(
+        entity_type='copersonid', entity_id=co_person_id).get('Identifiers', [])
+    for ident in co_identifiers:
+        if ident.get('Type', None) == 'eppn':
+            identity['eppn'] = ident.get('Identifier', '')
+        if ident.get('Type', None) == os.getenv('CORE_API_CO_USER_IDENTIFIER', 'fabricid'):
+            identity['fabric_id'] = ident.get('Identifier', '')
+        if ident.get('Type', None) == 'oidcsub':
+            identity['oidc_claim_sub'] = ident.get('Identifier', '')
+    fab_person = FabricPeople.query.filter_by(oidc_claim_sub=identity.get('oidc_claim_sub', None)).one_or_none()
+    if fab_person:
+        return fab_person
+    else:
+        return None
+
+
 def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPeople:
     """
     Create by co_person_id attributes
@@ -94,46 +112,54 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
     - registered_on - timestamp user was registered on
     - uuid - unique universal identifier
     """
-    fab_person = FabricPeople()
-    try:
-        fab_person.co_person_id = co_person_id
-        co_person = api.copeople_view_one(coperson_id=co_person_id).get('CoPeople', [])
-        co_names = api.names_view_per_person(
-            person_type='copersonid',
-            person_id=co_person_id
-        ).get('Names', [])
-        for n in co_names:
-            if n.get('PrimaryName', False):
-                fab_person.oidc_claim_family_name = n.get('Family', '')
-                fab_person.oidc_claim_given_name = n.get('Given', '')
-                fab_person.display_name = n.get('Given', '') + ' ' + n.get('Family', '')
-        co_emails = api.email_addresses_view_per_person(
-            person_type='copersonid',
-            person_id=co_person_id
-        ).get('EmailAddresses', [])
-        for e in co_emails:
-            if e.get('Type', None) == 'official':
-                fab_person.preferred_email = e.get('Mail', '')
-                break
-        if co_person:
-            co_person_created = datetime.strptime(co_person[0].get('Created'), "%Y-%m-%d %H:%M:%S")
-            fab_person.created = co_person_created
-            fab_person.registered_on = co_person_created
-        else:
-            fab_person.created = datetime.now(timezone.utc)
-            fab_person.registered_on = datetime.now(timezone.utc)
-        fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
-            os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
-        fab_person.uuid = uuid4()
-        db.session.add(fab_person)
-        db.session.commit()
-        create_people_preferences(fab_person=fab_person)
-        create_profile_people(fab_person=fab_person)
-        update_people_identifiers(fab_person_id=fab_person.id, co_person_id=co_person_id)
-        logger.info('CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
-    except Exception as exc:
-        details = 'Oops! something went wrong with create_fabric_person_from_co_person_id(): {0}'.format(exc)
-        logger.error(details)
+    fab_person = find_fabric_person_by_oidcsub_identifier(co_person_id=co_person_id)
+    if fab_person:
+        # set co_person_id if missing
+        if not fab_person.co_person_id:
+            fab_person.co_person_id = co_person_id
+            db.session.commit()
+        logger.info('FOUND FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+    else:
+        fab_person = FabricPeople()
+        try:
+            fab_person.co_person_id = co_person_id
+            co_person = api.copeople_view_one(coperson_id=co_person_id).get('CoPeople', [])
+            co_names = api.names_view_per_person(
+                person_type='copersonid',
+                person_id=co_person_id
+            ).get('Names', [])
+            for n in co_names:
+                if n.get('PrimaryName', False):
+                    fab_person.oidc_claim_family_name = n.get('Family', '')
+                    fab_person.oidc_claim_given_name = n.get('Given', '')
+                    fab_person.display_name = n.get('Given', '') + ' ' + n.get('Family', '')
+            co_emails = api.email_addresses_view_per_person(
+                person_type='copersonid',
+                person_id=co_person_id
+            ).get('EmailAddresses', [])
+            for e in co_emails:
+                if e.get('Type', None) == 'official':
+                    fab_person.preferred_email = e.get('Mail', '')
+                    break
+            if co_person:
+                co_person_created = datetime.strptime(co_person[0].get('Created'), "%Y-%m-%d %H:%M:%S")
+                fab_person.created = co_person_created
+                fab_person.registered_on = co_person_created
+            else:
+                fab_person.created = datetime.now(timezone.utc)
+                fab_person.registered_on = datetime.now(timezone.utc)
+            fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
+                os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
+            fab_person.uuid = uuid4()
+            db.session.add(fab_person)
+            db.session.commit()
+            create_people_preferences(fab_person=fab_person)
+            create_profile_people(fab_person=fab_person)
+            update_people_identifiers(fab_person_id=fab_person.id, co_person_id=co_person_id)
+            logger.info('CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+        except Exception as exc:
+            details = 'Oops! something went wrong with create_fabric_person_from_co_person_id(): {0}'.format(exc)
+            logger.error(details)
 
     return fab_person
 
@@ -159,8 +185,8 @@ def update_fabric_person(fab_person: FabricPeople = None):
         # check co_person_id
         if not fab_person.co_person_id:
             co_person = api.copeople_match(
-                given=fab_person.oidc_claim_given_name,
-                family=fab_person.oidc_claim_family_name).get('CoPeople', [])
+                mail=fab_person.oidc_claim_email
+            ).get('CoPeople', [])
             if len(co_person) == 1:
                 fab_person.co_person_id = co_person[0].get('Id')
                 db.session.commit()

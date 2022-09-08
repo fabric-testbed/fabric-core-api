@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from comanage_api import ComanageApi
@@ -11,8 +11,9 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_PREFERENCES, PROJECTS_PREFERENCES, \
     PROJECTS_PROFILE_PREFERENCES
-from swagger_server.response_code.comanage_utils import update_groups, update_organizations
-from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id, update_fabric_person
+from swagger_server.response_code.comanage_utils import update_email_addresses, update_groups, update_org_affiliation, \
+    update_organizations, update_people_identifiers, update_people_roles
+from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id
 from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
 
 app.app_context().push()
@@ -112,10 +113,13 @@ def load_organizations() -> None:
                     fab_org.organization = organization
                     fab_org.affiliation = affiliation
                     db.session.add(fab_org)
-                    logger.info("CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
+                    logger.info(
+                        "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
                 except Exception as exc:
                     logger.error(exc)
                     continue
+            else:
+                logger.info("FOUND: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
     db.session.commit()
 
 
@@ -470,7 +474,6 @@ def load_groups():
             fab_group = FabricGroups()
             fab_group.co_cou_id = co_cou_id
             fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
-            print(co_cou.get('Created'))
             fab_group.created = datetime.strptime(co_cou.get('Created'), '%d/%m/%y %H:%M:%S')
             fab_group.name = co_cou.get('Name')
             fab_group.description = co_cou.get('Description')
@@ -524,7 +527,24 @@ def load_people_from_comanage():
         fab_person = FabricPeople.query.filter_by(co_person_id=co_person_id).one_or_none()
         if not fab_person:
             fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person_id)
-        update_fabric_person(fab_person=fab_person)
+        # check email_addresses
+        update_email_addresses(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+        # check co_person_roles
+        update_people_roles(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+        # check identifiers
+        update_people_identifiers(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+        # check org affiliation
+        update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+        # determine if active
+        fab_person.active = False
+        for role in fab_person.roles:
+            if role.name == os.getenv('COU_NAME_ACTIVE_USERS') and role.status == 'Active':
+                fab_person.active = True
+                break
+        # set updated
+        fab_person.updated = datetime.now(timezone.utc)
+        # commit changes
+        db.session.commit()
 
 
 def load_projects_from_groups():

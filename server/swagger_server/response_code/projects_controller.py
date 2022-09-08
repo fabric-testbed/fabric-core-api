@@ -244,7 +244,7 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         # get api_user
         api_user = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
-        if not api_user.active or os.getenv('COU_NAME_PROJECT_LEADS') not in [r.name for r in api_user.roles]:
+        if not api_user.active or not api_user.is_project_lead():
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PROJECT_LEADS')))
@@ -356,9 +356,10 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify creator role
-        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
-                uuid + '-po' not in [r.name for r in api_user.roles]:
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
                 details="User: '{0}' is not the creator of the project".format(api_user.display_name))
         # delete Tags
@@ -502,9 +503,10 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify creator or owner role
-        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
-                uuid + '-po' not in [r.name for r in api_user.roles]:
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
@@ -612,9 +614,10 @@ def projects_uuid_personnel_patch(uuid: str = None,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify creator or owner role
-        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
-                uuid + '-po' not in [r.name for r in api_user.roles]:
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
@@ -672,9 +675,10 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify creator or owner role
-        if not api_user.active or uuid + '-pc' not in [r.name for r in api_user.roles] and \
-                uuid + '-po' not in [r.name for r in api_user.roles]:
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
@@ -814,8 +818,8 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check api_user active flag and verify facility-operators role
-        if not api_user.active or os.getenv('COU_NAME_FACILITY_OPERATORS') not in [r.name for r in api_user.roles]:
+        # verify active facility-operators role
+        if not api_user.active or not api_user.is_facility_operator():
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))

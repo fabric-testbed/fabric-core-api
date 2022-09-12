@@ -59,8 +59,8 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         if search:
             results_page = FabricPeople.query.filter(
                 (FabricPeople.active.is_(True)) &
-                (FabricPeople.display_name.ilike("%" + search + "%")) |
-                (FabricPeople.preferred_email.ilike("%" + search + "%"))
+                ((FabricPeople.display_name.ilike("%" + search + "%")) |
+                 (FabricPeople.preferred_email.ilike("%" + search + "%")))
             ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
         else:
             results_page = FabricPeople.query.filter(

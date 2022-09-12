@@ -829,6 +829,12 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
                 update_projects_tags(fab_project=fab_project, tags=body.tags)
                 logger.info('UPDATE: FabricProjects: uuid={0}, tags=[]')
             else:
+                tags = body.tags
+                for tag in tags:
+                    if tag not in PROJECTS_TAGS.options:
+                        details = "Attempting to add invalid tag '{0}'".format(tag)
+                        logger.error(details)
+                        return cors_400(details=details)
                 update_projects_tags(fab_project=fab_project, tags=body.tags)
                 logger.info('UPDATE: FabricProjects: uuid={0}, tags={1}'.format(
                     fab_project.uuid, [t.tag for t in fab_project.tags]))

@@ -77,7 +77,7 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
             person = Person()
             person.email = item.preferred_email if prefs.__getattribute__('show_email') else None
             person.name = item.display_name
-            person.uuid = item.uuid
+            person.uuid = str(item.uuid)
             # add person to people results
             response.results.append(person)
         # set links

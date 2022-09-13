@@ -154,7 +154,7 @@ def sshkey_from_fab_sshkey(fab_sshkey: FabricSshKeys) -> SshkeysOne:
     sshkey.fingerprint = fab_sshkey.fingerprint
     sshkey.public_key = fab_sshkey.public_key
     sshkey.ssh_key_type = fab_sshkey.ssh_key_type
-    sshkey.uuid = fab_sshkey.uuid
+    sshkey.uuid = str(fab_sshkey.uuid)
     return sshkey
 
 
@@ -185,7 +185,7 @@ def sshkeys_from_fab_person(fab_person: FabricPeople, is_self: bool = False) -> 
             sshkey.fingerprint = k.fingerprint
             sshkey.public_key = k.public_key
             sshkey.ssh_key_type = k.ssh_key_type
-            sshkey.uuid = k.uuid
+            sshkey.uuid = str(k.uuid)
             sshkeys.append(sshkey)
     return sshkeys
 

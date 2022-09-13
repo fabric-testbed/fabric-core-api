@@ -104,7 +104,7 @@ def announcements_get(
             announcement.link = item.link if item.link else None
             announcement.start_date = str(item.start_date)
             announcement.title = item.title
-            announcement.uuid = item.uuid
+            announcement.uuid = str(item.uuid)
             # add announcement to announcements results
             response.results.append(announcement)
         # # set links

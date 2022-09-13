@@ -38,7 +38,7 @@ def whoami_get() -> Whoami:  # noqa: E501
         whoami.email = person.preferred_email if person.preferred_email else ''
         whoami.enrolled = True if person.co_person_id else False
         whoami.name = person.display_name if person.display_name else ''
-        whoami.uuid = person.uuid if person.uuid else ''
+        whoami.uuid = str(person.uuid) if person.uuid else ''
         # set Whoami object and return
         response = Whoami()
         response.results = [whoami]

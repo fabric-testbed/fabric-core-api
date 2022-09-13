@@ -181,9 +181,9 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
 def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople) -> ProjectMembership:
     membership = ProjectMembership()
     person_roles = [r.name for r in fab_person.roles]
-    membership.is_creator = fab_project.uuid + '-pc' in person_roles
-    membership.is_member = fab_project.uuid + '-pm' in person_roles
-    membership.is_owner = fab_project.uuid + '-po' in person_roles
+    membership.is_creator = str(fab_project.uuid) + '-pc' in person_roles
+    membership.is_member = str(fab_project.uuid) + '-pm' in person_roles
+    membership.is_owner = str(fab_project.uuid) + '-po' in person_roles
 
     return membership
 
@@ -217,7 +217,7 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         person = Person()
         person.email = p.preferred_email if prefs.get('show_email') else None
         person.name = p.display_name
-        person.uuid = p.uuid
+        person.uuid = str(p.uuid)
         # add person to personnel_data
         personnel_data.append(person)
 

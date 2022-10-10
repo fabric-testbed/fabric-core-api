@@ -6,6 +6,7 @@ from swagger_server.models.whoami import Whoami, WhoamiResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
+from swagger_server.response_code.whoami_utils import get_vouch_session_expiry
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ def whoami_get() -> Whoami:  # noqa: E501
         whoami.enrolled = True if person.co_person_id else False
         whoami.name = person.display_name if person.display_name else ''
         whoami.uuid = str(person.uuid) if person.uuid else ''
+        whoami.vouch_expiry = get_vouch_session_expiry()
         # set Whoami object and return
         response = Whoami()
         response.results = [whoami]

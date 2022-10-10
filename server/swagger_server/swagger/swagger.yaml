@@ -2645,7 +2645,6 @@ components:
           type: string
         prev:
           type: string
-      example: null
     status_200_ok_no_content_results:
       type: object
       properties:
@@ -2674,7 +2673,6 @@ components:
         status:
           type: integer
           default: 400
-      example: null
     status_401_unauthorized_errors:
       type: object
       properties:
@@ -2683,7 +2681,6 @@ components:
           default: Unauthorized
         details:
           type: string
-      example: null
     status_403_forbidden_errors:
       type: object
       properties:
@@ -2692,7 +2689,6 @@ components:
           default: Forbidden
         details:
           type: string
-      example: null
     status_404_not_found_errors:
       type: object
       properties:
@@ -2701,7 +2697,6 @@ components:
           default: Not Found
         details:
           type: string
-      example: null
     status_500_internal_server_error_errors:
       type: object
       properties:
@@ -2710,7 +2705,6 @@ components:
           default: Internal Server Error
         details:
           type: string
-      example: null
     people_one_roles:
       type: object
       properties:
@@ -2718,7 +2712,6 @@ components:
           type: string
         description:
           type: string
-      example: null
     profile_people_other_identities:
       type: object
       properties:
@@ -2726,7 +2719,6 @@ components:
           type: string
         type:
           type: string
-      example: null
     profile_people_personal_pages:
       type: object
       properties:
@@ -2734,7 +2726,6 @@ components:
           type: string
         type:
           type: string
-      example: null
     profile_projects_references:
       type: object
       properties:
@@ -2742,7 +2733,6 @@ components:
           type: string
         url:
           type: string
-      example: null
     sshkey_pair_results:
       type: object
       properties:
@@ -2750,7 +2740,6 @@ components:
           type: string
         public_openssh:
           type: string
-      example: null
     version_results:
       required:
       - reference
@@ -2762,7 +2751,6 @@ components:
         version:
           type: string
           example: 1.0.0
-      example: null
     whoami_results:
       required:
       - active
@@ -2783,14 +2771,14 @@ components:
           type: string
         uuid:
           type: string
-      example: null
+        vouch_expiry:
+          type: number
     api_options_one_api_endpoints:
       properties:
         description:
           type: string
         endpoint:
           type: string
-      example: null
   responses:
     "200_people":
       description: OK

@@ -14,7 +14,7 @@ class WhoamiResults(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=False, email: str=None, enrolled: bool=False, name: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=False, email: str=None, enrolled: bool=False, name: str=None, uuid: str=None, vouch_expiry: float=None):  # noqa: E501
         """WhoamiResults - a model defined in Swagger
 
         :param active: The active of this WhoamiResults.  # noqa: E501
@@ -27,13 +27,16 @@ class WhoamiResults(Model):
         :type name: str
         :param uuid: The uuid of this WhoamiResults.  # noqa: E501
         :type uuid: str
+        :param vouch_expiry: The vouch_expiry of this WhoamiResults.  # noqa: E501
+        :type vouch_expiry: float
         """
         self.swagger_types = {
             'active': bool,
             'email': str,
             'enrolled': bool,
             'name': str,
-            'uuid': str
+            'uuid': str,
+            'vouch_expiry': float
         }
 
         self.attribute_map = {
@@ -41,13 +44,15 @@ class WhoamiResults(Model):
             'email': 'email',
             'enrolled': 'enrolled',
             'name': 'name',
-            'uuid': 'uuid'
+            'uuid': 'uuid',
+            'vouch_expiry': 'vouch_expiry'
         }
         self._active = active
         self._email = email
         self._enrolled = enrolled
         self._name = name
         self._uuid = uuid
+        self._vouch_expiry = vouch_expiry
 
     @classmethod
     def from_dict(cls, dikt) -> 'WhoamiResults':
@@ -174,3 +179,24 @@ class WhoamiResults(Model):
             raise ValueError("Invalid value for `uuid`, must not be `None`")  # noqa: E501
 
         self._uuid = uuid
+
+    @property
+    def vouch_expiry(self) -> float:
+        """Gets the vouch_expiry of this WhoamiResults.
+
+
+        :return: The vouch_expiry of this WhoamiResults.
+        :rtype: float
+        """
+        return self._vouch_expiry
+
+    @vouch_expiry.setter
+    def vouch_expiry(self, vouch_expiry: float):
+        """Sets the vouch_expiry of this WhoamiResults.
+
+
+        :param vouch_expiry: The vouch_expiry of this WhoamiResults.
+        :type vouch_expiry: float
+        """
+
+        self._vouch_expiry = vouch_expiry

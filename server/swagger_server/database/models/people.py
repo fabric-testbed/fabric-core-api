@@ -126,7 +126,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
         Produce a GECOS-formatted string based on db person info
         """
         return ','.join([
-            self.oidc_claim_name.strip(),  # Full Name
+            self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip(),  # Full Name
             '',  # Building, room number
             '',  # Office telephone
             '',  # Home telephone

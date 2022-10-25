@@ -207,14 +207,18 @@ def bastionkeys_by_since_date(since_date: datetime = None) -> [BastionkeysOne]:
         ((FabricSshKeys.created >= since_date) | (FabricSshKeys.deactivated_on >= since_date))
     ).order_by('created').all()
     for r in results:
-        fab_person = FabricPeople.query.filter_by(id=r.people_id).one_or_none()
-        if fab_person:
-            bkey = BastionkeysOne()
-            bkey.status = r.status.name
-            bkey.login = fab_person.bastion_login()
-            bkey.gecos = fab_person.gecos()
-            ts = r.expires_on.strftime("_(%Y-%m-%d_%H:%M:%S%z)_")
-            bastion_comment = r.comment.strip()[0:COMMENT_LENGTH - len(ts)] + ts
-            bkey.public_openssh = " ".join([r.ssh_key_type, r.public_key, bastion_comment])
-            bastionkeys.append(bkey)
+        try:
+            fab_person = FabricPeople.query.filter_by(id=r.people_id).one_or_none()
+            if fab_person:
+                bkey = BastionkeysOne()
+                bkey.status = r.status.name
+                bkey.login = fab_person.bastion_login()
+                bkey.gecos = fab_person.gecos()
+                ts = r.expires_on.strftime("_(%Y-%m-%d_%H:%M:%S%z)_")
+                bastion_comment = r.comment.strip()[0:COMMENT_LENGTH - len(ts)] + ts
+                bkey.public_openssh = " ".join([r.ssh_key_type, r.public_key, bastion_comment])
+                bastionkeys.append(bkey)
+        except Exception as exc:
+            print(r.people_id)
+            print(exc)
     return bastionkeys

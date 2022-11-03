@@ -15,15 +15,16 @@ from swagger_server.models.status200_ok_no_content import Status200OkNoContent, 
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
     PEOPLE_PROFILE_PERSONALPAGE_TYPES, PEOPLE_PROFILE_PREFERENCES
+from swagger_server.response_code.comanage_utils import update_org_affiliation
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
-from swagger_server.response_code.people_utils import get_people_roles, get_person_by_login_claims
+from swagger_server.response_code.people_utils import get_people_roles_as_other, get_people_roles_as_self, \
+    get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import get_people_preferences
 from swagger_server.response_code.profiles_utils import get_profile_people, other_identities_to_array, \
     personal_pages_to_array
 from swagger_server.response_code.response_utils import array_difference, is_valid_url
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
-from swagger_server.response_code.comanage_utils import update_org_affiliation
 
 logger = logging.getLogger(__name__)
 
@@ -267,7 +268,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.preferences = {p.key: p.value for p in fab_person.preferences}
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
             people_one.publications = []
-            people_one.roles = get_people_roles(people_roles=fab_person.roles)
+            people_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person)
         # set remaining attributes for uuid != self based on user preference
         else:
@@ -277,7 +278,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id,
                                                     as_self=False) if people_prefs.get('show_profile') else None
             people_one.publications = [] if people_prefs.get('show_publications') else None
-            people_one.roles = get_people_roles(people_roles=fab_person.roles) if people_prefs.get(
+            people_one.roles = get_people_roles_as_other(people_roles=fab_person.roles) if people_prefs.get(
                 'show_roles') else None
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person) if people_prefs.get(
                 'show_sshkeys') else None

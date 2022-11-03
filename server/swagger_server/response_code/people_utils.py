@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
+from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, update_email_addresses, update_org_affiliation, \
     update_people_identifiers, update_people_roles
 from swagger_server.response_code.preferences_utils import create_people_preferences
@@ -222,9 +223,32 @@ def update_fabric_person(fab_person: FabricPeople = None):
         logger.error(details)
 
 
-def get_people_roles(people_roles: [FabricRoles] = None) -> [object]:
+def get_people_roles_as_self(people_roles: [FabricRoles] = None) -> [object]:
+    """
+    Return all roles if the api_user is the user being queried
+    - Global roles
+    - Project roles are returned regardless of being public or private
+    """
     roles = []
     for r in people_roles:
         roles.append({'name': r.name, 'description': r.description})
+    roles = sorted(roles, key=lambda d: (d.get('name')).casefold())
+    return roles
+
+
+def get_people_roles_as_other(people_roles: [FabricRoles] = None) -> [object]:
+    """
+    Return partial roles if the api_user is not the user being queried
+    - Global roles
+    - Project roles are returned only if the project is public
+    """
+    roles = []
+    for r in people_roles:
+        if r.name[-3:] in ['-pc', '-pm', '-po']:
+            fab_project = FabricProjects.query.filter_by(uuid=r.name[0:-3]).one_or_none()
+            if fab_project.is_public:
+                roles.append({'name': r.name, 'description': r.description})
+        else:
+            roles.append({'name': r.name, 'description': r.description})
     roles = sorted(roles, key=lambda d: (d.get('name')).casefold())
     return roles

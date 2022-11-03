@@ -133,8 +133,9 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             results_page = FabricProjects.query.filter(
                 is_public_check &
                 (FabricProjects.active.is_(True)) &
-                (FabricProjects.name.ilike("%" + search + "%")) |
-                (FabricProjects.description.ilike("%" + search + "%"))
+                ((FabricProjects.name.ilike("%" + search + "%")) |
+                 (FabricProjects.description.ilike("%" + search + "%")) |
+                 (FabricProjects.uuid.ilike("%" + search + "%")))
             ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
@@ -160,8 +161,9 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
                 results_page = FabricProjects.query.filter(
                     is_public_check &
                     FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &
-                    (FabricProjects.name.ilike("%" + search + "%") |
-                     FabricProjects.description.ilike("%" + search + "%"))
+                    ((FabricProjects.name.ilike("%" + search + "%")) |
+                     (FabricProjects.description.ilike("%" + search + "%")) |
+                     (FabricProjects.uuid.ilike("%" + search + "%")))
                 ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
@@ -190,7 +192,12 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             else:
                 project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
             project.name = item.name
-            project.tags = get_project_tags(fab_project=item, fab_person=api_user)
+            if api_user.is_facility_operator():
+                project.tags = get_project_tags(fab_project=item, fab_person=api_user)
+            elif as_self and (project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
+                project.tags = get_project_tags(fab_project=item, fab_person=api_user)
+            else:
+                project.tags = []
             project.uuid = item.uuid
             # add project to results
             response.results.append(project)
@@ -469,7 +476,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                                                                 personnel_type='owners') if project_prefs.get(
                 'show_project_owners') else None
             project_one.publications = []
-            project_one.tags = get_project_tags(fab_project=fab_project, fab_person=api_user)
+            project_one.tags = []
         # set project_details response
         response = ProjectsDetails()
         response.results = [project_one]

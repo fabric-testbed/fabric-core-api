@@ -64,7 +64,7 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
                  (FabricPeople.oidc_claim_family_name.ilike("%" + search + "%")) |
                  (FabricPeople.oidc_claim_given_name.ilike("%" + search + "%")) |
                  (FabricPeople.preferred_email.ilike("%" + search + "%")) |
-                 (FabricPeople.uuid.ilike("%" + search + "%")))
+                 (FabricPeople.uuid == search))
             ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
         else:
             results_page = FabricPeople.query.filter(

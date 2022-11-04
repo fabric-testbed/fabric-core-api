@@ -135,7 +135,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
                 (FabricProjects.active.is_(True)) &
                 ((FabricProjects.name.ilike("%" + search + "%")) |
                  (FabricProjects.description.ilike("%" + search + "%")) |
-                 (FabricProjects.uuid.ilike("%" + search + "%")))
+                 (FabricProjects.uuid == search))
             ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)

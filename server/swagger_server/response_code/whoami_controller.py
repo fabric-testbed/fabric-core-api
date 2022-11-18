@@ -27,8 +27,10 @@ def whoami_get() -> Whoami:  # noqa: E501
         # check last time the user was updated against COmanage
         now = datetime.now(timezone.utc)
         try:
-            if person.updated.timestamp() + int(os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
-                logger.info('UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
+            if person.updated.timestamp() + int(
+                    os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
+                logger.info(
+                    'UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
                 update_fabric_person(fab_person=person)
         except Exception as exc:
             logger.info('UPDATE FabricPeople: name={0}, last_updated=None - {1}'.format(person.display_name, exc))

@@ -268,13 +268,6 @@ def announcements_uuid_get(uuid: str) -> AnnouncementsDetails:  # noqa: E501
     :rtype: AnnouncementsDetails
     """
     try:
-        # # get api_user
-        # api_user = get_person_by_login_claims()
-        # # check api_user active flag and verify portal-admin role
-        # if not api_user.active or not api_user.is_portal_admin():
-        #     return cors_403(
-        #         details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
-        #             api_user.display_name, os.getenv('COU_NAME_PORTAL_ADMINS')))
         # get Announcement by uuid
         fab_announcement = FabricAnnouncements.query.filter_by(uuid=uuid).one_or_none()
         if not fab_announcement:

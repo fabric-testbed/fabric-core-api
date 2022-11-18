@@ -25,6 +25,8 @@ tags:
   description: FABRIC Publications
 - name: sshkeys
   description: FABRIC Public SSH Keys
+- name: testbed-info
+  description: FABRIC Testbed Information
 - name: version
   description: Core API Version
 - name: whoami
@@ -1841,6 +1843,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+  /testbed-info:
+    get:
+      tags:
+      - testbed-info
+      summary: Testbed Information
+      description: Testbed Information
+      operationId: testbed_info_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/testbed_info'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.testbed_info_controller
+    post:
+      tags:
+      - testbed-info
+      summary: Create Testbed Information
+      description: Create Testbed Information
+      operationId: testbed_info_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_testbed_info_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/testbed_info'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.testbed_info_controller
   /version:
     get:
       tags:
@@ -2413,6 +2482,16 @@ components:
           - deactivated
           - expired
           default: active
+    testbed_info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/testbed_info_results'
     version:
       type: object
       allOf:
@@ -2634,6 +2713,13 @@ components:
           type: string
         title:
           type: string
+    testbed_info_post:
+      type: object
+      properties:
+        testbed_info:
+          anyOf:
+          - type: object
+          - type: array
     status_200_ok_paginated_links:
       type: object
       properties:
@@ -2740,6 +2826,12 @@ components:
           type: string
         public_openssh:
           type: string
+    testbed_info_results:
+      properties:
+        testbed_info:
+          type: object
+        uuid:
+          type: string
     version_results:
       required:
       - reference
@@ -2822,6 +2914,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sshkey_pair'
+    "200_testbed_info":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/testbed_info'
     "200_version":
       description: OK
       content:
@@ -3106,4 +3204,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/announcements_patch'
+    payload_testbed_info_post:
+      description: Create Testbed Information
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/testbed_info_post'
 

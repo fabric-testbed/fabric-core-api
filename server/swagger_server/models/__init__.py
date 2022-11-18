@@ -8,6 +8,7 @@ from swagger_server.models.announcements import Announcements
 from swagger_server.models.announcements_details import AnnouncementsDetails
 from swagger_server.models.announcements_patch import AnnouncementsPatch
 from swagger_server.models.announcements_post import AnnouncementsPost
+from swagger_server.models.any_oftestbed_info_post_testbed_info import AnyOftestbedInfoPostTestbedInfo
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.api_options_details import ApiOptionsDetails
 from swagger_server.models.api_options_one import ApiOptionsOne
@@ -56,6 +57,9 @@ from swagger_server.models.status404_not_found import Status404NotFound
 from swagger_server.models.status404_not_found_errors import Status404NotFoundErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
+from swagger_server.models.testbed_info import TestbedInfo
+from swagger_server.models.testbed_info_post import TestbedInfoPost
+from swagger_server.models.testbed_info_results import TestbedInfoResults
 from swagger_server.models.version import Version
 from swagger_server.models.version_results import VersionResults
 from swagger_server.models.whoami import Whoami

@@ -194,7 +194,8 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
             project.name = item.name
             if api_user.is_facility_operator():
                 project.tags = get_project_tags(fab_project=item, fab_person=api_user)
-            elif as_self and (project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
+            elif as_self and (
+                    project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
                 project.tags = get_project_tags(fab_project=item, fab_person=api_user)
             else:
                 project.tags = []

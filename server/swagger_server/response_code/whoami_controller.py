@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timezone
 
 from swagger_server.models.whoami import Whoami, WhoamiResults  # noqa: E501
-from swagger_server.response_code.cors_response import cors_200, cors_500
+from swagger_server.response_code.cors_response import cors_200, cors_401, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
 from swagger_server.response_code.whoami_utils import get_vouch_session_expiry
@@ -23,7 +23,10 @@ def whoami_get() -> Whoami:  # noqa: E501
     try:
         # get person from people table
         person = get_person_by_login_claims()
-        print(person.updated)
+        if not person.co_person_id:
+            details = 'Enrollment required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
+            logger.info("unauthorized_access(): {0}".format(details))
+            return cors_401(details=details)
         # check last time the user was updated against COmanage
         now = datetime.now(timezone.utc)
         try:

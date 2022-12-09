@@ -33,6 +33,8 @@ def get_person_by_login_claims() -> FabricPeople:
 
 def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     """
+    Create a new FABRIC user if the user had previously enrolled, otherwise prompt to enroll
+
     Create by login attributes
     - created - timestamp created (TimestampMixin)
     - display_name - initially OIDC scope: profile:name
@@ -50,25 +52,22 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     """
     fab_person = FabricPeople()
     try:
-        if claims.get('sub'):
-            fab_person.bastion_login = fab_person.bastion_login()
-            fab_person.created = datetime.now(timezone.utc)
-            fab_person.display_name = claims.get('name')
-            fab_person.oidc_claim_email = claims.get('email')
-            fab_person.oidc_claim_family_name = claims.get('family_name')
-            fab_person.oidc_claim_given_name = claims.get('given_name')
-            fab_person.oidc_claim_name = claims.get('name')
-            fab_person.oidc_claim_sub = claims.get('sub')
-            fab_person.preferred_email = claims.get('email')
-            fab_person.registered_on = datetime.now(timezone.utc)
-            fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
-                os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
-            fab_person.uuid = uuid4()
-            db.session.add(fab_person)
-            db.session.commit()
-            create_people_preferences(fab_person=fab_person)
-            create_profile_people(fab_person=fab_person)
-            logger.info('CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+        if claims.get('given_name') and claims.get('family_name') and claims.get('email'):
+            co_person = api.copeople_match(
+                given=claims.get('given'),
+                family=claims.get('family'),
+                mail=claims.get('email')).get('CoPeople', [])
+            if co_person:
+                fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person[0].get('Id'))
+                fab_person.oidc_claim_email = claims.get('email')
+                fab_person.oidc_claim_family_name = claims.get('family_name')
+                fab_person.oidc_claim_given_name = claims.get('given_name')
+                fab_person.oidc_claim_name = claims.get('name')
+                fab_person.oidc_claim_sub = claims.get('sub')
+                fab_person.preferred_email = claims.get('email')
+                fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
+                    os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
+                db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with create_fabric_person_from_login(): {0}'.format(exc)
         logger.error(details)

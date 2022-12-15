@@ -236,7 +236,7 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
         for role_id in roles_removed:
             fab_role = FabricRoles.query.filter_by(co_person_role_id=int(role_id)).one_or_none()
             if fab_role:
-                logger.info("DELETE: entry in 'roles' table for co_person_role_id: {0}".format(fab_role.id))
+                logger.info("DELETE: entry in 'roles' table for fabric_role_id: {0}".format(fab_role.id))
                 FabricRoles.query.filter_by(id=fab_role.id).delete()
                 db.session.commit()
         # add new COmanage roles

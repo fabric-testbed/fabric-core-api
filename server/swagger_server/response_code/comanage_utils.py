@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from comanage_api import ComanageApi
+from swagger_server.response_code.response_utils import array_difference
 
 from swagger_server.database.db import db
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
@@ -224,7 +225,21 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
     - status - role status
     """
     try:
+        fab_person = FabricPeople.query.filter_by(id=fab_person_id).one_or_none()
         co_roles = api.coperson_roles_view_per_coperson(coperson_id=co_person_id).get('CoPersonRoles', [])
+        fab_roles = fab_person.roles
+        co_role_ids = [r.get('Id') for r in co_roles]
+        fab_role_ids = [str(r.co_person_role_id) for r in fab_roles]
+        roles_added = array_difference(co_role_ids, fab_role_ids)
+        roles_removed = array_difference(fab_role_ids, co_role_ids)
+        # remove old Fabric roles
+        for role_id in roles_removed:
+            fab_role = FabricRoles.query.filter_by(co_person_role_id=int(role_id)).one_or_none()
+            if fab_role:
+                logger.info("DELETE: entry in 'roles' table for co_person_role_id: {0}".format(fab_role.id))
+                FabricRoles.query.filter_by(id=fab_role.id).delete()
+                db.session.commit()
+        # add new COmanage roles
         for co_role in co_roles:
             co_person_role_id = co_role.get('Id', None)
             co_cou_id = co_role.get('CouId')
@@ -232,24 +247,25 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
             fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
             if fab_group:
                 if not fab_role:
-                    fab_role = FabricRoles()
-                    fab_role.affiliation = co_role.get('Affiliation', 'member')
-                    fab_role.co_cou_id = co_cou_id
-                    fab_role.co_person_id = co_person_id
-                    fab_role.co_person_role_id = co_person_role_id
-                    fab_role.name = fab_group.name
-                    fab_role.description = fab_group.description
-                    fab_role.people_id = fab_person_id
-                    fab_role.status = co_role.get('Status', 'Pending')
-                    try:
-                        db.session.add(fab_role)
-                        db.session.commit()
-                        logger.info(
-                            "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
-                    except Exception as exc:
-                        logger.error('DUPLICATE ROLE: {0}'.format(exc))
-                        db.session.rollback()
-                        continue
+                    if co_person_role_id in roles_added and str(co_role.get('Status')).casefold() == 'active':
+                        fab_role = FabricRoles()
+                        fab_role.affiliation = co_role.get('Affiliation', 'member')
+                        fab_role.co_cou_id = co_cou_id
+                        fab_role.co_person_id = co_person_id
+                        fab_role.co_person_role_id = co_person_role_id
+                        fab_role.name = fab_group.name
+                        fab_role.description = fab_group.description
+                        fab_role.people_id = fab_person_id
+                        fab_role.status = co_role.get('Status')
+                        try:
+                            db.session.add(fab_role)
+                            db.session.commit()
+                            logger.info(
+                                "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
+                        except Exception as exc:
+                            logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                            db.session.rollback()
+                            continue
                 else:
                     fab_role.affiliation = co_role.get('Affiliation', 'member')
                     fab_role.name = fab_group.name

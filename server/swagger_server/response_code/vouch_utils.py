@@ -6,8 +6,6 @@ import os
 import jwt
 from flask import request
 
-logger = logging.getLogger(__name__)
-
 
 def vouch_get_custom_claims() -> dict:
     """

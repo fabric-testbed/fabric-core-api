@@ -1,14 +1,12 @@
-import logging
 import os
 from datetime import datetime, timezone
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.models.whoami import Whoami, WhoamiResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_401, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
 from swagger_server.response_code.whoami_utils import get_vouch_session_expiry
-
-logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -25,18 +23,19 @@ def whoami_get() -> Whoami:  # noqa: E501
         person = get_person_by_login_claims()
         if not person.co_person_id:
             details = 'Enrollment required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
-            logger.info("unauthorized_access(): {0}".format(details))
+            consoleLogger.info("unauthorized_access(): {0}".format(details))
             return cors_401(details=details)
         # check last time the user was updated against COmanage
         now = datetime.now(timezone.utc)
         try:
             if person.updated.timestamp() + int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
-                logger.info(
+                consoleLogger.info(
                     'UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
                 update_fabric_person(fab_person=person)
         except Exception as exc:
-            logger.info('UPDATE FabricPeople: name={0}, last_updated=None - {1}'.format(person.display_name, exc))
+            consoleLogger.info(
+                'UPDATE FabricPeople: name={0}, last_updated=None - {1}'.format(person.display_name, exc))
             update_fabric_person(fab_person=person)
         # set WhoamiResults object
         whoami = WhoamiResults()
@@ -55,5 +54,5 @@ def whoami_get() -> Whoami:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with whoami_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

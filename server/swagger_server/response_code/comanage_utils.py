@@ -1,14 +1,12 @@
-import logging
 import os
 from datetime import datetime
 
 from comanage_api import ComanageApi
-from swagger_server.response_code.response_utils import array_difference
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
-
-logger = logging.getLogger(__name__)
+from swagger_server.response_code.response_utils import array_difference
 
 api = ComanageApi(
     co_api_url=os.getenv('COMANAGE_API_URL'),
@@ -35,14 +33,14 @@ def create_comanage_group(name: str, description: str = None, parent_cou_id: int
             fab_group.name = name
             db.session.add(fab_group)
             db.session.commit()
-            logger.info(
+            consoleLogger.info(
                 "CREATE: entry in 'groups' table for co_cou_id: {0}".format(cou.get('Id')))
             return cou.get('Id')
         else:
             return -1
     except Exception as exc:
         details = 'Oops! something went wrong with create_comanage_group(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return -1
 
 
@@ -58,7 +56,7 @@ def delete_comanage_group(co_cou_id: int) -> bool:
             is_deleted = api.cous_delete(cou_id=co_cou_id)
             # delete group in FABRIC
             if is_deleted:
-                logger.info(
+                consoleLogger.info(
                     "DELETE: entry in 'groups' table for co_cou_id: {0}".format(
                         co_cou.co_cou_id))
                 FabricGroups.query.filter_by(id=co_cou.id).delete()
@@ -66,7 +64,7 @@ def delete_comanage_group(co_cou_id: int) -> bool:
             return is_deleted
     except Exception as exc:
         details = 'Oops! something went wrong with delete_comanage_group(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return False
 
 
@@ -95,7 +93,7 @@ def update_comanage_group(co_cou_id: int, name: str = None, description: str = N
             return False
     except Exception as exc:
         details = 'Oops! something went wrong with update_comanage_group(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return False
 
 
@@ -118,17 +116,17 @@ def create_comanage_role(fab_person: FabricPeople, fab_group: FabricGroups) -> b
             try:
                 db.session.add(fab_role)
                 db.session.commit()
-                logger.info(
+                consoleLogger.info(
                     "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role.get('Id')))
             except Exception as exc:
-                logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                consoleLogger.error('DUPLICATE ROLE: {0}'.format(exc))
                 db.session.rollback()
                 return False
 
             return True
     except Exception as exc:
         details = 'Oops! something went wrong with create_comanage_role(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return False
 
 
@@ -140,7 +138,7 @@ def delete_comanage_role(co_person_role_id: int) -> bool:
             is_deleted = api.coperson_roles_delete(coperson_role_id=co_person_role_id)
             # delete co_person_role in FABRIC
             if is_deleted:
-                logger.info(
+                consoleLogger.info(
                     "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(
                         co_person_role.co_person_role_id))
                 FabricRoles.query.filter_by(id=co_person_role.id).delete()
@@ -148,7 +146,7 @@ def delete_comanage_role(co_person_role_id: int) -> bool:
             return is_deleted
     except Exception as exc:
         details = 'Oops! something went wrong with delete_comanage_role(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return False
 
 
@@ -167,7 +165,7 @@ def update_people_identifiers(fab_person_id: int, co_person_id: int) -> None:
         db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with update_people_identifiers(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
@@ -195,21 +193,21 @@ def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
                             db.session.commit()
                             fab_person.org_affiliation = fab_org.id
                             db.session.commit()
-                            logger.info(
+                            consoleLogger.info(
                                 "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(
                                     oi.get('Id', None)))
                         except Exception as exc:
-                            logger.error(exc)
+                            consoleLogger.error(exc)
                             continue
                     else:
-                        logger.warning('[NEEDS REVIEW] org_identity_id = {0}'.format(org_identity_id))
+                        consoleLogger.warning('[NEEDS REVIEW] org_identity_id = {0}'.format(org_identity_id))
             else:
                 fab_person.org_affiliation = fab_org.id
                 db.session.commit()
 
     except Exception as exc:
         details = 'Oops! something went wrong with update_org_affiliation(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
@@ -236,7 +234,7 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
         for role_id in roles_removed:
             fab_role = FabricRoles.query.filter_by(co_person_role_id=int(role_id)).one_or_none()
             if fab_role:
-                logger.info("DELETE: entry in 'roles' table for fabric_role_id: {0}".format(fab_role.id))
+                consoleLogger.info("DELETE: entry in 'roles' table for fabric_role_id: {0}".format(fab_role.id))
                 FabricRoles.query.filter_by(id=fab_role.id).delete()
                 db.session.commit()
         # add new COmanage roles
@@ -260,10 +258,10 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                         try:
                             db.session.add(fab_role)
                             db.session.commit()
-                            logger.info(
+                            consoleLogger.info(
                                 "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
                         except Exception as exc:
-                            logger.error('DUPLICATE ROLE: {0}'.format(exc))
+                            consoleLogger.error('DUPLICATE ROLE: {0}'.format(exc))
                             db.session.rollback()
                             continue
                 else:
@@ -272,19 +270,19 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                     fab_role.description = fab_group.description
                     fab_role.status = co_role.get('Status', 'Pending')
                     db.session.commit()
-                    logger.info(
+                    consoleLogger.info(
                         "UPDATE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
                     if fab_role.status == 'Deleted':
-                        logger.info(
+                        consoleLogger.info(
                             "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
                         FabricRoles.query.filter_by(id=fab_role.id).delete()
                         db.session.commit()
             else:
-                logger.warning(
+                consoleLogger.warning(
                     "ERROR: unable to locate co_cou_id {0} in the 'groups' table".format(co_cou_id))
     except Exception as exc:
         details = 'Oops! something went wrong with update_people_roles(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def update_email_addresses(fab_person_id: int, co_person_id: int) -> None:
@@ -310,17 +308,17 @@ def update_email_addresses(fab_person_id: int, co_person_id: int) -> None:
                 fab_email.type = co_email.get('Type')
                 db.session.add(fab_email)
                 db.session.commit()
-                logger.info(
+                consoleLogger.info(
                     'CREATE EmailAddress: email={0}, fab_person_id={1}'.format(fab_email.email, fab_email.people_id))
             else:
                 fab_email.email = co_email.get('Mail')
                 fab_email.type = co_email.get('Type')
                 db.session.commit()
-                logger.info(
+                consoleLogger.info(
                     'UPDATE EmailAddress: email={0}, fab_person_id={1}'.format(fab_email.email, fab_email.people_id))
     except Exception as exc:
         details = 'Oops! something went wrong with update_email_addresses(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def update_groups():
@@ -347,21 +345,21 @@ def update_groups():
                 fab_group.name = co_cou.get('Name')
                 db.session.add(fab_group)
                 db.session.commit()
-                logger.info("CREATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
+                consoleLogger.info("CREATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
             else:
                 fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
                 fab_group.deleted = co_cou.get('Deleted')
                 fab_group.description = co_cou.get('Description')
                 fab_group.name = co_cou.get('Name')
                 db.session.commit()
-                logger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
+                consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
                 if fab_group.deleted:
-                    logger.info("DELETE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
+                    consoleLogger.info("DELETE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
                     FabricGroups.query.filter_by(id=fab_group.id).delete()
                     db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with update_groups(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def update_organizations() -> None:
@@ -380,7 +378,7 @@ def update_organizations() -> None:
             if org_identity_id and organization and affiliation and not org.get('Deleted'):
                 fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
                 if not fab_org:
-                    logger.info(
+                    consoleLogger.info(
                         "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
                     fab_org = Organizations()
                     fab_org.org_identity_id = org_identity_id
@@ -389,8 +387,8 @@ def update_organizations() -> None:
                     db.session.add(fab_org)
                     db.session.commit()
                 else:
-                    logger.info(
+                    consoleLogger.info(
                         "FOUND: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
     except Exception as exc:
         details = 'Oops! something went wrong with update_organizations(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)

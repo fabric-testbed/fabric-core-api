@@ -1,8 +1,8 @@
-import logging
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects
@@ -11,8 +11,6 @@ from swagger_server.response_code.comanage_utils import api, update_email_addres
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
-
-logger = logging.getLogger(__name__)
 
 
 def get_person_by_login_claims() -> FabricPeople:
@@ -25,7 +23,7 @@ def get_person_by_login_claims() -> FabricPeople:
             fab_person = create_fabric_person_from_login(claims=claims)
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         fab_person = FabricPeople()
 
     return fab_person
@@ -70,7 +68,7 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
                 db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with create_fabric_person_from_login(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
     return fab_person
 
@@ -118,7 +116,7 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
         if not fab_person.co_person_id:
             fab_person.co_person_id = co_person_id
             db.session.commit()
-        logger.info('FOUND FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+        consoleLogger.info('FOUND FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
     else:
         fab_person = FabricPeople()
         try:
@@ -156,10 +154,11 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
             create_people_preferences(fab_person=fab_person)
             create_profile_people(fab_person=fab_person)
             update_people_identifiers(fab_person_id=fab_person.id, co_person_id=co_person_id)
-            logger.info('CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+            consoleLogger.info(
+                'CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
         except Exception as exc:
             details = 'Oops! something went wrong with create_fabric_person_from_co_person_id(): {0}'.format(exc)
-            logger.error(details)
+            consoleLogger.error(details)
 
     return fab_person
 
@@ -219,7 +218,7 @@ def update_fabric_person(fab_person: FabricPeople = None):
         db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with update_fabric_person(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
 
 
 def get_people_roles_as_self(people_roles: [FabricRoles] = None) -> [object]:

@@ -1,10 +1,10 @@
-import logging
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from fss_utils.sshkey import FABRICSSHKey
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.sshkeys import EnumSshKeyStatus, EnumSshKeyTypes, FabricSshKeys
@@ -14,8 +14,6 @@ from swagger_server.models.sshkeys_one import SshkeysOne
 from swagger_server.models.sshkeys_post import SshkeysPost
 from swagger_server.models.sshkeys_put import SshkeysPut
 from swagger_server.response_code.cors_response import cors_400, cors_500
-
-logger = logging.getLogger(__name__)
 
 # constants
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
@@ -39,7 +37,7 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
     status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    logger.info("Generating key of type '{0}' for '{1}' with comment '{2}'".format(
+    consoleLogger.info("Generating key of type '{0}' for '{1}' with comment '{2}'".format(
         body.keytype, fab_person.display_name, body.comment))
     try:
         sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
@@ -73,18 +71,18 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
         return response
     except Exception as exc:
         details = 'Oops! something went wrong with create_sshkey(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
 def put_sshkey(body: SshkeysPut, fab_person: FabricPeople) -> FabricSshKeys:
     # keytype: str, public_openssh: str, description: str
-    logger.info("PUT key of type '{0}'".format(body.keytype))
+    consoleLogger.info("PUT key of type '{0}'".format(body.keytype))
     try:
         fssh = FABRICSSHKey(body.public_openssh)
         if fssh.get_fingerprint() in [k.fingerprint for k in fab_person.sshkeys]:
             details = "Fingerprint '{0}' is not unique".format(fssh.get_fingerprint())
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         # create new fabric key object
         fab_sshkey = FabricSshKeys()
@@ -109,7 +107,7 @@ def put_sshkey(body: SshkeysPut, fab_person: FabricPeople) -> FabricSshKeys:
         return fab_sshkey
     except Exception as exc:
         details = 'Oops! something went wrong with put_sshkey(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -128,7 +126,7 @@ def delete_sshkey(fab_person: FabricPeople, fab_sshkey: FabricSshKeys):
     status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    logger.info("Delete key '{0}'".format(fab_sshkey.uuid))
+    consoleLogger.info("Delete key '{0}'".format(fab_sshkey.uuid))
     try:
         # remove key from person
         fab_person.sshkeys.remove(fab_sshkey)
@@ -138,7 +136,7 @@ def delete_sshkey(fab_person: FabricPeople, fab_sshkey: FabricSshKeys):
         db.session.commit()
     except Exception as exc:
         details = 'Oops! something went wrong with delete_sshkey(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 

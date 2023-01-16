@@ -1,6 +1,6 @@
-import logging
 import os
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
@@ -25,8 +25,6 @@ from swagger_server.response_code.profiles_utils import get_profile_people, othe
     personal_pages_to_array
 from swagger_server.response_code.response_utils import array_difference, is_valid_url
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
-
-logger = logging.getLogger(__name__)
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -104,7 +102,7 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with people_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -130,7 +128,7 @@ def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         response.type = PEOPLE_PREFERENCES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("people_preferences_get(search=None): {0}".format(exc))
+        consoleLogger.error("people_preferences_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Preferences.Get()')
 
 
@@ -157,7 +155,7 @@ def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: 
         response.type = PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("people_profile_otheridentity_types_get(search=None): {0}".format(exc))
+        consoleLogger.error("people_profile_otheridentity_types_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Profile.OtherIdentity.Types.Get()')
 
 
@@ -184,7 +182,7 @@ def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E
         response.type = PEOPLE_PROFILE_PERSONALPAGE_TYPES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("people_profile_personalpage_types_get(search=None): {0}".format(exc))
+        consoleLogger.error("people_profile_personalpage_types_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Profile.PersonalPage.Types.Get()')
 
 
@@ -210,7 +208,7 @@ def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         response.type = PEOPLE_PROFILE_PREFERENCES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("people_profile_preferences_get(search=None): {0}".format(exc))
+        consoleLogger.error("people_profile_preferences_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
@@ -248,7 +246,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.affiliation = Organizations.query.filter_by(
                 id=fab_person.org_affiliation).one_or_none().organization
         except Exception as exc:
-            logger.warning(exc)
+            consoleLogger.warning(exc)
             people_one.affiliation = 'Unknown'
         people_one.name = fab_person.display_name
         people_one.registered_on = str(fab_person.registered_on)
@@ -292,7 +290,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with people_uuid_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -331,9 +329,10 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
             else:
                 fab_person.display_name = body.name
             db.session.commit()
-            logger.info('UPDATE: FabricPeople: uuid={0}, name={1}'.format(fab_person.uuid, fab_person.display_name))
+            consoleLogger.info(
+                'UPDATE: FabricPeople: uuid={0}, name={1}'.format(fab_person.uuid, fab_person.display_name))
         except Exception as exc:
-            logger.info("NOP: people_uuid_patch(): 'name' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_patch(): 'name' - {0}".format(exc))
         # check for email
         try:
             if len(body.email) == 0:
@@ -344,9 +343,10 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                 return cors_400(
                     details="Email: '{0}' is not found in User's existing Email Addresses".format(body.email))
             db.session.commit()
-            logger.info('UPDATE: FabricPeople: uuid={0}, email={1}'.format(fab_person.uuid, fab_person.preferred_email))
+            consoleLogger.info(
+                'UPDATE: FabricPeople: uuid={0}, email={1}'.format(fab_person.uuid, fab_person.preferred_email))
         except Exception as exc:
-            logger.info("NOP: people_uuid_patch(): 'email' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_patch(): 'email' - {0}".format(exc))
         # check for preferences
         try:
             for key in body.preferences.keys():
@@ -365,19 +365,19 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                         db.session.add(fab_pref)
                         db.session.commit()
                         fab_person.preferences.append(fab_pref)
-                        logger.info("CREATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
+                        consoleLogger.info("CREATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
                             fab_person.uuid, fab_pref.key, fab_pref.value))
                     else:
                         details = "People Preferences: '{0}' is not a valid preference type".format(key)
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                 else:
                     fab_pref.value = body.preferences.get(key)
                     db.session.commit()
-                    logger.info("UPDATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
+                    consoleLogger.info("UPDATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))
         except Exception as exc:
-            logger.info("NOP: people_uuid_patch(): 'preferences' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_patch(): 'preferences' - {0}".format(exc))
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "User: '{0}' has been successfully updated".format(fab_person.display_name)
@@ -389,7 +389,7 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with people_uuid_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -429,9 +429,10 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             else:
                 fab_profile.bio = body.bio
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.bio))
+            consoleLogger.info(
+                'UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.bio))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'bio' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'bio' - {0}".format(exc))
         # check for cv
         try:
             if len(body.cv) == 0:
@@ -441,12 +442,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     fab_profile.cv = body.cv
                 else:
                     details = "CV: '{0}' is not a valid URL".format(body.cv)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesPeople: uuid={0}, cv={1}'.format(fab_profile.uuid, fab_profile.cv))
+            consoleLogger.info(
+                'UPDATE: FabricProfilesPeople: uuid={0}, cv={1}'.format(fab_profile.uuid, fab_profile.cv))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'cv' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'cv' - {0}".format(exc))
         # check for job
         try:
             if len(body.job) == 0:
@@ -454,9 +456,10 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             else:
                 fab_profile.job = body.job
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesPeople: uuid={0}, job={1}'.format(fab_profile.uuid, fab_profile.job))
+            consoleLogger.info(
+                'UPDATE: FabricProfilesPeople: uuid={0}, job={1}'.format(fab_profile.uuid, fab_profile.job))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'job' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'job' - {0}".format(exc))
         # check for other_identities
         try:
             oi_orig = other_identities_to_array(fab_person.profile.other_identities)
@@ -473,7 +476,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 if not fab_oi:
                     if oi.get('type').casefold() not in PEOPLE_PROFILE_OTHER_IDENTITY_TYPES.options:
                         details = "OtherIdentities: '{0}' is not a valid identity type".format(oi.get('type'))
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                     fab_oi = ProfilesOtherIdentities()
                     fab_oi.identity = oi.get('identity')
@@ -481,7 +484,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     fab_oi.type = oi.get('type').casefold()
                     db.session.add(fab_oi)
                     db.session.commit()
-                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
+                    consoleLogger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
                         fab_person.uuid, fab_oi.type, fab_oi.identity))
             # remove old identities
             for oi in oi_remove:
@@ -491,12 +494,12 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     ProfilesOtherIdentities.type == oi.get('type').casefold()
                 ).one_or_none()
                 if fab_oi:
-                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
+                    consoleLogger.info("DELETE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
                         fab_person.uuid, fab_oi.type, fab_oi.identity))
                     db.session.delete(fab_oi)
                     db.session.commit()
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'other_identities' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'other_identities' - {0}".format(exc))
         # check for preferences
         try:
             for key in body.preferences.keys():
@@ -515,19 +518,19 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                         db.session.add(fab_pref)
                         db.session.commit()
                         fab_profile.preferences.append(fab_pref)
-                        logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                        consoleLogger.info("CREATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
                             fab_person.uuid, fab_pref.key, fab_pref.value))
                     else:
                         details = "People Preferences: '{0}' is not a valid preference type".format(key)
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                 else:
                     fab_pref.value = body.preferences.get(key)
                     db.session.commit()
-                    logger.info("UPDATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                    consoleLogger.info("UPDATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'preferences' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'preferences' - {0}".format(exc))
         # check for personal pages
         try:
             pp_orig = personal_pages_to_array(fab_person.profile.personal_pages)
@@ -544,11 +547,11 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 if not fab_pp:
                     if pp.get('type').casefold() not in PEOPLE_PROFILE_PERSONALPAGE_TYPES.options:
                         details = "PersonalPages: '{0}' is not a valid page type".format(pp.get('type'))
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                     if not is_valid_url(pp.get('url')):
                         details = "PersonalPages: '{0}' is not a valid URL".format(pp.get('url'))
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                     fab_pp = ProfilesPersonalPages()
                     fab_pp.profiles_people_id = fab_profile.id
@@ -556,7 +559,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     fab_pp.type = pp.get('type').casefold()
                     db.session.add(fab_pp)
                     db.session.commit()
-                    logger.info("CREATE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
+                    consoleLogger.info("CREATE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pp.type, fab_pp.url))
             # remove old personal pages
             for pp in pp_remove:
@@ -566,12 +569,12 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     ProfilesPersonalPages.type == pp.get('type').casefold()
                 ).one_or_none()
                 if fab_pp:
-                    logger.info("DELETE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
+                    consoleLogger.info("DELETE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pp.type, fab_pp.url))
                     db.session.delete(fab_pp)
                     db.session.commit()
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'personal_pages' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'personal_pages' - {0}".format(exc))
         # check for pronouns
         try:
             if len(body.pronouns) == 0:
@@ -579,10 +582,10 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             else:
                 fab_profile.pronouns = body.pronouns
             db.session.commit()
-            logger.info(
+            consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.pronouns))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'pronouns' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'pronouns' - {0}".format(exc))
         # check for website
         try:
             if len(body.website) == 0:
@@ -592,13 +595,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     fab_profile.website = body.website
                 else:
                     details = "Website: '{0}' is not a valid URL".format(body.website)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
             db.session.commit()
-            logger.info(
+            consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, website={1}'.format(fab_profile.uuid, fab_profile.website))
         except Exception as exc:
-            logger.info("NOP: people_uuid_profile_patch(): 'website' - {0}".format(exc))
+            consoleLogger.info("NOP: people_uuid_profile_patch(): 'website' - {0}".format(exc))
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "Profile for User: '{0}' has been successfully updated".format(fab_person.display_name)
@@ -610,5 +613,5 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with people_uuid_profile_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

@@ -1,10 +1,11 @@
-import logging
+import os
 import os
 import re
 from datetime import datetime, timezone
 
 from fss_utils.sshkey import FABRICSSHKey
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.sshkeys import EnumSshKeyTypes, FabricSshKeys
 from swagger_server.models.bastionkeys import Bastionkeys  # noqa: E501
@@ -19,8 +20,6 @@ from swagger_server.response_code.decorators import login_required, secret_requi
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, delete_sshkey, \
     put_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, sskeys_count_by_fabric_key_type
-
-logger = logging.getLogger(__name__)
 
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
 TZPYTHON = r"^.+\+[\d]{4}$"
@@ -58,7 +57,7 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
             pdate = pdate.astimezone(timezone.utc)
         except ValueError as exc:
             details = 'Exception: since_date: {0}'.format(exc)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
 
         response = Bastionkeys()
@@ -69,7 +68,7 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with bastionkeys_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -106,10 +105,12 @@ def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
         response.size = len(response.results)
         response.status = 200
         response.type = 'sshkeys'
+        log_event = 'User event usr:{0}'.format(str(api_user.uuid))
+        metricsconsoleLogger.info(log_event)
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -150,7 +151,7 @@ def sshkeys_post(body: SshkeysPost = None) -> SshkeyPair:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_post(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -183,14 +184,14 @@ def sshkeys_put(body: SshkeysPut = None):  # noqa: E501
         fssh = FABRICSSHKey(body.public_openssh)
         if fssh.get_fingerprint() in [k.fingerprint for k in api_user.sshkeys]:
             details = "Duplicate Key: Fingerprint '{0}' is not unique".format(fssh.get_fingerprint())
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         # put SSH public key
         try:
             fab_sshkey = put_sshkey(body=body, fab_person=api_user)
         except Exception as exc:
             details = 'Oops! something went wrong with sshkeys_put(): {0}'.format(exc)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_500(details=details)
         # create response
         put_info = Status200OkNoContentResults()
@@ -203,7 +204,7 @@ def sshkeys_put(body: SshkeysPut = None):  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_put(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -243,7 +244,7 @@ def sshkeys_uuid_delete(uuid) -> Status200OkNoContent:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_uuid_delete(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -283,5 +284,5 @@ def sshkeys_uuid_get(uuid: str) -> Sshkeys:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_uuid_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

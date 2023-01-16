@@ -11,13 +11,12 @@ Tags (match by project_id, tag)
 
 """
 import json
-import logging
 from datetime import datetime
 
 from swagger_server.__main__ import app, db
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 
-logger = logging.getLogger(__name__)
 app.app_context().push()
 
 # load pr_projects.json, pr_tags.json, pr_people.json
@@ -70,15 +69,15 @@ def update_project_from_pr(fab_project: FabricProjects, pr_project: dict):
     - uuid - unique universal identifier
     """
     # update description
-    logger.info('- description: {0} --> {1}'.format(str(fab_project.description), pr_project.get('description')))
+    consoleLogger.info('- description: {0} --> {1}'.format(str(fab_project.description), pr_project.get('description')))
     fab_project.description = pr_project.get('description')
     db.session.commit()
     # update created
-    logger.info('- created: {0} --> {1}'.format(str(fab_project.created), pr_project.get('created_time')))
+    consoleLogger.info('- created: {0} --> {1}'.format(str(fab_project.created), pr_project.get('created_time')))
     fab_project.created = date_parser(pr_project.get('created_time'))
     db.session.commit()
     # update modified
-    logger.info('- modified: {0} --> {1}'.format(str(fab_project.modified), pr_project.get('modified')))
+    consoleLogger.info('- modified: {0} --> {1}'.format(str(fab_project.modified), pr_project.get('modified')))
     if pr_project.get('modified').casefold() != "none":
         fab_project.modified = date_parser(pr_project.get('modified'))
     else:
@@ -102,7 +101,7 @@ def add_tags_to_project(fab_project: FabricProjects, pr_project: dict):
             if ProjectsTags.query.filter(
                     ProjectsTags.tag == tag.get('tag'), ProjectsTags.projects_id == fab_project.id
             ).first():
-                logger.info('- tags: DUPLICATE {0}'.format(tag.get('tag')))
+                consoleLogger.info('- tags: DUPLICATE {0}'.format(tag.get('tag')))
             # create new project tag
             else:
                 p_tag = ProjectsTags()
@@ -110,14 +109,14 @@ def add_tags_to_project(fab_project: FabricProjects, pr_project: dict):
                 p_tag.tag = tag.get('tag')
                 db.session.add(p_tag)
                 db.session.commit()
-                logger.info('- tags: ADD {0}'.format(tag.get('tag')))
+                consoleLogger.info('- tags: ADD {0}'.format(tag.get('tag')))
 
 
 # migrate UIS data to core-api
 for pr_p in pr_projects:
     project = FabricProjects.query.filter_by(uuid=pr_p.get('uuid')).first()
     if project:
-        logger.info('FOUND: {0}'.format(pr_p.get('uuid')))
+        consoleLogger.info('FOUND: {0}'.format(pr_p.get('uuid')))
         update_project_from_pr(fab_project=project, pr_project=pr_p)
     else:
-        logger.warning('NOT FOUND: {0}'.format(pr_p.get('uuid')))
+        consoleLogger.warning('NOT FOUND: {0}'.format(pr_p.get('uuid')))

@@ -1,6 +1,6 @@
-import logging
 import os
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.announcements import EnumAnnouncementTypes, FabricAnnouncements
 from swagger_server.models.announcements import AnnouncementOne, Announcements, Status200OkPaginatedLinks  # noqa: E501
@@ -14,8 +14,6 @@ from swagger_server.response_code.cors_response import cors_200, cors_400, cors_
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.validation_utils import parse_timestamp
-
-logger = logging.getLogger(__name__)
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -145,7 +143,7 @@ def announcements_get(
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with announcements_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -175,7 +173,7 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
                    [body.content, body.display_date, body.is_active, body.start_date, body.title]):
                 details = \
                     "Announcements POST: missing required value {content, display_date, is_active, start_date, title}"
-                logger.error(details)
+                consoleLogger.error(details)
                 return cors_400(details=details)
         elif body.announcement_type == EnumAnnouncementTypes.maintenance.name:
             # required: content, end_date, is_active, start_date, title
@@ -183,24 +181,24 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
                    [body.content, body.end_date, body.is_active, body.start_date, body.title]):
                 details = \
                     "Announcements POST: missing required value {content, end_date, is_active, start_date, title}"
-                logger.error(details)
+                consoleLogger.error(details)
                 return cors_400(details=details)
         else:
             details = "Announcements POST: '{0}' is not a valid announcement_type".format(body.announcement_type)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         # validate display_date, end_date, start_date
         if body.display_date and not parse_timestamp(str(body.display_date)):
             details = "Announcements POST: '{0}' is not a valid display_date".format(body.display_date)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         if body.end_date and not parse_timestamp(str(body.end_date)):
             details = "Announcements POST: '{0}' is not a valid end_date".format(body.end_date)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         if body.start_date and not parse_timestamp(str(body.start_date)):
             details = "Announcements POST: '{0}' is not a valid start_date".format(body.start_date)
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         # create Announcement
         fab_announcement = create_fabric_announcement_from_api(body=body, creator=api_user)
@@ -208,7 +206,7 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
         return announcements_uuid_get(uuid=str(fab_announcement.uuid))
     except Exception as exc:
         details = 'Oops! something went wrong with announcements_post(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -239,7 +237,7 @@ def announcements_uuid_delete(uuid: str):  # noqa: E501
         db.session.delete(fab_announcement)
         db.session.commit()
         details = "Announcement: '{0}' has been successfully deleted".format(str(fab_announcement.uuid))
-        logger.info(details)
+        consoleLogger.info(details)
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = details
@@ -252,7 +250,7 @@ def announcements_uuid_delete(uuid: str):  # noqa: E501
 
     except Exception as exc:
         details = 'Oops! something went wrong with announcements_uuid_delete(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -293,7 +291,7 @@ def announcements_uuid_get(uuid: str) -> AnnouncementsDetails:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with announcements_uuid_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -328,58 +326,58 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
                 if body.announcement_type not in [x.name for x in EnumAnnouncementTypes]:
                     details = \
                         "Announcements PATCH: '{0}' is not a valid announcement_type".format(body.announcement_type)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
                 fab_announcement.announcement_type = body.announcement_type
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, announcement_type={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, announcement_type={1}'.format(
                     fab_announcement.uuid, fab_announcement.button))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'announcement_type' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'announcement_type' - {0}".format(exc))
         # check for button
         try:
             if len(body.button) != 0:
                 fab_announcement.button = body.button
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, button={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, button={1}'.format(
                     fab_announcement.uuid, fab_announcement.button))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'button' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'button' - {0}".format(exc))
         # check for content
         try:
             if len(body.content) != 0:
                 fab_announcement.content = body.content
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, content={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, content={1}'.format(
                     fab_announcement.uuid, fab_announcement.content))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'content' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'content' - {0}".format(exc))
         # check for display_date
         try:
             if len(body.display_date) != 0:
                 if body.display_date and not parse_timestamp(str(body.display_date)):
                     details = "Announcements PATCH: '{0}' is not a valid display_date".format(body.display_date)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
                 fab_announcement.display_date = body.display_date
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, display_date={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, display_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.display_date))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'display_date' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'display_date' - {0}".format(exc))
         # check for end_date
         try:
             if len(body.end_date) != 0:
                 if body.end_date and not parse_timestamp(str(body.end_date)):
                     details = "Announcements PATCH: '{0}' is not a valid end_date".format(body.end_date)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
                 fab_announcement.end_date = body.end_date
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, end_date={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, end_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.end_date))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'end_date' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'end_date' - {0}".format(exc))
         # check for is_active
         try:
             if body.is_active is not None:
@@ -388,41 +386,41 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
                 if not body.is_active:
                     fab_announcement.is_active = False
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, is_active={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, is_active={1}'.format(
                     fab_announcement.uuid, fab_announcement.is_active))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'is_active' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'is_active' - {0}".format(exc))
         # check for link
         try:
             if len(body.link) != 0:
                 fab_announcement.link = body.link
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, link={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, link={1}'.format(
                     fab_announcement.uuid, fab_announcement.link))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'link' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'link' - {0}".format(exc))
         # check for start_date
         try:
             if len(body.start_date) != 0:
                 if body.start_date and not parse_timestamp(str(body.start_date)):
                     details = "Announcements PATCH: '{0}' is not a valid start_date".format(body.start_date)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
                 fab_announcement.start_date = body.start_date
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, start_date={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, start_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.start_date))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'start_date' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'start_date' - {0}".format(exc))
         # check for title
         try:
             if len(body.title) != 0:
                 fab_announcement.title = body.title
                 db.session.commit()
-                logger.info('UPDATE: FabricAnnouncements: uuid={0}, title={1}'.format(
+                consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, title={1}'.format(
                     fab_announcement.uuid, fab_announcement.title))
         except Exception as exc:
-            logger.info("NOP: announcements_uuid_patch(): 'title' - {0}".format(exc))
+            consoleLogger.info("NOP: announcements_uuid_patch(): 'title' - {0}".format(exc))
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "Announcement: '{0}' has been successfully updated".format(str(fab_announcement.uuid))
@@ -435,5 +433,5 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
 
     except Exception as exc:
         details = 'Oops! something went wrong with announcements_uuid_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

@@ -1,6 +1,6 @@
-import logging
 import os
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.models.testbed_info import TestbedInfo
@@ -8,8 +8,6 @@ from swagger_server.models.testbed_info_post import TestbedInfoPost
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_500
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.testbed_info_utils import create_fabric_testbed_info_from_api
-
-logger = logging.getLogger(__name__)
 
 
 def testbed_info_get() -> TestbedInfo:  # noqa: E501
@@ -36,7 +34,7 @@ def testbed_info_get() -> TestbedInfo:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with testbed_info_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -61,7 +59,7 @@ def testbed_info_post(body: TestbedInfoPost = None) -> TestbedInfo:  # noqa: E50
         # validate testbed_info
         if not body.testbed_info:
             details = "Testbed Info POST: invalid entry, must contain data for 'testbed_info'"
-            logger.error(details)
+            consoleLogger.error(details)
             return cors_400(details=details)
         # create Announcement
         testbed_info = create_fabric_testbed_info_from_api(body=body, creator=api_user)
@@ -70,5 +68,5 @@ def testbed_info_post(body: TestbedInfoPost = None) -> TestbedInfo:  # noqa: E50
 
     except Exception as exc:
         details = 'Oops! something went wrong with testbed_info_post(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

@@ -125,8 +125,13 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
         """
         Produce a GECOS-formatted string based on db person info
         """
+        try:
+            full_name = self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip()
+        except Exception as exc:
+            print(exc)
+            full_name = 'Unknown Name'
         return ','.join([
-            self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip(),  # Full Name
+            full_name,  # Full Name
             '',  # Building, room number
             '',  # Office telephone
             '',  # Home telephone

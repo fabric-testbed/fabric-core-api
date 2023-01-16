@@ -1,6 +1,6 @@
-import logging
 import os
 
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
@@ -28,8 +28,6 @@ from swagger_server.response_code.profiles_utils import delete_profile_projects,
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
     get_project_tags, get_projects_personnel, update_projects_personnel, update_projects_tags
 from swagger_server.response_code.response_utils import is_valid_url
-
-logger = logging.getLogger(__name__)
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -221,7 +219,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -263,7 +261,7 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         return projects_uuid_get(uuid=str(fab_project.uuid))
     except Exception as exc:
         details = 'Oops! something went wrong with projects_post(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -289,7 +287,7 @@ def projects_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         response.type = PROJECTS_PREFERENCES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("projects_preferences_get(search=None): {0}".format(exc))
+        consoleLogger.error("projects_preferences_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with Projects.Preferences.Get()')
 
 
@@ -316,7 +314,7 @@ def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         response.type = PROJECTS_PROFILE_PREFERENCES.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("projects_profile_preferences_get(search=None): {0}".format(exc))
+        consoleLogger.error("projects_profile_preferences_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with Projects.Profile.Preferences.Get()')
 
 
@@ -342,7 +340,7 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
         response.type = PROJECTS_TAGS.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("projects_tags_get(search=None): {0}".format(exc))
+        consoleLogger.error("projects_tags_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with Projects.Tags.Get()')
 
 
@@ -390,7 +388,7 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
         # delete FabricProject
         details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-        logger.info(details)
+        consoleLogger.info(details)
         db.session.delete(fab_project)
         db.session.commit()
         # create response
@@ -401,11 +399,17 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         response.size = len(response.results)
         response.status = 200
         response.type = 'no_content'
+        # metrics log - Project was deleted:
+        # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef delete by usr:dead-beef-dead-beef
+        log_msg = 'Project event prj:{0} delete by usr:{1}'.format(
+            str(fab_project.uuid),
+            str(api_user.uuid))
+        metricsLogger.info(log_msg)
         return cors_200(response_body=response)
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_delete(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -487,7 +491,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_get(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -523,10 +527,17 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
             if len(body.description) != 0:
                 fab_project.description = body.description
                 db.session.commit()
-                logger.info('UPDATE: FabricProjects: uuid={0}, description={1}'.format(
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, description={1}'.format(
                     fab_project.uuid, fab_project.description))
+                # metrics log - Project description modified:
+                # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify description DESC by usr:dead-beef-dead-beef
+                log_msg = 'Project event prj:{0} modify description \'{1}\' by usr:{2}'.format(
+                    str(fab_project.uuid),
+                    fab_project.description,
+                    str(api_user.uuid))
+                metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_patch(): 'description' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_patch(): 'description' - {0}".format(exc))
         # check for is_public
         try:
             if body.is_public is not None:
@@ -535,10 +546,17 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                 if not body.is_public:
                     fab_project.is_public = False
                 db.session.commit()
-                logger.info('UPDATE: FabricProjects: uuid={0}, is_public={1}'.format(
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, is_public={1}'.format(
                     fab_project.uuid, fab_project.is_public))
+                # metrics log - Project is_public modified:
+                # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify is_public BOOL by usr:dead-beef-dead-beef
+                log_msg = 'Project event prj:{0} modify is_public {1} by usr:{2}'.format(
+                    str(fab_project.uuid),
+                    str(fab_project.is_public),
+                    str(api_user.uuid))
+                metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_patch(): 'is_public' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_patch(): 'is_public' - {0}".format(exc))
         # check for name
         try:
             if len(body.name) != 0:
@@ -548,11 +566,20 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                 if is_pc_name and is_pm_name and is_po_name:
                     fab_project.name = body.name
                     db.session.commit()
-                    logger.info('UPDATE: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
+                    consoleLogger.info(
+                        'UPDATE: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
+                    # metrics log - Project name modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify name NAME by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify name \'{1}\' by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        fab_project.name,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
                 else:
-                    logger.error('ERROR: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
+                    consoleLogger.error(
+                        'ERROR: FabricProjects: uuid={0}, name={1}'.format(fab_project.uuid, fab_project.name))
         except Exception as exc:
-            logger.info("NOP: projects_uuid_patch(): 'name' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_patch(): 'name' - {0}".format(exc))
         # check for preferences
         try:
             for key in body.preferences.keys():
@@ -571,19 +598,27 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                         db.session.add(fab_pref)
                         db.session.commit()
                         fab_project.preferences.append(fab_pref)
-                        logger.info("CREATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
+                        consoleLogger.info("CREATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
                             fab_project.uuid, fab_pref.key, fab_pref.value))
                     else:
                         details = "Projects Preferences: '{0}' is not a valid preference type".format(key)
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                 else:
                     fab_pref.value = body.preferences.get(key)
                     db.session.commit()
-                    logger.info("UPDATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
+                    consoleLogger.info("UPDATE: FabricProjects: uuid={0}, 'preferences.{1}' = {2}".format(
                         fab_project.uuid, fab_pref.key, fab_pref.value))
+                    # metrics log - Project preference modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify PREF BOOL by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify {1} {2} by usr:{3}'.format(
+                        str(fab_project.uuid),
+                        fab_pref.key,
+                        str(fab_pref.value),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_patch(): 'preferences' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_patch(): 'preferences' - {0}".format(exc))
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -597,7 +632,7 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -634,18 +669,20 @@ def projects_uuid_personnel_patch(uuid: str = None,
             if len(body.project_members) == 0:
                 body.project_members = []
             # add project_members
-            update_projects_personnel(fab_project=fab_project, personnel=body.project_members, personnel_type='members')
+            update_projects_personnel(user=api_user, fab_project=fab_project, personnel=body.project_members,
+                                      personnel_type='members')
         except Exception as exc:
-            logger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
 
         # check for project_owners
         try:
             if len(body.project_owners) == 0:
                 body.project_owners = []
             # add project_owners
-            update_projects_personnel(fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
+            update_projects_personnel(user=api_user, fab_project=fab_project, personnel=body.project_owners,
+                                      personnel_type='owners')
         except Exception as exc:
-            logger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -659,7 +696,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_personnel_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -698,10 +735,17 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             else:
                 fab_profile.award_information = body.award_information
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, award_information={1}'.format(
+            consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, award_information={1}'.format(
                 fab_profile.uuid, fab_profile.award_information))
+            # metrics log - Project award_information modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify award_information INFO by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify award_information \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                fab_profile.award_information,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'award_information' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'award_information' - {0}".format(exc))
         # check for goals
         try:
             if len(body.goals) == 0:
@@ -709,21 +753,30 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             else:
                 fab_profile.goals = body.goals
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, goals={1}'.format(
+            consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, goals={1}'.format(
                 fab_profile.uuid, fab_profile.goals))
+            # metrics log - Project goals modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify goals GOALS by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify goals \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                fab_profile.goals,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'goals' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'goals' - {0}".format(exc))
         # check for keywords
         try:
             if len(body.keywords) == 0:
-                update_profiles_projects_keywords(fab_profile=fab_profile, keywords=body.keywords)
-                logger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords=[]')
+                update_profiles_projects_keywords(user=api_user, fab_project=fab_project, fab_profile=fab_profile,
+                                                  keywords=body.keywords)
+                consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords=[]')
             else:
-                update_profiles_projects_keywords(fab_profile=fab_profile, keywords=body.keywords)
-                logger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords={1}'.format(
+                update_profiles_projects_keywords(user=api_user, fab_project=fab_project, fab_profile=fab_profile,
+                                                  keywords=body.keywords)
+                consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords={1}'.format(
                     fab_project.uuid, [k.keyword for k in fab_profile.keywords]))
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'keywords' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'keywords' - {0}".format(exc))
         # check for notebooks
         # TODO - define notebooks
         # check for preferences
@@ -744,19 +797,27 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
                         db.session.add(fab_pref)
                         db.session.commit()
                         fab_profile.preferences.append(fab_pref)
-                        logger.info("CREATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                        consoleLogger.info("CREATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
                             fab_project.uuid, fab_pref.key, fab_pref.value))
                     else:
                         details = "Projects Preferences: '{0}' is not a valid preference type".format(key)
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
                 else:
                     fab_pref.value = body.preferences.get(key)
                     db.session.commit()
-                    logger.info("UPDATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
+                    consoleLogger.info("UPDATE: FabricProfilesProjects: uuid={0}, 'preferences.{1}' = '{2}'".format(
                         fab_project.uuid, fab_pref.key, fab_pref.value))
+                    # metrics log - Project preference modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify PREF BOOL by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify {1} {2} by usr:{3}'.format(
+                        str(fab_project.uuid),
+                        fab_pref.key,
+                        str(fab_pref.value),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'preferences' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'preferences' - {0}".format(exc))
         # check for project_status
         try:
             if len(body.project_status) == 0:
@@ -764,10 +825,17 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             else:
                 fab_profile.project_status = body.project_status
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, project_status={1}'.format(
+            consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, project_status={1}'.format(
                 fab_profile.uuid, fab_profile.project_status))
+            # metrics log - Project project_status modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify project_status STATUS by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify project_status \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                fab_profile.project_status,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'project_status' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'project_status' - {0}".format(exc))
         # check for purpose
         try:
             if len(body.purpose) == 0:
@@ -775,20 +843,29 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             else:
                 fab_profile.purpose = body.purpose
             db.session.commit()
-            logger.info('UPDATE: FabricProfilesProjects: uuid={0}, purpose={1}'.format(
+            consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, purpose={1}'.format(
                 fab_profile.uuid, fab_profile.purpose))
+            # metrics log - Project purpose modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify purpose PURPOSE by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify purpose \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                fab_profile.purpose,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'purpose' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'purpose' - {0}".format(exc))
         # check for references
         try:
+            print(body.references)
             for ref in body.references:
                 if not is_valid_url(ref.url):
                     details = "References: '{0}' is not a valid URL type".format(ref.url)
-                    logger.error(details)
+                    consoleLogger.error(details)
                     return cors_400(details=details)
-            update_profiles_projects_references(fab_profile=fab_project.profile, references=body.references)
+            update_profiles_projects_references(user=api_user, fab_project=fab_project, fab_profile=fab_project.profile,
+                                                references=body.references)
         except Exception as exc:
-            logger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -802,7 +879,7 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_profile_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)
 
 
@@ -834,20 +911,20 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         # check for tags
         try:
             if len(body.tags) == 0:
-                update_projects_tags(fab_project=fab_project, tags=body.tags)
-                logger.info('UPDATE: FabricProjects: uuid={0}, tags=[]')
+                update_projects_tags(user=api_user, fab_project=fab_project, tags=body.tags)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, tags=[]')
             else:
                 tags = body.tags
                 for tag in tags:
                     if tag not in PROJECTS_TAGS.options:
                         details = "Attempting to add invalid tag '{0}'".format(tag)
-                        logger.error(details)
+                        consoleLogger.error(details)
                         return cors_400(details=details)
-                update_projects_tags(fab_project=fab_project, tags=body.tags)
-                logger.info('UPDATE: FabricProjects: uuid={0}, tags={1}'.format(
+                update_projects_tags(user=api_user, fab_project=fab_project, tags=body.tags)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, tags={1}'.format(
                     fab_project.uuid, [t.tag for t in fab_project.tags]))
         except Exception as exc:
-            logger.info("NOP: projects_uuid_tags_patch(): 'tags' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_tags_patch(): 'tags' - {0}".format(exc))
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
@@ -860,5 +937,5 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_patch(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return cors_500(details=details)

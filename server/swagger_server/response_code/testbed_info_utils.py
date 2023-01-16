@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -7,8 +6,6 @@ from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.models.testbed_info import TestbedInfo
 from swagger_server.models.testbed_info_post import TestbedInfoPost
-
-logger = logging.getLogger(__name__)
 
 
 def create_fabric_testbed_info_from_api(body: TestbedInfoPost, creator: FabricPeople) -> TestbedInfo:

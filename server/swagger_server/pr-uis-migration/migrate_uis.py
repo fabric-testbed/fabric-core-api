@@ -10,14 +10,13 @@ SshKeys (match by person_uuid)
 
 """
 import json
-import logging
 from datetime import datetime, timezone
 
 from swagger_server.__main__ import app, db
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.people import FabricPeople
-from swagger_server.database.models.sshkeys import FabricSshKeys, EnumSshKeyStatus
+from swagger_server.database.models.sshkeys import EnumSshKeyStatus, FabricSshKeys
 
-logger = logging.getLogger(__name__)
 app.app_context().push()
 
 # load uis_people.py and uis_sshkeys.py
@@ -74,11 +73,12 @@ def update_person_from_uis(fab_person: FabricPeople, uis_person: dict):
     - * uuid - unique universal identifier
     """
     # update uuid
-    logger.info('- uuid: {0} --> {1}'.format(str(fab_person.uuid), uis_p.get('uuid')))
+    consoleLogger.info('- uuid: {0} --> {1}'.format(str(fab_person.uuid), uis_p.get('uuid')))
     fab_person.uuid = uis_person.get('uuid')
     db.session.commit()
     # update registered_on
-    logger.info('- registered_on: {0} --> {1}'.format(str(fab_person.registered_on), uis_person.get('registered_on')))
+    consoleLogger.info(
+        '- registered_on: {0} --> {1}'.format(str(fab_person.registered_on), uis_person.get('registered_on')))
     fab_person.registered_on = date_parser(uis_person.get('registered_on'))
     db.session.commit()
     # update sshkeys
@@ -131,7 +131,7 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
         for sshkey in sshkeys:
             # check for duplicate key
             if sshkey.get('fingerprint') in [k.fingerprint for k in fab_person.sshkeys]:
-                logger.info('- sshkeys: DUPLICATE {0}'.format(sshkey.get('fingerprint')))
+                consoleLogger.info('- sshkeys: DUPLICATE {0}'.format(sshkey.get('fingerprint')))
                 fab_sshkey = FabricSshKeys.query.filter_by(fingerprint=sshkey.get('fingerprint')).one_or_none()
                 if fab_sshkey:
                     fab_sshkey.comment = sshkey.get('comment')
@@ -145,7 +145,8 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
                     fab_sshkey.people_id = fab_person.id
                     fab_sshkey.public_key = sshkey.get('public_key')
                     fab_sshkey.ssh_key_type = sshkey.get('ssh_key_type')
-                    if datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") <= datetime.now(timezone.utc):
+                    if datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") <= datetime.now(
+                            timezone.utc):
                         fab_sshkey.status = EnumSshKeyStatus.expired
                     elif str(sshkey.get('active', None)).casefold() == 'true' and datetime.strptime(
                             sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") > datetime.now(timezone.utc):
@@ -170,21 +171,22 @@ def add_sshkey_to_person(fab_person: FabricPeople, uis_person: dict):
                 fab_sshkey.ssh_key_type = sshkey.get('ssh_key_type')
                 if datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") <= datetime.now(timezone.utc):
                     fab_sshkey.status = EnumSshKeyStatus.expired
-                elif str(sshkey.get('active', None)).casefold() == 'true' and datetime.strptime(sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") > datetime.now(timezone.utc):
+                elif str(sshkey.get('active', None)).casefold() == 'true' and datetime.strptime(
+                        sshkey.get('expires_on'), "%Y-%m-%d %H:%M:%S.%f%z") > datetime.now(timezone.utc):
                     fab_sshkey.status = EnumSshKeyStatus.active
                 else:
                     fab_sshkey.status = EnumSshKeyStatus.deactivated
                 fab_sshkey.uuid = sshkey.get('key_uuid')
                 db.session.add(fab_sshkey)
                 db.session.commit()
-                logger.info('- sshkeys: ADD {0}'.format(sshkey.get('key_uuid')))
+                consoleLogger.info('- sshkeys: ADD {0}'.format(sshkey.get('key_uuid')))
 
 
 # migrate UIS data to core-api
 for uis_p in uis_people:
     person = FabricPeople.query.filter_by(oidc_claim_sub=uis_p.get('oidc_claim_sub')).first()
     if person:
-        logger.info('FOUND: {0}'.format(uis_p.get('oidc_claim_sub')))
+        consoleLogger.info('FOUND: {0}'.format(uis_p.get('oidc_claim_sub')))
         update_person_from_uis(fab_person=person, uis_person=uis_p)
     else:
-        logger.warning('NOT FOUND: {0}'.format(uis_p.get('oidc_claim_sub')))
+        consoleLogger.warning('NOT FOUND: {0}'.format(uis_p.get('oidc_claim_sub')))

@@ -1,13 +1,11 @@
-import logging
 import os
 
+from swagger_server.api_logger import consoleLogger
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.response_code import PUBLICATIONS_CLASSIFICATION_TERMS
 from swagger_server.response_code.cors_response import cors_200, cors_500
 from swagger_server.response_code.decorators import login_required
-
-logger = logging.getLogger(__name__)
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -38,7 +36,7 @@ def publications_classification_terms_get(search=None) -> ApiOptions:  # noqa: E
         response.type = PUBLICATIONS_CLASSIFICATION_TERMS.name
         return cors_200(response_body=response)
     except Exception as exc:
-        logger.error("publications_classification_terms_get(search=None): {0}".format(exc))
+        consoleLogger.error("publications_classification_terms_get(search=None): {0}".format(exc))
         return cors_500(details='Ooops! something has gone wrong with publications_classification_terms_get()')
 
 

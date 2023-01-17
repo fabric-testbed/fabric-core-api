@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from swagger_server.api_logger import consoleLogger
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects
@@ -156,6 +156,10 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
             update_people_identifiers(fab_person_id=fab_person.id, co_person_id=co_person_id)
             consoleLogger.info(
                 'CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
+            # metrics log - User was created:
+            # 2022-09-06 19:45:56,022 User event usr:deaf-bead-deaf-bead create
+            log_msg = 'User event usr:{0} create'.format(str(fab_person.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             details = 'Oops! something went wrong with create_fabric_person_from_co_person_id(): {0}'.format(exc)
             consoleLogger.error(details)

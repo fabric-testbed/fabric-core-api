@@ -1,6 +1,6 @@
 import os
 
-from swagger_server.api_logger import consoleLogger
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
@@ -319,7 +319,7 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
         if not fab_person:
             return cors_404(details="No match for Person with uuid = '{0}'".format(uuid))
         # check that api_user.uuid == fab_person.uuid
-        if not api_user.uuid == fab_person.uuid:
+        if api_user.uuid != fab_person.uuid:
             return cors_403(
                 details="User: '{0}' is not permitted to update the requested User".format(api_user.display_name))
         # check for name
@@ -331,6 +331,13 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricPeople: uuid={0}, name={1}'.format(fab_person.uuid, fab_person.display_name))
+            # metrics log - User display_name modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify display_name NAME by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify display_name \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_person.display_name,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_patch(): 'name' - {0}".format(exc))
         # check for email
@@ -345,6 +352,13 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricPeople: uuid={0}, email={1}'.format(fab_person.uuid, fab_person.preferred_email))
+            # metrics log - User preferred_email modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify preferred_email EMAIL by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify preferred_email \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_person.preferred_email,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_patch(): 'email' - {0}".format(exc))
         # check for preferences
@@ -376,6 +390,14 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                     db.session.commit()
                     consoleLogger.info("UPDATE: FabricPeople: uuid={0}, 'preferences.{1}' = {2}".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))
+                    # metrics log - User preference modified:
+                    # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify PREF BOOL by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify {1} {2} by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_pref.key,
+                        str(fab_pref.value),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_patch(): 'preferences' - {0}".format(exc))
         # create response
@@ -431,6 +453,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.bio))
+            # metrics log - User bio modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify bio BIO by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify bio \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_profile.bio,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'bio' - {0}".format(exc))
         # check for cv
@@ -447,6 +476,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, cv={1}'.format(fab_profile.uuid, fab_profile.cv))
+            # metrics log - User cv modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify cv URL by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify cv \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_profile.cv,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'cv' - {0}".format(exc))
         # check for job
@@ -458,6 +494,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, job={1}'.format(fab_profile.uuid, fab_profile.job))
+            # metrics log - User job modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify job JOB by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify job \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_profile.job,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'job' - {0}".format(exc))
         # check for other_identities
@@ -466,6 +509,8 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             oi_new = other_identities_to_array(body.other_identities)
             oi_add = array_difference(oi_new, oi_orig)
             oi_remove = array_difference(oi_orig, oi_new)
+            print(oi_orig)
+            print(oi_new)
             # add new identities
             for oi in oi_add:
                 fab_oi = ProfilesOtherIdentities.query.filter(
@@ -486,6 +531,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     db.session.commit()
                     consoleLogger.info("CREATE: FabricProfilesPeople: uuid={0}, 'other_identities.{1}' = '{2}'".format(
                         fab_person.uuid, fab_oi.type, fab_oi.identity))
+                    # metrics log - User other_identity added:
+                    # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-add other_identity IDENTITY by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify-add other_identity \'identity={1}, type={2}\' by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_oi.identity,
+                        fab_oi.type,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
             # remove old identities
             for oi in oi_remove:
                 fab_oi = ProfilesOtherIdentities.query.filter(
@@ -498,6 +551,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                         fab_person.uuid, fab_oi.type, fab_oi.identity))
                     db.session.delete(fab_oi)
                     db.session.commit()
+                    # metrics log - User other_identity removed:
+                    # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-remove other_identity IDENTITY by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify-remove other_identity \'identity={1}, type={2}\' by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_oi.identity,
+                        fab_oi.type,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'other_identities' - {0}".format(exc))
         # check for preferences
@@ -529,6 +590,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     db.session.commit()
                     consoleLogger.info("UPDATE: FabricProfilesPeople: uuid={0}, 'preferences.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pref.key, fab_pref.value))
+                    # metrics log - User preference modified:
+                    # 2022-09-06 19:45:56,022 Project event usr:dead-beef-dead-beef modify PREF BOOL by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify {1} {2} by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_pref.key,
+                        str(fab_pref.value),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'preferences' - {0}".format(exc))
         # check for personal pages
@@ -561,6 +630,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                     db.session.commit()
                     consoleLogger.info("CREATE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pp.type, fab_pp.url))
+                    # metrics log - User personal_pages added:
+                    # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-add personal_page PAGE by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify-add personal_page \'url={1}, type={2}\' by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_pp.url,
+                        fab_pp.type,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
             # remove old personal pages
             for pp in pp_remove:
                 fab_pp = ProfilesPersonalPages.query.filter(
@@ -571,6 +648,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 if fab_pp:
                     consoleLogger.info("DELETE: FabricProfilesPeople: uuid={0}, 'personal_pages.{1}' = '{2}'".format(
                         fab_person.uuid, fab_pp.type, fab_pp.url))
+                    # metrics log - User personal_pages removed:
+                    # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-remove personal_page PAGE by usr:dead-beef-dead-beef
+                    log_msg = 'User event usr:{0} modify-remove personal_page \'url={1}, type={2}\' by usr:{3}'.format(
+                        str(fab_person.uuid),
+                        fab_pp.url,
+                        fab_pp.type,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
                     db.session.delete(fab_pp)
                     db.session.commit()
         except Exception as exc:
@@ -583,7 +668,14 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
                 fab_profile.pronouns = body.pronouns
             db.session.commit()
             consoleLogger.info(
-                'UPDATE: FabricProfilesPeople: uuid={0}, bio={1}'.format(fab_profile.uuid, fab_profile.pronouns))
+                'UPDATE: FabricProfilesPeople: uuid={0}, pronouns={1}'.format(fab_profile.uuid, fab_profile.pronouns))
+            # metrics log - User pronouns modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify pronouns PRONOUNS by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify pronouns \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_profile.pronouns,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'pronouns' - {0}".format(exc))
         # check for website
@@ -600,6 +692,13 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
             db.session.commit()
             consoleLogger.info(
                 'UPDATE: FabricProfilesPeople: uuid={0}, website={1}'.format(fab_profile.uuid, fab_profile.website))
+            # metrics log - User website modified:
+            # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify website URL by usr:dead-beef-dead-beef
+            log_msg = 'User event usr:{0} modify website \'{1}\' by usr:{2}'.format(
+                str(fab_person.uuid),
+                fab_profile.website,
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_profile_patch(): 'website' - {0}".format(exc))
         # create response

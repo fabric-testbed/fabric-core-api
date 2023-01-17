@@ -363,7 +363,7 @@ def update_projects_tags(user: FabricPeople = None, fab_project: FabricProjects 
             db.session.commit()
             # metrics log - Project tag added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
-            log_msg = 'Project event prj:{0} modify-add tag {1} by usr:{2}'.format(str(fab_project.uuid), tag,
+            log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
                                                                                    str(user.uuid))
             metricsLogger.info(log_msg)
     # remove projects tags
@@ -376,6 +376,6 @@ def update_projects_tags(user: FabricPeople = None, fab_project: FabricProjects 
             db.session.commit()
             # metrics log - Project tag removed:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
-            log_msg = 'Project event prj:{0} modify-remove tag {1} by usr:{2}'.format(str(fab_project.uuid), tag,
+            log_msg = 'Project event prj:{0} modify-remove tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
                                                                                       str(user.uuid))
             metricsLogger.info(log_msg)

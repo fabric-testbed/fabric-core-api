@@ -3,7 +3,7 @@ from datetime import datetime
 
 from comanage_api import ComanageApi
 
-from swagger_server.api_logger import consoleLogger
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
 from swagger_server.response_code.response_utils import array_difference
@@ -264,6 +264,12 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                             consoleLogger.error('DUPLICATE ROLE: {0}'.format(exc))
                             db.session.rollback()
                             continue
+                        # metrics log - User role added:
+                        # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-add role ROLE
+                        log_msg = 'User event usr:{0} modify-add role \'{1}\''.format(
+                            str(fab_person.uuid),
+                            fab_role.name)
+                        metricsLogger.info(log_msg)
                 else:
                     fab_role.affiliation = co_role.get('Affiliation', 'member')
                     fab_role.name = fab_group.name
@@ -275,6 +281,12 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
                     if fab_role.status == 'Deleted':
                         consoleLogger.info(
                             "DELETE: entry in 'roles' table for co_person_role_id: {0}".format(co_person_role_id))
+                        # metrics log - User role removed:
+                        # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify-remove role ROLE
+                        log_msg = 'User event usr:{0} modify-remove role \'{1}\''.format(
+                            str(fab_person.uuid),
+                            fab_role.name)
+                        metricsLogger.info(log_msg)
                         FabricRoles.query.filter_by(id=fab_role.id).delete()
                         db.session.commit()
             else:

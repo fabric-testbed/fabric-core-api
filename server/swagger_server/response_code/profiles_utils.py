@@ -30,10 +30,10 @@ FabricProfilesPeople model (* denotes required)
 """
 
 
-def other_identities_to_array(n): return [{'identity': x.identity, 'type': x.type} for x in n]
+def other_identities_to_array(n): return [{'identity': x.identity, 'type': str(x.type).casefold()} for x in n]
 
 
-def personal_pages_to_array(n): return [{'url': x.url, 'type': x.type} for x in n]
+def personal_pages_to_array(n): return [{'url': x.url, 'type': str(x.type).casefold()} for x in n]
 
 
 def references_to_array(n): return [{'description': x.description, 'url': x.url} for x in n]

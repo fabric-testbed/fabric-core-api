@@ -856,7 +856,6 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             consoleLogger.info("NOP: projects_uuid_profile_patch(): 'purpose' - {0}".format(exc))
         # check for references
         try:
-            print(body.references)
             for ref in body.references:
                 if not is_valid_url(ref.url):
                     details = "References: '{0}' is not a valid URL type".format(ref.url)

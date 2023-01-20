@@ -669,7 +669,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             if len(body.project_members) == 0:
                 body.project_members = []
             # add project_members
-            update_projects_personnel(user=api_user, fab_project=fab_project, personnel=body.project_members,
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_members,
                                       personnel_type='members')
         except Exception as exc:
             consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
@@ -679,7 +679,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             if len(body.project_owners) == 0:
                 body.project_owners = []
             # add project_owners
-            update_projects_personnel(user=api_user, fab_project=fab_project, personnel=body.project_owners,
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
                                       personnel_type='owners')
         except Exception as exc:
             consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))

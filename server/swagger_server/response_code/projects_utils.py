@@ -75,7 +75,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     # create profile
     create_profile_projects(fab_project=fab_project)
     # add project_creators
-    update_projects_personnel(fab_project=fab_project, personnel=[str(project_creator.uuid)], personnel_type='creators')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=[str(project_creator.uuid)], personnel_type='creators')
     # check for project_members
     try:
         if len(body.project_members) == 0:
@@ -84,7 +84,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         body.project_members = []
         consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
     # add project_members
-    update_projects_personnel(fab_project=fab_project, personnel=body.project_members, personnel_type='members')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members, personnel_type='members')
     # check for project_owners
     try:
         if len(body.project_owners) == 0:
@@ -97,7 +97,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         body.project_owners = [str(project_creator.uuid)]
         consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
     # add project_owners
-    update_projects_personnel(fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
     db.session.commit()
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
@@ -226,7 +226,7 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
     return personnel_data
 
 
-def update_projects_personnel(user: FabricPeople = None, fab_project: FabricProjects = None,
+def update_projects_personnel(api_user: FabricPeople = None, fab_project: FabricProjects = None,
                               personnel: [FabricPeople] = None,
                               personnel_type: str = None) -> None:
     personnel = list(set(personnel))
@@ -278,7 +278,7 @@ def update_projects_personnel(user: FabricPeople = None, fab_project: FabricProj
                     log_msg = 'Project event prj:{0} modify-add member usr:{1} by usr:{2}'.format(
                         str(fab_project.uuid),
                         str(fab_person.uuid),
-                        str(user.uuid))
+                        str(api_user.uuid))
                     metricsLogger.info(log_msg)
             # remove project_members
             for pm in p_remove:
@@ -298,7 +298,7 @@ def update_projects_personnel(user: FabricPeople = None, fab_project: FabricProj
                     log_msg = 'Project event prj:{0} modify-remove member usr:{1} by usr:{2}'.format(
                         str(fab_project.uuid),
                         str(fab_person.uuid),
-                        str(user.uuid))
+                        str(api_user.uuid))
                     metricsLogger.info(log_msg)
     elif personnel_type == 'owners':
         p_orig = [str(p.uuid) for p in fab_project.project_owners]
@@ -320,7 +320,7 @@ def update_projects_personnel(user: FabricPeople = None, fab_project: FabricProj
                     log_msg = 'Project event prj:{0} modify-add owner usr:{1} by usr:{2}'.format(
                         str(fab_project.uuid),
                         str(fab_person.uuid),
-                        str(user.uuid))
+                        str(api_user.uuid))
                     metricsLogger.info(log_msg)
             # remove project_owners
             for po in p_remove:
@@ -340,13 +340,13 @@ def update_projects_personnel(user: FabricPeople = None, fab_project: FabricProj
                     log_msg = 'Project event prj:{0} modify-remove owner usr:{1} by usr:{2}'.format(
                         str(fab_project.uuid),
                         str(fab_person.uuid),
-                        str(user.uuid))
+                        str(api_user.uuid))
                     metricsLogger.info(log_msg)
     else:
         consoleLogger.error('Invalid personnel_type provided')
 
 
-def update_projects_tags(user: FabricPeople = None, fab_project: FabricProjects = None, tags: [str] = None) -> None:
+def update_projects_tags(api_user: FabricPeople = None, fab_project: FabricProjects = None, tags: [str] = None) -> None:
     tags_orig = [p.tag for p in fab_project.tags]
     tags_new = tags
     tags_add = array_difference(tags_new, tags_orig)
@@ -364,7 +364,7 @@ def update_projects_tags(user: FabricPeople = None, fab_project: FabricProjects 
             # metrics log - Project tag added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
-                                                                                   str(user.uuid))
+                                                                                   str(api_user.uuid))
             metricsLogger.info(log_msg)
     # remove projects tags
     for tag in tags_remove:
@@ -377,5 +377,5 @@ def update_projects_tags(user: FabricPeople = None, fab_project: FabricProjects 
             # metrics log - Project tag removed:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-remove tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
-                                                                                      str(user.uuid))
+                                                                                      str(api_user.uuid))
             metricsLogger.info(log_msg)

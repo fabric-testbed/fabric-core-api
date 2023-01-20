@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.schema import Index
-
+from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
@@ -125,12 +125,22 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
         """
         Produce a GECOS-formatted string based on db person info
         """
+        try:
+            full_name = self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip()
+        except Exception as exc:
+            consoleLogger.error('people.FabricPeople.gecos: full_name: {0}'.format(exc))
+            full_name = 'UnknownName'
+        try:
+            oidc_email = self.oidc_claim_email.strip()
+        except Exception as exc:
+            consoleLogger.error('people.FabricPeople.gecos: oidc_email: {0}'.format(exc))
+            oidc_email = 'UnknownEmail'
         return ','.join([
-            self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip(),  # Full Name
+            full_name,  # Full Name
             '',  # Building, room number
             '',  # Office telephone
             '',  # Home telephone
-            self.oidc_claim_email.strip() if self.oidc_claim_email else self.eppn.strip() if self.eppn else ''
+            oidc_email
             # external email or other contact info
         ])
 

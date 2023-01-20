@@ -1,12 +1,11 @@
 import base64
 import gzip
-import logging
 import os
 
 import jwt
 from flask import request
 
-logger = logging.getLogger(__name__)
+from swagger_server.api_logger import consoleLogger
 
 
 def get_vouch_session_expiry() -> int:
@@ -37,5 +36,5 @@ def get_vouch_session_expiry() -> int:
 
     except Exception as exc:
         details = 'Oops! something went wrong with get_vouch_session_expiry(): {0}'.format(exc)
-        logger.error(details)
+        consoleLogger.error(details)
         return -1

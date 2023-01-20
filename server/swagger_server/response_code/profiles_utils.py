@@ -1,6 +1,6 @@
-import logging
 from uuid import uuid4
 
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, \
@@ -11,8 +11,6 @@ from swagger_server.models.profile_projects import ProfileProjects, ProfileProje
 from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
     create_profile_projects_preferences, delete_profile_projects_preferences
 from swagger_server.response_code.response_utils import array_difference
-
-logger = logging.getLogger(__name__)
 
 """
 FabricProfilesPeople model (* denotes required)
@@ -32,10 +30,10 @@ FabricProfilesPeople model (* denotes required)
 """
 
 
-def other_identities_to_array(n): return [{'identity': x.identity, 'type': x.type} for x in n]
+def other_identities_to_array(n): return [{'identity': x.identity, 'type': str(x.type).casefold()} for x in n]
 
 
-def personal_pages_to_array(n): return [{'url': x.url, 'type': x.type} for x in n]
+def personal_pages_to_array(n): return [{'url': x.url, 'type': str(x.type).casefold()} for x in n]
 
 
 def references_to_array(n): return [{'description': x.description, 'url': x.url} for x in n]
@@ -163,7 +161,8 @@ def get_profile_projects(profile_projects_id: int, as_owner: bool = False) -> Pr
     return profile_projects
 
 
-def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects, keywords: [str] = None) -> None:
+def update_profiles_projects_keywords(user: FabricPeople, fab_project: FabricProjects,
+                                      fab_profile: FabricProfilesProjects, keywords: [str] = None) -> None:
     kw_orig = [k.keyword for k in fab_profile.keywords]
     kw_new = keywords
     kw_add = array_difference(kw_new, kw_orig)
@@ -178,6 +177,13 @@ def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects, keywo
             fab_kw.keyword = kw
             fab_profile.keywords.append(fab_kw)
             db.session.commit()
+            # metrics log - Project keyword added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add keyword KEYWORD by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify-add keyword \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                kw,
+                str(user.uuid))
+            metricsLogger.info(log_msg)
     # remove profiles projects keywords
     for kw in kw_remove:
         fab_kw = ProfilesKeywords.query.filter(
@@ -186,10 +192,18 @@ def update_profiles_projects_keywords(fab_profile: FabricProfilesProjects, keywo
             fab_profile.keywords.remove(fab_kw)
             db.session.delete(fab_kw)
             db.session.commit()
+            # metrics log - Project keyword removed:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove keyword KEYWORD by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify-remove keyword \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                kw,
+                str(user.uuid))
+            metricsLogger.info(log_msg)
 
 
-def update_profiles_projects_references(
-        fab_profile: FabricProfilesProjects, references: [ProfileProjectsReferences] = None) -> None:
+def update_profiles_projects_references(user: FabricPeople, fab_project: FabricProjects,
+                                        fab_profile: FabricProfilesProjects,
+                                        references: [ProfileProjectsReferences] = None) -> None:
     ref_orig = references_to_array(fab_profile.references)
     ref_new = references_to_array(references)
     ref_add = array_difference(ref_new, ref_orig)
@@ -208,8 +222,16 @@ def update_profiles_projects_references(
             fab_ref.url = ref.get('url')
             db.session.add(fab_ref)
             db.session.commit()
-            logger.info("CREATE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+            consoleLogger.info("CREATE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
                 fab_profile.uuid, fab_ref.description, fab_ref.url))
+            # metrics log - Project references added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add reference REFERENCE by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify-add reference \'description={1}, url={2}\' by usr:{3}'.format(
+                str(fab_project.uuid),
+                fab_ref.description,
+                fab_ref.url,
+                str(user.uuid))
+            metricsLogger.info(log_msg)
     # # remove old references
     for ref in ref_remove:
         fab_ref = ProfilesReferences.query.filter(
@@ -218,7 +240,15 @@ def update_profiles_projects_references(
             ProfilesReferences.url == ref.get('url')
         ).one_or_none()
         if fab_ref:
-            logger.info("DELETE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
+            consoleLogger.info("DELETE: FabricProfilesProjects: uuid={0}, references: '{1}' = '{2}'".format(
                 fab_profile.uuid, fab_ref.description, fab_ref.url))
+            # metrics log - Project references removed:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove reference REFERENCE by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify-remove reference \'description={1}, url={2}\' by usr:{3}'.format(
+                str(fab_project.uuid),
+                fab_ref.description,
+                fab_ref.url,
+                str(user.uuid))
+            metricsLogger.info(log_msg)
             db.session.delete(fab_ref)
             db.session.commit()

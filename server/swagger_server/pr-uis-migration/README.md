@@ -5,9 +5,11 @@ FABRIC Core API (core-api) is intended to be a replacement for two existing serv
 - Project Registry (PR)
 - User Information Service (UIS)
 
-Core-api will also extend these services by including preference and profile information for Users and Projects, as well as other new features.
+Core-api will also extend these services by including preference and profile information for Users and Projects, as well
+as other new features.
 
-In an effort to preserve prior data a migration must take place between existing services running in FABRIC v1.2 (PR and UIS) and the new core-api service that will run in v1.3.
+In an effort to preserve prior data a migration must take place between existing services running in FABRIC v1.2 (PR and
+UIS) and the new core-api service that will run in v1.3.
 
 Documentation written using Alpha Tier infrastructure
 
@@ -26,7 +28,8 @@ Documentation written using Alpha Tier infrastructure
 
 ## <a name="maintenance"></a>Maintenance period
 
-It should take less than an hour to perform the migration of PR and UIS to core-api, but arranging for a two hour downtime is preferred.
+It should take less than an hour to perform the migration of PR and UIS to core-api, but arranging for a two hour
+downtime is preferred.
 
 Maintenance should be denoted in the FABRIC forum at least one week ahead of time
 
@@ -36,8 +39,10 @@ During the maintenance period both PR and UIS will be unavailable to users such 
 
 Data migration scripts have been added to both PR and UIS repositories and are executed as described below:
 
-- Ref PR: See `server/swagger_server/scripts/db_export.py` in [project-registry](https://github.com/fabric-testbed/project-registry)
-- Ref UIS: See `server/swagger_server/scripts/db_export.py` in [UserInformationService](https://github.com/fabric-testbed/UserInformationService)
+- Ref PR: See `server/swagger_server/scripts/db_export.py`
+  in [project-registry](https://github.com/fabric-testbed/project-registry)
+- Ref UIS: See `server/swagger_server/scripts/db_export.py`
+  in [UserInformationService](https://github.com/fabric-testbed/UserInformationService)
 
 ### project-registry (PR)
 
@@ -240,7 +245,8 @@ docker cp uis-api-server:/code/uis_sshkeys.json ./uis_sshkeys.json
 
 ## <a name="copy"></a>Copy snapshot data to core-api
 
-Output files from PR and UIS need to be copied into the fabric-core-api repository at `server/swagger_server/pr-uis-migration/data`
+Output files from PR and UIS need to be copied into the fabric-core-api repository
+at `server/swagger_server/pr-uis-migration/data`
 
 ### ensure the files are on the host
 
@@ -323,9 +329,11 @@ python -m server.swagger_server.database.db_verify
 
 ### Note about loading data from `db_load.py`
 
-Whenever you intend to re-run the `db_load.py` script beyond initial creation of the application you should always run the `db_verify.py` script first. 
+Whenever you intend to re-run the `db_load.py` script beyond initial creation of the application you should always run
+the `db_verify.py` script first.
 
-Both scripts are idempotent, but it's possible to have accumulated stale data in the core-api application that should be verified prior to searching for new data to load.
+Both scripts are idempotent, but it's possible to have accumulated stale data in the core-api application that should be
+verified prior to searching for new data to load.
 
 A common pattern would look like
 

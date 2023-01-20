@@ -21,6 +21,7 @@ from swagger_server.models.status403_forbidden import Status403Forbidden, Status
 from swagger_server.models.status404_not_found import Status404NotFound, Status404NotFoundErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError, \
     Status500InternalServerErrorErrors
+from swagger_server.models.testbed_info import TestbedInfo
 from swagger_server.models.version import Version
 from swagger_server.models.whoami import Whoami
 
@@ -68,7 +69,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 def cors_200(response_body: Union[
     ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
-    Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails
+    Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails, TestbedInfo
 ] = None) -> cors_response:
     """
     Return 200 - OK

@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -6,8 +5,6 @@ from swagger_server.database.db import db
 from swagger_server.database.models.announcements import FabricAnnouncements
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.models.announcements_post import AnnouncementsPost
-
-logger = logging.getLogger(__name__)
 
 
 def create_fabric_announcement_from_api(body: AnnouncementsPost, creator: FabricPeople) -> FabricAnnouncements:

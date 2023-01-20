@@ -244,7 +244,7 @@ def deactivate_expired_keys():
     now = datetime.now(timezone.utc)
     expired_keys = FabricSshKeys.query.filter(
         FabricSshKeys.expires_on < now,
-        FabricSshKeys.status in [EnumSshKeyStatus.active, EnumSshKeyStatus.deactivated]
+        FabricSshKeys.active.__eq__(True)
     ).order_by('created').all()
     for k in expired_keys:
         try:
@@ -276,7 +276,7 @@ def garbage_collect_expired_keys():
     check_instant = now - gc_delta
     garbage_keys = FabricSshKeys.query.filter(
         FabricSshKeys.deactivated_on < check_instant,
-        FabricSshKeys.status in [EnumSshKeyStatus.expired]
+        FabricSshKeys.active.__eq__(False)
     ).order_by('created').all()
     for k in garbage_keys:
         try:

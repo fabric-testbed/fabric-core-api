@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from fss_utils.sshkey import FABRICSSHKey
 
-from swagger_server.api_logger import consoleLogger
+from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.sshkeys import EnumSshKeyStatus, EnumSshKeyTypes, FabricSshKeys
@@ -68,6 +68,13 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
             db.session.commit()
             response.private_openssh = sshkey.as_keypair()[0]
             response.public_openssh = sshkey.as_keypair()[1]
+            # metrics log - User SSH Key created:
+            # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 create sshkey KEYTYPE key:feed-beef-feed-beef
+            log_msg = 'User event usr:{0} create sshkey \'{1}\' key:{2}'.format(
+                str(fab_person.uuid),
+                fab_sshkey.fabric_key_type.name,
+                str(fab_sshkey.uuid))
+            metricsLogger.info(log_msg)
         return response
     except Exception as exc:
         details = 'Oops! something went wrong with create_sshkey(): {0}'.format(exc)
@@ -128,12 +135,21 @@ def delete_sshkey(fab_person: FabricPeople, fab_sshkey: FabricSshKeys):
     """
     consoleLogger.info("Delete key '{0}'".format(fab_sshkey.uuid))
     try:
-        # remove key from person
-        fab_person.sshkeys.remove(fab_sshkey)
-        # delete key
-        db.session.delete(fab_sshkey)
+        now = datetime.now(timezone.utc)
+        # deactivate key
+        fab_sshkey.deactivated_on = now
+        fab_sshkey.deactivated_reason = 'User deactivated on {0}'.format(now)
+        fab_sshkey.active = False
+        fab_sshkey.status = EnumSshKeyStatus.deactivated
         # save db
         db.session.commit()
+        # metrics log - User SSH Key deactivated:
+        # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 deactivate sshkey KEYTYPE key:feed-beef-feed-beef
+        log_msg = 'User event usr:{0} deactivate sshkey \'{1}\' key:{2}'.format(
+            str(fab_person.uuid),
+            fab_sshkey.fabric_key_type.name,
+            str(fab_sshkey.uuid))
+        metricsLogger.info(log_msg)
     except Exception as exc:
         details = 'Oops! something went wrong with delete_sshkey(): {0}'.format(exc)
         consoleLogger.error(details)
@@ -201,7 +217,6 @@ def bastionkeys_by_since_date(since_date: datetime = None) -> [BastionkeysOne]:
     bastionkeys = []
     results = FabricSshKeys.query.filter(
         FabricSshKeys.fabric_key_type == EnumSshKeyTypes.bastion,
-        FabricSshKeys.status == EnumSshKeyStatus.active,
         ((FabricSshKeys.created >= since_date) | (FabricSshKeys.deactivated_on >= since_date))
     ).order_by('created').all()
     for r in results:
@@ -217,6 +232,68 @@ def bastionkeys_by_since_date(since_date: datetime = None) -> [BastionkeysOne]:
                 bkey.public_openssh = " ".join([r.ssh_key_type, r.public_key, bastion_comment])
                 bastionkeys.append(bkey)
         except Exception as exc:
-            print(r.people_id)
-            print(exc)
+            consoleLogger.error('sshkeys_utils.bastionkeys_by_since_date: {0}'.format(exc))
+    consoleLogger.info('sshkeys_utils.bastionkeys_by_since_date: {0} keys returned'.format(len(bastionkeys)))
     return bastionkeys
+
+
+def deactivate_expired_keys():
+    """
+    Scan the keys and deactivate those that are expired.
+    """
+    now = datetime.now(timezone.utc)
+    expired_keys = FabricSshKeys.query.filter(
+        FabricSshKeys.expires_on < now,
+        FabricSshKeys.status in [EnumSshKeyStatus.active, EnumSshKeyStatus.deactivated]
+    ).order_by('created').all()
+    for k in expired_keys:
+        try:
+            fab_person = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
+            k.deactivated_on = now
+            k.deactivated_reason = 'Key automatically expired on {0}'.format(now)
+            k.active = False
+            k.status = EnumSshKeyStatus.expired
+            # save db
+            db.session.commit()
+            consoleLogger.info('deactivate sshkey:{0} from usr:{1}'.format(str(k.uuid), str(fab_person.uuid)))
+            # metrics log - User SSH Key deactivated:
+            # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 deactivate sshkey KEYTYPE key:feed-beef-feed-beef
+            log_msg = 'User event usr:{0} deactivate sshkey \'{1}\' key:{2}'.format(
+                str(fab_person.uuid),
+                k.fabric_key_type.name,
+                str(k.uuid))
+            metricsLogger.info(log_msg)
+        except Exception as exc:
+            consoleLogger.error('sshkeys_utils.deactivate_expired_keys: {0}'.format(exc))
+
+
+def garbage_collect_expired_keys():
+    """
+    Delete deactivated keys older than specified period
+    """
+    now = datetime.now(timezone.utc)
+    gc_delta = timedelta(days=float(os.getenv('SSH_GARBAGE_COLLECT_AFTER_DAYS')))
+    check_instant = now - gc_delta
+    garbage_keys = FabricSshKeys.query.filter(
+        FabricSshKeys.deactivated_on < check_instant,
+        FabricSshKeys.status in [EnumSshKeyStatus.expired]
+    ).order_by('created').all()
+    for k in garbage_keys:
+        try:
+            fab_person = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
+            # remove key from person
+            fab_person.sshkeys.remove(k)
+            consoleLogger.info('garbage collect sshkey:{0} from usr:{1}'.format(str(k.uuid), str(fab_person.uuid)))
+            # metrics log - User SSH Key deleted:
+            # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 delete sshkey KEYTYPE key:feed-beef-feed-beef
+            log_msg = 'User event usr:{0} delete sshkey \'{1}\' key:{2}'.format(
+                str(fab_person.uuid),
+                k.fabric_key_type.name,
+                str(k.uuid))
+            metricsLogger.info(log_msg)
+            # delete key
+            db.session.delete(k)
+            # save db
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.error('sshkeys_utils.garbage_collect_expired_keys: {0}'.format(exc))

@@ -19,7 +19,7 @@ from swagger_server.response_code.cors_response import cors_200, cors_400, cors_
 from swagger_server.response_code.decorators import login_required, secret_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, delete_sshkey, \
-    put_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, sskeys_count_by_fabric_key_type
+    put_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, sskeys_count_by_fabric_key_type, garbage_collect_expired_keys, deactivate_expired_keys
 
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
 TZPYTHON = r"^.+\+[\d]{4}$"
@@ -59,7 +59,10 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
             details = 'Exception: since_date: {0}'.format(exc)
             consoleLogger.error(details)
             return cors_400(details=details)
-
+        # check for expired keys and garbage collect
+        deactivate_expired_keys()
+        garbage_collect_expired_keys()
+        # generate bastionkeys response
         response = Bastionkeys()
         response.results = bastionkeys_by_since_date(since_date=pdate)
         response.size = len(response.results)
@@ -105,8 +108,6 @@ def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
         response.size = len(response.results)
         response.status = 200
         response.type = 'sshkeys'
-        log_event = 'User event usr:{0}'.format(str(api_user.uuid))
-        metricsconsoleLogger.info(log_event)
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_get(): {0}'.format(exc)

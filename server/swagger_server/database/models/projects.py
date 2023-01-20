@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
@@ -47,6 +48,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     co_cou_id_pm = db.Column(db.Integer, nullable=True)
     co_cou_id_po = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text, nullable=False)
+    # TODO: add expires_on with 1.4.1 along with the inclusion of fixtures
+    # expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
     facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
     is_public = db.Column(db.Boolean, default=True, nullable=False)
     name = db.Column(db.String(), nullable=False)

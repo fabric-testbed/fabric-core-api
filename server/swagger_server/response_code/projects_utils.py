@@ -75,7 +75,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     # create profile
     create_profile_projects(fab_project=fab_project)
     # add project_creators
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=[str(project_creator.uuid)], personnel_type='creators')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=[str(project_creator.uuid)],
+                              personnel_type='creators')
     # check for project_members
     try:
         if len(body.project_members) == 0:
@@ -84,7 +85,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         body.project_members = []
         consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
     # add project_members
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members, personnel_type='members')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members,
+                              personnel_type='members')
     # check for project_owners
     try:
         if len(body.project_owners) == 0:
@@ -97,7 +99,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         body.project_owners = [str(project_creator.uuid)]
         consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
     # add project_owners
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners, personnel_type='owners')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners,
+                              personnel_type='owners')
     db.session.commit()
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
@@ -364,7 +367,7 @@ def update_projects_tags(api_user: FabricPeople = None, fab_project: FabricProje
             # metrics log - Project tag added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
-                                                                                   str(api_user.uuid))
+                                                                                       str(api_user.uuid))
             metricsLogger.info(log_msg)
     # remove projects tags
     for tag in tags_remove:
@@ -377,5 +380,5 @@ def update_projects_tags(api_user: FabricPeople = None, fab_project: FabricProje
             # metrics log - Project tag removed:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-remove tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
-                                                                                      str(api_user.uuid))
+                                                                                          str(api_user.uuid))
             metricsLogger.info(log_msg)

@@ -117,16 +117,17 @@ def create_profile_projects(fab_project: FabricProjects) -> None:
     create_profile_projects_preferences(fab_profile=fab_profile)
 
 
-def delete_profile_projects(fab_project: FabricProjects) -> None:
+def delete_profile_projects(api_user: FabricPeople, fab_project: FabricProjects) -> None:
     fab_profile = fab_project.profile
     # delete keywords
-    update_profiles_projects_keywords(fab_profile=fab_profile, keywords=[])
+    update_profiles_projects_keywords(api_user=api_user, fab_project=fab_project, fab_profile=fab_profile, keywords=[])
     # remove notebooks
     # TODO: define notebooks
     # delete preferences
     delete_profile_projects_preferences(fab_profile=fab_profile)
     # delete references
-    update_profiles_projects_references(fab_profile=fab_profile, references=[])
+    update_profiles_projects_references(api_user=api_user, fab_project=fab_project, fab_profile=fab_profile,
+                                        references=[])
     db.session.delete(fab_profile)
     db.session.commit()
 
@@ -161,7 +162,7 @@ def get_profile_projects(profile_projects_id: int, as_owner: bool = False) -> Pr
     return profile_projects
 
 
-def update_profiles_projects_keywords(user: FabricPeople, fab_project: FabricProjects,
+def update_profiles_projects_keywords(api_user: FabricPeople, fab_project: FabricProjects,
                                       fab_profile: FabricProfilesProjects, keywords: [str] = None) -> None:
     kw_orig = [k.keyword for k in fab_profile.keywords]
     kw_new = keywords
@@ -182,7 +183,7 @@ def update_profiles_projects_keywords(user: FabricPeople, fab_project: FabricPro
             log_msg = 'Project event prj:{0} modify-add keyword \'{1}\' by usr:{2}'.format(
                 str(fab_project.uuid),
                 kw,
-                str(user.uuid))
+                str(api_user.uuid))
             metricsLogger.info(log_msg)
     # remove profiles projects keywords
     for kw in kw_remove:
@@ -197,11 +198,11 @@ def update_profiles_projects_keywords(user: FabricPeople, fab_project: FabricPro
             log_msg = 'Project event prj:{0} modify-remove keyword \'{1}\' by usr:{2}'.format(
                 str(fab_project.uuid),
                 kw,
-                str(user.uuid))
+                str(api_user.uuid))
             metricsLogger.info(log_msg)
 
 
-def update_profiles_projects_references(user: FabricPeople, fab_project: FabricProjects,
+def update_profiles_projects_references(api_user: FabricPeople, fab_project: FabricProjects,
                                         fab_profile: FabricProfilesProjects,
                                         references: [ProfileProjectsReferences] = None) -> None:
     ref_orig = references_to_array(fab_profile.references)
@@ -230,7 +231,7 @@ def update_profiles_projects_references(user: FabricPeople, fab_project: FabricP
                 str(fab_project.uuid),
                 fab_ref.description,
                 fab_ref.url,
-                str(user.uuid))
+                str(api_user.uuid))
             metricsLogger.info(log_msg)
     # # remove old references
     for ref in ref_remove:
@@ -248,7 +249,7 @@ def update_profiles_projects_references(user: FabricPeople, fab_project: FabricP
                 str(fab_project.uuid),
                 fab_ref.description,
                 fab_ref.url,
-                str(user.uuid))
+                str(api_user.uuid))
             metricsLogger.info(log_msg)
             db.session.delete(fab_ref)
             db.session.commit()

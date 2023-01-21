@@ -369,17 +369,17 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             return cors_403(
                 details="User: '{0}' is not the creator of the project".format(api_user.display_name))
         # delete Tags
-        update_projects_tags(fab_project=fab_project, tags=[])
+        update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
         # delete Preferences
         delete_projects_preferences(fab_project=fab_project)
         # delete Profile
-        delete_profile_projects(fab_project=fab_project)
+        delete_profile_projects(api_user=api_user, fab_project=fab_project)
         # remove project_creators
-        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='creators')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators')
         # remove project_members
-        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='members')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members')
         # remove project_owners
-        update_projects_personnel(fab_project=fab_project, personnel=[], personnel_type='owners')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners')
         # remove Publications
         # TODO: define Publications
         # delete COUs -pc, -pm, -po
@@ -767,11 +767,11 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
         # check for keywords
         try:
             if len(body.keywords) == 0:
-                update_profiles_projects_keywords(user=api_user, fab_project=fab_project, fab_profile=fab_profile,
+                update_profiles_projects_keywords(api_user=api_user, fab_project=fab_project, fab_profile=fab_profile,
                                                   keywords=body.keywords)
                 consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords=[]')
             else:
-                update_profiles_projects_keywords(user=api_user, fab_project=fab_project, fab_profile=fab_profile,
+                update_profiles_projects_keywords(api_user=api_user, fab_project=fab_project, fab_profile=fab_profile,
                                                   keywords=body.keywords)
                 consoleLogger.info('UPDATE: FabricProfilesProjects: uuid={0}, keywords={1}'.format(
                     fab_project.uuid, [k.keyword for k in fab_profile.keywords]))
@@ -861,7 +861,8 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
                     details = "References: '{0}' is not a valid URL type".format(ref.url)
                     consoleLogger.error(details)
                     return cors_400(details=details)
-            update_profiles_projects_references(user=api_user, fab_project=fab_project, fab_profile=fab_project.profile,
+            update_profiles_projects_references(api_user=api_user, fab_project=fab_project,
+                                                fab_profile=fab_project.profile,
                                                 references=body.references)
         except Exception as exc:
             consoleLogger.info("NOP: projects_uuid_profile_patch(): 'references' - {0}".format(exc))
@@ -910,7 +911,7 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         # check for tags
         try:
             if len(body.tags) == 0:
-                update_projects_tags(user=api_user, fab_project=fab_project, tags=body.tags)
+                update_projects_tags(api_user=api_user, fab_project=fab_project, tags=body.tags)
                 consoleLogger.info('UPDATE: FabricProjects: uuid={0}, tags=[]')
             else:
                 tags = body.tags
@@ -919,7 +920,7 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
                         details = "Attempting to add invalid tag '{0}'".format(tag)
                         consoleLogger.error(details)
                         return cors_400(details=details)
-                update_projects_tags(user=api_user, fab_project=fab_project, tags=body.tags)
+                update_projects_tags(api_user=api_user, fab_project=fab_project, tags=body.tags)
                 consoleLogger.info('UPDATE: FabricProjects: uuid={0}, tags={1}'.format(
                     fab_project.uuid, [t.tag for t in fab_project.tags]))
         except Exception as exc:

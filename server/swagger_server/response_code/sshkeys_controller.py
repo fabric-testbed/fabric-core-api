@@ -18,8 +18,9 @@ from swagger_server.models.status200_ok_no_content import Status200OkNoContent, 
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required, secret_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, delete_sshkey, \
-    put_sshkey, sshkey_from_fab_sshkey, sshkeys_from_fab_person, sskeys_count_by_fabric_key_type, garbage_collect_expired_keys, deactivate_expired_keys
+from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, \
+    deactivate_expired_keys, delete_sshkey, garbage_collect_expired_keys, put_sshkey, sshkey_from_fab_sshkey, \
+    sshkeys_from_fab_person, sskeys_count_by_fabric_key_type
 
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
 TZPYTHON = r"^.+\+[\d]{4}$"

@@ -31,6 +31,7 @@ class FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'announcements'
+    __allow_unmapped__ = True
 
     announcement_type = db.Column(db.Enum(EnumAnnouncementTypes),
                                   default=EnumAnnouncementTypes.facility, nullable=False)

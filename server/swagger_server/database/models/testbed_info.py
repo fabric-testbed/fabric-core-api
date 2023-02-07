@@ -16,6 +16,7 @@ class FabricTestbedInfo(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'testbed_info'
+    __allow_unmapped__ = True
 
     is_active = db.Column(db.Boolean, default=True)
     json_data = db.Column(JSONB, nullable=False)

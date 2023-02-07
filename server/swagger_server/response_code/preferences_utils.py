@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
@@ -25,8 +27,11 @@ FabricPreferences model (* denotes required)
 def create_people_preferences(fab_person: FabricPeople) -> None:
     pref_type = EnumPreferenceTypes.people
     for option in PEOPLE_PREFERENCES.options:
+        now = datetime.now(timezone.utc)
         pref = FabricPreferences()
+        pref.created = now
         pref.key = option
+        pref.modified = now
         pref.value = True
         pref.type = pref_type
         pref.people_id = fab_person.id
@@ -56,8 +61,11 @@ def get_people_preferences(fab_person: FabricPeople) -> Preferences:
 def create_profile_people_preferences(fab_profile: FabricProfilesPeople) -> None:
     pref_type = EnumPreferenceTypes.profiles_people
     for option in PEOPLE_PROFILE_PREFERENCES.options:
+        now = datetime.now(timezone.utc)
         pref = FabricPreferences()
+        pref.created = now
         pref.key = option
+        pref.modified = now
         pref.value = True
         pref.type = pref_type
         pref.profiles_people_id = fab_profile.id
@@ -70,8 +78,11 @@ def create_profile_people_preferences(fab_profile: FabricProfilesPeople) -> None
 def create_projects_preferences(fab_project: FabricProjects) -> None:
     pref_type = EnumPreferenceTypes.projects
     for option in PROJECTS_PREFERENCES.options:
+        now = datetime.now(timezone.utc)
         pref = FabricPreferences()
+        pref.created = now
         pref.key = option
+        pref.modified = now
         pref.value = True
         pref.type = pref_type
         pref.projects_id = fab_project.id
@@ -92,8 +103,11 @@ def delete_projects_preferences(fab_project: FabricProjects) -> None:
 def create_profile_projects_preferences(fab_profile: FabricProfilesProjects) -> None:
     pref_type = EnumPreferenceTypes.profiles_projects
     for option in PROJECTS_PROFILE_PREFERENCES.options:
+        now = datetime.now(timezone.utc)
         pref = FabricPreferences()
+        pref.created = now
         pref.key = option
+        pref.modified = now
         pref.value = True
         pref.type = pref_type
         pref.profiles_projects_id = fab_profile.id

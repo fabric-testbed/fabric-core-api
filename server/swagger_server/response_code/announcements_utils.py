@@ -39,16 +39,19 @@ def create_fabric_announcement_from_api(body: AnnouncementsPost, creator: Fabric
     }
     """
     # create Announcement
+    now = datetime.now(timezone.utc)
     fab_announcement = FabricAnnouncements()
     fab_announcement.announcement_type = body.announcement_type
     fab_announcement.button = body.button
     fab_announcement.content = body.content
-    fab_announcement.created = datetime.now(timezone.utc)
+    fab_announcement.created = now
     fab_announcement.created_by_uuid = str(creator.uuid)
     fab_announcement.display_date = body.display_date
     fab_announcement.end_date = body.end_date
     fab_announcement.is_active = body.is_active
     fab_announcement.link = body.link
+    fab_announcement.modified = now
+    fab_announcement.modified_by_uuid = str(creator.uuid)
     fab_announcement.start_date = body.start_date
     fab_announcement.title = body.title
     fab_announcement.uuid = uuid4()

@@ -49,13 +49,21 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     }
     """
     # create Project
+    now = datetime.now(timezone.utc)
     fab_project = FabricProjects()
     fab_project.active = False
-    fab_project.created = datetime.now(timezone.utc)
+    fab_project.created = now
+    fab_project.created_by_uuid = str(project_creator.uuid)
     fab_project.description = body.description
+    # TODO: expires_one
+    # fab_project.expires_on = now
     fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
     fab_project.is_public = body.is_public
+    fab_project.modified = now
+    fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
+    # TODO: publications
+    # fab_project.publications = []
     fab_project.uuid = uuid4()
     db.session.add(fab_project)
     db.session.commit()

@@ -43,9 +43,10 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
         sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
         response = SshkeyPairResults()
         if sshkey:
+            now = datetime.now(timezone.utc)
             fab_sshkey = FabricSshKeys()
             fab_sshkey.comment = sshkey.comment
-            fab_sshkey.created = datetime.now(timezone.utc)
+            fab_sshkey.created = now
             fab_sshkey.description = body.description
             if body.keytype == EnumSshKeyTypes.sliver.name:
                 fab_sshkey.expires_on = datetime.now(timezone.utc) + \
@@ -56,6 +57,7 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
                                         timedelta(days=float(os.getenv('SSH_BASTION_KEY_VALIDITY_DAYS')))
                 fab_sshkey.fabric_key_type = EnumSshKeyTypes.bastion
             fab_sshkey.fingerprint = sshkey.get_fingerprint()
+            fab_sshkey.modified = now
             fab_sshkey.people_id = fab_person.id
             fab_sshkey.public_key = sshkey.public_key
             fab_sshkey.ssh_key_type = sshkey.name

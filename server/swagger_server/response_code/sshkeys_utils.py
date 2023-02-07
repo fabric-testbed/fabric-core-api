@@ -224,7 +224,7 @@ def bastionkeys_by_since_date(since_date: datetime = None) -> [BastionkeysOne]:
     for r in results:
         try:
             fab_person = FabricPeople.query.filter_by(id=r.people_id).one_or_none()
-            if fab_person:
+            if fab_person and fab_person.bastion_login():
                 bkey = BastionkeysOne()
                 bkey.status = r.status.name
                 bkey.login = fab_person.bastion_login()

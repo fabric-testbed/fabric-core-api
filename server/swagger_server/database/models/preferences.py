@@ -29,6 +29,7 @@ class FabricPreferences(BaseMixin, TimestampMixin, db.Model):
     __tablename__ = 'preferences'
     __table_args__ = (db.UniqueConstraint('key', 'people_id', 'profiles_people_id', 'profiles_projects_id',
                                           'projects_id', name='constraint_preferences'),)
+    __allow_unmapped__ = True
 
     key = db.Column(db.String(), nullable=False)
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=True)

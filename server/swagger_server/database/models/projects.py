@@ -42,6 +42,7 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'projects'
+    __allow_unmapped__ = True
 
     active = db.Column(db.Boolean, default=True, nullable=False)
     co_cou_id_pc = db.Column(db.Integer, nullable=True)
@@ -76,6 +77,7 @@ class ProjectsTags(BaseMixin, db.Model):
     query: db.Query
     __tablename__ = 'projects_tags'
     __table_args__ = (db.UniqueConstraint('projects_id', 'tag', name='constraint_projects_tags'),)
+    __allow_unmapped__ = True
 
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     tag = db.Column(db.Text, nullable=False)

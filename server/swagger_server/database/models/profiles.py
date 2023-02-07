@@ -23,6 +23,7 @@ class FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
     query: db.Query
     __tablename__ = 'profiles_people'
     __table_args__ = (db.UniqueConstraint('people_id', name='constraint_profiles_people'),)
+    __allow_unmapped__ = True
 
     bio = db.Column(db.String(), nullable=True)
     cv = db.Column(db.String(), nullable=True)
@@ -55,6 +56,7 @@ class FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
     query: db.Query
     __tablename__ = 'profiles_projects'
     __table_args__ = (db.UniqueConstraint('projects_id', name='constraint_profiles_projects'),)
+    __allow_unmapped__ = True
 
     award_information = db.Column(db.String(), nullable=True)
     goals = db.Column(db.String(), nullable=True)
@@ -78,6 +80,7 @@ class ProfilesPersonalPages(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_personal_pages'
+    __allow_unmapped__ = True
 
     profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     url = db.Column(db.String(), nullable=False)
@@ -93,6 +96,7 @@ class ProfilesKeywords(BaseMixin, db.Model):
     query: db.Query
     __tablename__ = 'profiles_keywords'
     __table_args__ = (db.UniqueConstraint('keyword', 'profiles_projects_id', name='constraint_projects_keywords'),)
+    __allow_unmapped__ = True
 
     keyword = db.Column(db.String(), nullable=False)
     profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
@@ -107,6 +111,7 @@ class ProfilesOtherIdentities(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_other_identities'
+    __allow_unmapped__ = True
 
     identity = db.Column(db.String(), nullable=False)
     profiles_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
@@ -122,6 +127,7 @@ class ProfilesReferences(BaseMixin, db.Model):
     """
     query: db.Query
     __tablename__ = 'profiles_references'
+    __allow_unmapped__ = True
 
     description = db.Column(db.String(), nullable=False)
     profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)

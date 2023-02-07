@@ -44,6 +44,7 @@ class FabricSshKeys(BaseMixin, TimestampMixin, db.Model):
     query: db.Query
     __tablename__ = 'sshkeys'
     __table_args__ = (db.UniqueConstraint('public_key', 'people_id', name='constraint_sshkeys'),)
+    __allow_unmapped__ = True
 
     # When received from user or returned to them
     # SSH public key has name, public_key and label in that order

@@ -14,6 +14,7 @@
   "key_value_pairs": {
     "Net.FacilityPort.Chameleon-StarLight": "Chameleon-StarLight Production",
     "Net.FacilityPort.ESnet-StarLight": "ESnet-StarLight Production",
-    "Net.FacilityPort.Internet2-StarLight": "Internet2-StarLight Production"
+    "Net.FacilityPort.Internet2-StarLight": "Internet2-StarLight Production",
+    "Net.FacilityPort.Utah-Cloudlab-Powder": "Utah-Cloudlab-Powder Production"
   }
 }

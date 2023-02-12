@@ -18,7 +18,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, publications: List[object]=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, publications: List[object]=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -27,8 +27,12 @@ class ProjectsOne(Model):
         :type created: datetime
         :param description: The description of this ProjectsOne.  # noqa: E501
         :type description: str
+        :param expires_on: The expires_on of this ProjectsOne.  # noqa: E501
+        :type expires_on: str
         :param facility: The facility of this ProjectsOne.  # noqa: E501
         :type facility: str
+        :param is_locked: The is_locked of this ProjectsOne.  # noqa: E501
+        :type is_locked: bool
         :param is_public: The is_public of this ProjectsOne.  # noqa: E501
         :type is_public: bool
         :param memberships: The memberships of this ProjectsOne.  # noqa: E501
@@ -58,7 +62,9 @@ class ProjectsOne(Model):
             'active': bool,
             'created': datetime,
             'description': str,
+            'expires_on': str,
             'facility': str,
+            'is_locked': bool,
             'is_public': bool,
             'memberships': ProjectMembership,
             'modified': datetime,
@@ -77,7 +83,9 @@ class ProjectsOne(Model):
             'active': 'active',
             'created': 'created',
             'description': 'description',
+            'expires_on': 'expires_on',
             'facility': 'facility',
+            'is_locked': 'is_locked',
             'is_public': 'is_public',
             'memberships': 'memberships',
             'modified': 'modified',
@@ -94,7 +102,9 @@ class ProjectsOne(Model):
         self._active = active
         self._created = created
         self._description = description
+        self._expires_on = expires_on
         self._facility = facility
+        self._is_locked = is_locked
         self._is_public = is_public
         self._memberships = memberships
         self._modified = modified
@@ -187,6 +197,27 @@ class ProjectsOne(Model):
         self._description = description
 
     @property
+    def expires_on(self) -> str:
+        """Gets the expires_on of this ProjectsOne.
+
+
+        :return: The expires_on of this ProjectsOne.
+        :rtype: str
+        """
+        return self._expires_on
+
+    @expires_on.setter
+    def expires_on(self, expires_on: str):
+        """Sets the expires_on of this ProjectsOne.
+
+
+        :param expires_on: The expires_on of this ProjectsOne.
+        :type expires_on: str
+        """
+
+        self._expires_on = expires_on
+
+    @property
     def facility(self) -> str:
         """Gets the facility of this ProjectsOne.
 
@@ -208,6 +239,27 @@ class ProjectsOne(Model):
             raise ValueError("Invalid value for `facility`, must not be `None`")  # noqa: E501
 
         self._facility = facility
+
+    @property
+    def is_locked(self) -> bool:
+        """Gets the is_locked of this ProjectsOne.
+
+
+        :return: The is_locked of this ProjectsOne.
+        :rtype: bool
+        """
+        return self._is_locked
+
+    @is_locked.setter
+    def is_locked(self, is_locked: bool):
+        """Sets the is_locked of this ProjectsOne.
+
+
+        :param is_locked: The is_locked of this ProjectsOne.
+        :type is_locked: bool
+        """
+
+        self._is_locked = is_locked
 
     @property
     def is_public(self) -> bool:

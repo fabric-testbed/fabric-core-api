@@ -9,6 +9,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
+from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
@@ -18,6 +19,7 @@ from swagger_server.models.status400_bad_request import Status400BadRequest  # n
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
 from swagger_server.models.status403_forbidden import Status403Forbidden  # noqa: E501
 from swagger_server.models.status404_not_found import Status404NotFound  # noqa: E501
+from swagger_server.models.status423_locked import Status423Locked  # noqa: E501
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError  # noqa: E501
 from swagger_server.test import BaseTestCase
 
@@ -104,6 +106,20 @@ class TestProjectsController(BaseTestCase):
         response = self.client.open(
             '/projects/{uuid}'.format(uuid='uuid_example'),
             method='DELETE')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_expires_on_patch(self):
+        """Test case for projects_uuid_expires_on_patch
+
+        Update Project expires on date as Facility Operator
+        """
+        body = ProjectsExpiresOnPatch()
+        response = self.client.open(
+            '/projects/{uuid}/expires-on'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

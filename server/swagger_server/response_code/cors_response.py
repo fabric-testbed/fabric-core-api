@@ -19,6 +19,7 @@ from swagger_server.models.status400_bad_request import Status400BadRequest, Sta
 from swagger_server.models.status401_unauthorized import Status401Unauthorized, Status401UnauthorizedErrors
 from swagger_server.models.status403_forbidden import Status403Forbidden, Status403ForbiddenErrors
 from swagger_server.models.status404_not_found import Status404NotFound, Status404NotFoundErrors
+from swagger_server.models.status423_locked import Status423Locked, Status423LockedErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError, \
     Status500InternalServerErrorErrors
 from swagger_server.models.testbed_info import TestbedInfo
@@ -156,6 +157,22 @@ def cors_404(details: str = None) -> cors_response:
     return cors_response(
         req=request,
         status_code=404,
+        body=json.dumps(delete_none(error_object.to_dict()), indent=_INDENT, sort_keys=True)
+        if _INDENT != 0 else json.dumps(delete_none(error_object.to_dict()), sort_keys=True),
+        x_error=details
+    )
+
+
+def cors_423(details: str = None) -> cors_response:
+    """
+    Return 423 - Locked
+    """
+    errors = Status423LockedErrors()
+    errors.details = details
+    error_object = Status423Locked([errors])
+    return cors_response(
+        req=request,
+        status_code=423,
         body=json.dumps(delete_none(error_object.to_dict()), indent=_INDENT, sort_keys=True)
         if _INDENT != 0 else json.dumps(delete_none(error_object.to_dict()), sort_keys=True),
         x_error=details

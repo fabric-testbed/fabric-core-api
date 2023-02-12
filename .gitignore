@@ -7,6 +7,7 @@ vouch/config*
 !vouch/config.template
 .DS_Store
 server/swagger_server/pr-uis-migration/data/*.json
+server/swagger_server/backup/data/*.json
 
 ### VirtualEnv template
 # Virtualenv

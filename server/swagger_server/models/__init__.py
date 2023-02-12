@@ -31,6 +31,7 @@ from swagger_server.models.project import Project
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects import Projects
 from swagger_server.models.projects_details import ProjectsDetails
+from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
 from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
@@ -55,6 +56,8 @@ from swagger_server.models.status403_forbidden import Status403Forbidden
 from swagger_server.models.status403_forbidden_errors import Status403ForbiddenErrors
 from swagger_server.models.status404_not_found import Status404NotFound
 from swagger_server.models.status404_not_found_errors import Status404NotFoundErrors
+from swagger_server.models.status423_locked import Status423Locked
+from swagger_server.models.status423_locked_errors import Status423LockedErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
 from swagger_server.models.testbed_info import TestbedInfo

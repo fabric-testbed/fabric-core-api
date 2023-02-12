@@ -5,6 +5,7 @@ from swagger_server.database.db import db
 from swagger_server.database.models.announcements import FabricAnnouncements
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.models.announcements_post import AnnouncementsPost
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 
 def create_fabric_announcement_from_api(body: AnnouncementsPost, creator: FabricPeople) -> FabricAnnouncements:
@@ -46,13 +47,13 @@ def create_fabric_announcement_from_api(body: AnnouncementsPost, creator: Fabric
     fab_announcement.content = body.content
     fab_announcement.created = now
     fab_announcement.created_by_uuid = str(creator.uuid)
-    fab_announcement.display_date = body.display_date
-    fab_announcement.end_date = body.end_date
+    fab_announcement.display_date = normalize_date_to_utc(date_str=body.display_date) if body.display_date else None
+    fab_announcement.end_date = normalize_date_to_utc(date_str=body.end_date) if body.end_date else None
     fab_announcement.is_active = body.is_active
     fab_announcement.link = body.link
     fab_announcement.modified = now
     fab_announcement.modified_by_uuid = str(creator.uuid)
-    fab_announcement.start_date = body.start_date
+    fab_announcement.start_date = normalize_date_to_utc(date_str=body.start_date) if body.start_date else None
     fab_announcement.title = body.title
     fab_announcement.uuid = uuid4()
     db.session.add(fab_announcement)

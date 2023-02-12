@@ -10,10 +10,10 @@ from swagger_server.models.announcements_post import AnnouncementsPost
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code.announcements_utils import create_fabric_announcement_from_api
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.validation_utils import parse_timestamp
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -188,15 +188,15 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
             consoleLogger.error(details)
             return cors_400(details=details)
         # validate display_date, end_date, start_date
-        if body.display_date and not parse_timestamp(str(body.display_date)):
+        if body.display_date and not normalize_date_to_utc(date_str=body.display_date, return_type='str'):
             details = "Announcements POST: '{0}' is not a valid display_date".format(body.display_date)
             consoleLogger.error(details)
             return cors_400(details=details)
-        if body.end_date and not parse_timestamp(str(body.end_date)):
+        if body.end_date and not normalize_date_to_utc(date_str=body.end_date, return_type='str'):
             details = "Announcements POST: '{0}' is not a valid end_date".format(body.end_date)
             consoleLogger.error(details)
             return cors_400(details=details)
-        if body.start_date and not parse_timestamp(str(body.start_date)):
+        if body.start_date and not normalize_date_to_utc(date_str=body.start_date, return_type='str'):
             details = "Announcements POST: '{0}' is not a valid start_date".format(body.start_date)
             consoleLogger.error(details)
             return cors_400(details=details)
@@ -355,11 +355,11 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
         # check for display_date
         try:
             if len(body.display_date) != 0:
-                if body.display_date and not parse_timestamp(str(body.display_date)):
+                if body.display_date and not normalize_date_to_utc(date_str=body.display_date, return_type='str'):
                     details = "Announcements PATCH: '{0}' is not a valid display_date".format(body.display_date)
                     consoleLogger.error(details)
                     return cors_400(details=details)
-                fab_announcement.display_date = body.display_date
+                fab_announcement.display_date = normalize_date_to_utc(date_str=body.display_date)
                 db.session.commit()
                 consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, display_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.display_date))
@@ -368,11 +368,11 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
         # check for end_date
         try:
             if len(body.end_date) != 0:
-                if body.end_date and not parse_timestamp(str(body.end_date)):
+                if body.end_date and not normalize_date_to_utc(date_str=body.end_date, return_type='str'):
                     details = "Announcements PATCH: '{0}' is not a valid end_date".format(body.end_date)
                     consoleLogger.error(details)
                     return cors_400(details=details)
-                fab_announcement.end_date = body.end_date
+                fab_announcement.end_date = normalize_date_to_utc(date_str=body.end_date)
                 db.session.commit()
                 consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, end_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.end_date))
@@ -402,11 +402,11 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
         # check for start_date
         try:
             if len(body.start_date) != 0:
-                if body.start_date and not parse_timestamp(str(body.start_date)):
+                if body.start_date and not normalize_date_to_utc(date_str=body.start_date, return_type='str'):
                     details = "Announcements PATCH: '{0}' is not a valid start_date".format(body.start_date)
                     consoleLogger.error(details)
                     return cors_400(details=details)
-                fab_announcement.start_date = body.start_date
+                fab_announcement.start_date = normalize_date_to_utc(date_str=body.start_date)
                 db.session.commit()
                 consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, start_date={1}'.format(
                     fab_announcement.uuid, fab_announcement.start_date))

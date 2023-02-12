@@ -1,5 +1,4 @@
 import os
-import re
 from datetime import datetime, timezone
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
@@ -22,6 +21,7 @@ from swagger_server.models.status200_ok_no_content import Status200OkNoContent, 
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
@@ -34,8 +34,6 @@ from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
-TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
-TZPYTHON = r"^.+\+[\d]{4}$"
 
 
 @login_required
@@ -448,25 +446,14 @@ def projects_uuid_expires_on_patch(uuid: str,
         try:
             # validate expires_on
             try:
-                since_date = str(body.expires_on).strip()
-                # with +00:00
-                if re.match(TZISO, since_date) is not None:
-                    pdate = datetime.fromisoformat(since_date)
-                # with +0000
-                elif re.match(TZPYTHON, since_date) is not None:
-                    pdate = datetime.strptime(since_date, "%Y-%m-%d %H:%M:%S%z")
-                # perhaps no TZ info? add as if UTC
-                else:
-                    pdate = datetime.strptime(since_date + "+0000", "%Y-%m-%d %H:%M:%S%z")
-                # convert to UTC
-                pdate = pdate.astimezone(timezone.utc)
+                expires_on = normalize_date_to_utc(date_str=body.expires_on)
             except ValueError as exc:
                 details = 'Exception: expires_on: {0}'.format(exc)
                 consoleLogger.error(details)
                 return cors_400(details=details)
             # update project expires_on and set is_locked
-            fab_project.expires_on = pdate
-            if pdate < datetime.now(timezone.utc):
+            fab_project.expires_on = expires_on
+            if expires_on < datetime.now(timezone.utc):
                 fab_project.is_locked = True
             else:
                 fab_project.is_locked = False

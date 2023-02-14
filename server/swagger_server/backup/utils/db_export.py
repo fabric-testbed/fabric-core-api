@@ -31,12 +31,11 @@ $ docker exec -u postgres api-database psql -c "\dt;"
 
 import json
 import os
-from datetime import timedelta
 
-from dateutil import parser
+from sqlalchemy.sql import text
 
 from swagger_server import __API_VERSION__
-from swagger_server.__main__ import app
+from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
@@ -46,6 +45,7 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.sshkeys import FabricSshKeys
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -54,9 +54,22 @@ BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 # export alembic_version as JSON output file
 def dump_alembic_version_data():
     """
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    alembic_version
+    - version_num = String
     """
-    pass
+    alembic_version = []
+    query = text("SELECT version_num FROM alembic_version")
+    result = db.session.execute(query).fetchall()
+    for row in result:
+        data = {
+            'version_num': row[0]
+        }
+        alembic_version.append(data)
+    output_dict = {'alembic_version': alembic_version}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
 
 
 # export announcements as JSON output file
@@ -86,23 +99,23 @@ def dump_announcements_data():
             'announcement_type': a.announcement_type.name,
             'button': a.button,
             'content': a.content,
-            'created': normalize_date_format(str(a.created)),
+            'created': normalize_date_to_utc(date_str=str(a.created), return_type='str'),
             'created_by_uuid': str(a.created_by_uuid),
-            'display_date': normalize_date_format(str(a.display_date)),
-            'end_date': normalize_date_format(str(a.end_date)),
+            'display_date': normalize_date_to_utc(date_str=str(a.display_date), return_type='str'),
+            'end_date': normalize_date_to_utc(date_str=str(a.end_date), return_type='str'),
             'id': a.id,
             'is_active': a.is_active,
             'link': a.link,
-            'modified': normalize_date_format(str(a.modified)),
+            'modified': normalize_date_to_utc(date_str=str(a.modified), return_type='str'),
             'modified_by_uuid': str(a.modified_by_uuid),
-            'start_date': normalize_date_format(str(a.start_date)),
+            'start_date': normalize_date_to_utc(date_str=str(a.start_date), return_type='str'),
             'title': a.title,
             'uuid': str(a.uuid)
         }
         announcements.append(data)
     output_dict = {'announcements': announcements}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -126,17 +139,17 @@ def dump_groups_data():
         data = {
             'co_cou_id': g.co_cou_id,
             'co_parent_cou_id': g.co_parent_cou_id,
-            'created': normalize_date_format(str(g.created)),
+            'created': normalize_date_to_utc(date_str=str(g.created), return_type='str') if g.created else None,
             'deleted': g.deleted,
             'description': g.description,
             'id': g.id,
-            'modified': normalize_date_format(str(g.modified)),
+            'modified': normalize_date_to_utc(date_str=str(g.modified), return_type='str') if g.modified else None,
             'name': g.name,
         }
         groups.append(data)
     output_dict = {'groups': groups}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -176,13 +189,13 @@ def dump_people_data():
         data = {
             'active': p.active,
             'co_person_id': p.co_person_id,
-            'created': normalize_date_format(str(p.created)),
+            'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'display_name': p.display_name,
             'email_addresses': [e.id for e in p.email_addresses],
             'eppn': p.eppn,
             'fabric_id': p.fabric_id,
             'id': p.id,
-            'modified': normalize_date_format(str(p.modified)),
+            'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'oidc_claim_email': p.oidc_claim_email,
             'oidc_claim_family_name': p.oidc_claim_family_name,
             'oidc_claim_given_name': p.oidc_claim_given_name,
@@ -193,16 +206,17 @@ def dump_people_data():
             'preferred_email': p.preferred_email,
             'profile': p.profile.id,
             # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
-            'registered_on': normalize_date_format(str(p.registered_on)),
+            'registered_on': normalize_date_to_utc(date_str=str(p.registered_on),
+                                                   return_type='str') if p.registered_on else None,
             'roles': [r.id for r in p.roles],
             'sshkeys': [s.id for s in p.sshkeys],
-            'updated': normalize_date_format(str(p.updated)),
+            'updated': normalize_date_to_utc(date_str=str(p.updated), return_type='str') if p.updated else None,
             'uuid': p.uuid
         }
         people.append(data)
     output_dict = {'people': people}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -230,7 +244,7 @@ def dump_people_email_addresses_data():
         people_email_addresses.append(data)
     output_dict = {'people_email_addresses': people_email_addresses}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -256,7 +270,7 @@ def dump_people_organizations_data():
         people_organizations.append(data)
     output_dict = {'people_organizations': people_organizations}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -292,7 +306,7 @@ def dump_people_roles_data():
         people_roles.append(data)
     output_dict = {'people_roles': people_roles}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -316,10 +330,10 @@ def dump_preferences_data():
     fab_preferences = FabricPreferences.query.order_by('id').all()
     for p in fab_preferences:
         data = {
-            'created': normalize_date_format(str(p.created)),
+            'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'id': p.id,
             'key': p.key,
-            'modified': normalize_date_format(str(p.modified)),
+            'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'people_id': p.people_id,
             'profiles_people_id': p.profiles_people_id,
             'profiles_projects_id': p.profiles_projects_id,
@@ -330,7 +344,7 @@ def dump_preferences_data():
         preferences.append(data)
     output_dict = {'preferences': preferences}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -354,7 +368,7 @@ def dump_profiles_keywords_data():
         profiles_keywords.append(data)
     output_dict = {'profiles_keywords': profiles_keywords}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -380,7 +394,7 @@ def dump_profiles_other_identities_data():
         profiles_other_identities.append(data)
     output_dict = {'profiles_other_identities': profiles_other_identities}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -408,11 +422,11 @@ def dump_profiles_people_data():
     for p in fab_profiles_people:
         data = {
             'bio': p.bio,
-            'created': normalize_date_format(str(p.created)),
+            'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'cv': p.cv,
             'id': p.id,
             'job': p.job,
-            'modified': normalize_date_format(str(p.modified)),
+            'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'other_identities': [oi.id for oi in p.other_identities],
             'people_id': p.people_id,
             'personal_pages': [pp.id for pp in p.personal_pages],
@@ -424,7 +438,7 @@ def dump_profiles_people_data():
         profiles_people.append(data)
     output_dict = {'profiles_people': profiles_people}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -450,7 +464,7 @@ def dump_profiles_personal_pages_data():
         profiles_personal_pages.append(data)
     output_dict = {'profiles_personal_pages': profiles_personal_pages}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -478,11 +492,11 @@ def dump_profiles_projects_data():
     for p in fab_profiles_projects:
         data = {
             'award_information': p.award_information,
-            'created': normalize_date_format(str(p.created)),
+            'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'goals': p.goals,
             'id': p.id,
             'keywords': [k.id for k in p.keywords],
-            'modified': normalize_date_format(str(p.modified)),
+            'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             # - notebooks = db.relationship('Notebooks', secondary=notebooks, lazy='subquery)
             'preferences': [pr.id for pr in p.preferences],
             'project_status': p.project_status,
@@ -494,7 +508,7 @@ def dump_profiles_projects_data():
         profiles_projects.append(data)
     output_dict = {'profiles_projects': profiles_projects}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -520,7 +534,7 @@ def dump_profiles_references_data():
         profiles_references.append(data)
     output_dict = {'profiles_references': profiles_references}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -555,20 +569,19 @@ def dump_projects_data():
     projects = []
     fab_projects = FabricProjects.query.order_by('id').all()
     for p in fab_projects:
-        print(p.tags)
         data = {
             'active': p.active,
             'co_cou_id_pc': p.co_cou_id_pc,
             'co_cou_id_pm': p.co_cou_id_pm,
             'co_cou_id_po': p.co_cou_id_po,
-            'created': normalize_date_format(str(p.created)),
+            'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'created_by_uuid': p.created_by_uuid,
             'description': p.description,
-            # 'expires_on': normalize_date_format(str(p.expires_on)),
+            # 'expires_on': normalize_date_to_utc(date_str=str(p.expires_on), return_type='str') if p.expires_on else None,
             'facility': p.facility,
             'id': p.id,
             'is_public': p.is_public,
-            'modified': normalize_date_format(str(p.modified)),
+            'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'modified_by_uuid': p.modified_by_uuid,
             'name': p.name,
             'preferences': [pr.id for pr in p.preferences],  # [FabricPreferences.id]
@@ -583,24 +596,78 @@ def dump_projects_data():
         projects.append(data)
     output_dict = {'projects': projects}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
 
 # export projects_creators as JSON output file
 def dump_projects_creators_data():
-    pass
+    """
+    projects_creators
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    projects_creators = []
+    query = text("SELECT people_id, projects_id FROM projects_creators")
+    result = db.session.execute(query).fetchall()
+    for row in result:
+        data = {
+            'people_id': row[0],
+            'projects_id': row[1]
+        }
+        projects_creators.append(data)
+    output_dict = {'projects_creators': projects_creators}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
 
 
 # export projects_members as JSON output file
 def dump_projects_members_data():
-    pass
+    """
+    projects_members
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    projects_members = []
+    query = text("SELECT people_id, projects_id FROM projects_members")
+    result = db.session.execute(query).fetchall()
+    for row in result:
+        data = {
+            'people_id': row[0],
+            'projects_id': row[1]
+        }
+        projects_members.append(data)
+    output_dict = {'projects_members': projects_members}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/projects_members-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
 
 
 # export projects_owners as JSON output file
 def dump_projects_owners_data():
-    pass
+    """
+    projects_owners
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    projects_owners = []
+    query = text("SELECT people_id, projects_id FROM projects_owners")
+    result = db.session.execute(query).fetchall()
+    for row in result:
+        data = {
+            'people_id': row[0],
+            'projects_id': row[1]
+        }
+        projects_owners.append(data)
+    output_dict = {'projects_owners': projects_owners}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/projects_owners-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
 
 
 # export projects_tags as JSON output file
@@ -622,7 +689,7 @@ def dump_projects_tags_data():
         projects_tags.append(data)
     output_dict = {'projects_tags': projects_tags}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -654,15 +721,17 @@ def dump_sshkeys_data():
         data = {
             'active': k.active,
             'comment': k.comment,
-            'created': normalize_date_format(str(k.created)),
-            'deactivated_on': normalize_date_format(str(k.deactivated_on)),
+            'created': normalize_date_to_utc(date_str=str(k.created), return_type='str') if k.created else None,
+            'deactivated_on': normalize_date_to_utc(date_str=str(k.deactivated_on),
+                                                    return_type='str') if k.deactivated_on else None,
             'deactivated_reason': k.deactivated_reason,
             'description': k.description,
-            'expires_on': normalize_date_format(str(k.expires_on)),
+            'expires_on': normalize_date_to_utc(date_str=str(k.expires_on),
+                                                return_type='str') if k.expires_on else None,
             'fabric_key_type': str(k.fabric_key_type.name),
             'fingerprint': k.fingerprint,
             'id': k.id,
-            'modified': normalize_date_format(str(k.modified)),
+            'modified': normalize_date_to_utc(date_str=str(k.modified), return_type='str') if k.modified else None,
             'people_id': k.people_id,
             'public_key': k.public_key,
             'ssh_key_type': str(k.ssh_key_type),
@@ -672,7 +741,7 @@ def dump_sshkeys_data():
         sshkeys.append(data)
     output_dict = {'sshkeys': sshkeys}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
@@ -694,31 +763,21 @@ def dump_testbed_info_data():
     fab_testbed_info = FabricTestbedInfo.query.order_by('id').all()
     for i in fab_testbed_info:
         data = {
-            'created': normalize_date_format(str(i.created)),
+            'created': normalize_date_to_utc(date_str=str(i.created), return_type='str') if i.created else None,
             'created_by_uuid': str(i.created_by_uuid),
             'id': i.id,
             'is_active': i.is_active,
             'json_data': i.json_data,
-            'modified': normalize_date_format(str(i.modified)),
+            'modified': normalize_date_to_utc(date_str=str(i.modified), return_type='str') if i.modified else None,
             'modified_by_uuid': str(i.modified_by_uuid),
             'uuid': str(i.uuid)
         }
         testbed_info.append(data)
     output_dict = {'testbed_info': testbed_info}
     output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
+    # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
-
-
-# normalize datetime format across all objects
-def normalize_date_format(v1_date: str):
-    if len(v1_date) > 8:
-        v2_date = parser.parse(v1_date) + timedelta(milliseconds=100)
-        # print(v2_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z"))
-        return v2_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-    else:
-        return None
 
 
 if __name__ == '__main__':
@@ -732,81 +791,81 @@ if __name__ == '__main__':
     dump_alembic_version_data()
 
     #  public | announcements             | table | postgres
-    # consoleLogger.info('dump announcements table')
-    # dump_announcements_data()
+    consoleLogger.info('dump announcements table')
+    dump_announcements_data()
 
     #  public | groups                    | table | postgres
-    # consoleLogger.info('dump groups table')
-    # dump_groups_data()
+    consoleLogger.info('dump groups table')
+    dump_groups_data()
 
     #  public | people                    | table | postgres
-    # consoleLogger.info('dump people table')
-    # dump_people_data()
+    consoleLogger.info('dump people table')
+    dump_people_data()
 
     #  public | people_email_addresses    | table | postgres
-    # consoleLogger.info('dump people_email_addresses table')
-    # dump_people_email_addresses_data()
+    consoleLogger.info('dump people_email_addresses table')
+    dump_people_email_addresses_data()
 
     #  public | people_organizations      | table | postgres
-    # consoleLogger.info('dump people_organizations table')
-    # dump_people_organizations_data()
+    consoleLogger.info('dump people_organizations table')
+    dump_people_organizations_data()
 
     #  public | people_roles              | table | postgres
-    # consoleLogger.info('dump people_roles table')
-    # dump_people_roles_data()
+    consoleLogger.info('dump people_roles table')
+    dump_people_roles_data()
 
     #  public | preferences               | table | postgres
-    # consoleLogger.info('dump preferences table')
-    # dump_preferences_data()
+    consoleLogger.info('dump preferences table')
+    dump_preferences_data()
 
     #  public | profiles_keywords         | table | postgres
-    # consoleLogger.info('dump profiles_keywords table')
-    # dump_profiles_keywords_data()
+    consoleLogger.info('dump profiles_keywords table')
+    dump_profiles_keywords_data()
 
     #  public | profiles_other_identities | table | postgres
-    # consoleLogger.info('dump profiles_other_identities table')
-    # dump_profiles_other_identities_data()
+    consoleLogger.info('dump profiles_other_identities table')
+    dump_profiles_other_identities_data()
 
     #  public | profiles_people           | table | postgres
-    # consoleLogger.info('dump profiles_people table')
-    # dump_profiles_people_data()
+    consoleLogger.info('dump profiles_people table')
+    dump_profiles_people_data()
 
     #  public | profiles_personal_pages   | table | postgres
-    # consoleLogger.info('dump profiles_personal_pages table')
-    # dump_profiles_personal_pages_data()
+    consoleLogger.info('dump profiles_personal_pages table')
+    dump_profiles_personal_pages_data()
 
     #  public | profiles_projects         | table | postgres
-    # consoleLogger.info('dump profiles_projects table')
-    # dump_profiles_projects_data()
+    consoleLogger.info('dump profiles_projects table')
+    dump_profiles_projects_data()
 
     #  public | profiles_references       | table | postgres
-    # consoleLogger.info('dump profiles_references table')
-    # dump_profiles_references_data()
+    consoleLogger.info('dump profiles_references table')
+    dump_profiles_references_data()
 
     #  public | projects                  | table | postgres
-    # consoleLogger.info('dump projects table')
-    # dump_projects_data()
+    consoleLogger.info('dump projects table')
+    dump_projects_data()
 
     #  public | projects_creators         | table | postgres
-    consoleLogger.info('dump projects_creators table <-- generated by db_restore')
+    consoleLogger.info('dump projects_creators table')
     dump_projects_creators_data()
 
     #  public | projects_members          | table | postgres
-    consoleLogger.info('dump projects_members table <-- generated by db_restore')
+    consoleLogger.info('dump projects_members table')
     dump_projects_members_data()
 
     #  public | projects_owners           | table | postgres
-    consoleLogger.info('dump projects_owners table <-- generated by db_restore')
+    consoleLogger.info('dump projects_owners table')
     dump_projects_owners_data()
 
     #  public | projects_tags             | table | postgres
-    # consoleLogger.info('dump projects_tags table')
-    # dump_projects_tags_data()
+    consoleLogger.info('dump projects_tags table')
+    dump_projects_tags_data()
 
     #  public | sshkeys                   | table | postgres
-    # consoleLogger.info('dump sshkeys table')
-    # dump_sshkeys_data()
+    consoleLogger.info('dump sshkeys table')
+    dump_sshkeys_data()
 
     #  public | testbed_info              | table | postgres
-    # consoleLogger.info('dump testbed_info table')
-    # dump_testbed_info_data()
+    consoleLogger.info('dump testbed_info table')
+    dump_testbed_info_data()

@@ -4,16 +4,19 @@ from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
 
 projects_creators = db.Table('projects_creators',
+                             db.Model.metadata,
                              db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
                              db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                              )
 
 projects_members = db.Table('projects_members',
+                            db.Model.metadata,
                             db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
                             db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                             )
 
 projects_owners = db.Table('projects_owners',
+                           db.Model.metadata,
                            db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
                            db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
                            )

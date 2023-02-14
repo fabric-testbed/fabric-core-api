@@ -1,5 +1,5 @@
 """
-v1.4.0 - database tables
+v1.4.0 --> v1.4.1 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -27,26 +27,26 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
 (21 rows)
+
+Changes from v1.4.0 --> v1.4.1
+ public | projects                  | table | postgres
+ - add: expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
+ - add: is_locked = db.Column(db.Boolean, default=False, nullable=False)
 """
 
 import json
 import os
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from dateutil import parser
-from swagger_server.database.db import db
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import update, MetaData
 
 from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app
 from swagger_server.api_logger import consoleLogger
-from swagger_server.database.models.announcements import FabricAnnouncements
-from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
-from swagger_server.database.models.preferences import FabricPreferences
-from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
-    ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags
-from swagger_server.database.models.sshkeys import FabricSshKeys
-from swagger_server.database.models.testbed_info import FabricTestbedInfo
+from swagger_server.database.db import db
+from swagger_server.database.models.projects import FabricProjects
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -55,9 +55,18 @@ BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 # export alembic_version as JSON output file
 def restore_alembic_version_data():
     """
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    alembic_version
+    - version_num = String
     """
-    pass
+    with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        alembic_version_dict = json.load(infile)
+    alembic_version = alembic_version_dict.get('alembic_version')
+    for a in alembic_version:
+        stmt = update(db.Table('alembic_version')).values(
+            version_num=a.get('version_num')
+        )
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export announcements as JSON output file
@@ -80,32 +89,29 @@ def restore_announcements_data():
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    announcements = []
-    fab_announcements = FabricAnnouncements.query.order_by('id').all()
-    for a in fab_announcements:
-        data = {
-            'announcement_type': a.announcement_type.name,
-            'button': a.button,
-            'content': a.content,
-            'created': normalize_date_format(str(a.created)),
-            'created_by_uuid': str(a.created_by_uuid),
-            'display_date': normalize_date_format(str(a.display_date)),
-            'end_date': normalize_date_format(str(a.end_date)),
-            'id': a.id,
-            'is_active': a.is_active,
-            'link': a.link,
-            'modified': normalize_date_format(str(a.modified)),
-            'modified_by_uuid': str(a.modified_by_uuid),
-            'start_date': normalize_date_format(str(a.start_date)),
-            'title': a.title,
-            'uuid': str(a.uuid)
-        }
-        announcements.append(data)
-    output_dict = {'announcements': announcements}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        announcements_dict = json.load(infile)
+    announcements = announcements_dict.get('announcements')
+    for a in announcements:
+        stmt = insert(db.Table('announcements')).values(
+            announcement_type=a.get('announcement_type'),
+            button=a.get('button'),
+            content=a.get('content'),
+            created=normalize_date_to_utc(a.get('created')) if a.get('created') else None,
+            created_by_uuid=a.get('created_by_uuid'),
+            display_date=normalize_date_to_utc(a.get('display_date')) if a.get('display_date') else None,
+            end_date=normalize_date_to_utc(a.get('end_date')) if a.get('end_date') else None,
+            id=int(a.get('id')),
+            is_active=a.get('is_active'),
+            link=a.get('link'),
+            modified=normalize_date_to_utc(a.get('modified')) if a.get('modified') else None,
+            modified_by_uuid=a.get('modified_by_uuid'),
+            start_date=normalize_date_to_utc(a.get('start_date')) if a.get('start_date') else None,
+            title=a.get('title'),
+            uuid=a.get('uuid'),
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export groups as JSON output file
@@ -121,91 +127,84 @@ def restore_groups_data():
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - name = db.Column(db.String(), nullable=False)
     """
-    groups = []
-    fab_groups = FabricGroups.query.order_by('id').all()
-    for g in fab_groups:
-        data = {
-            'co_cou_id': g.co_cou_id,
-            'co_parent_cou_id': g.co_parent_cou_id,
-            'created': normalize_date_format(str(g.created)),
-            'deleted': g.deleted,
-            'description': g.description,
-            'id': g.id,
-            'modified': normalize_date_format(str(g.modified)),
-            'name': g.name,
-        }
-        groups.append(data)
-    output_dict = {'groups': groups}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        groups_dict = json.load(infile)
+    groups = groups_dict.get('groups')
+    for g in groups:
+        stmt = insert(db.Table('groups')).values(
+            co_cou_id=int(g.get('co_cou_id')),
+            co_parent_cou_id=int(g.get('co_parent_cou_id')) if g.get('co_parent_cou_id') else None,
+            created=normalize_date_to_utc(g.get('created')) if g.get('created') else None,
+            deleted=g.get('deleted'),
+            description=g.get('description'),
+            id=int(g.get('id')),
+            modified=normalize_date_to_utc(g.get('modified')) if g.get('modified') else None,
+            name=g.get('name')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export people as JSON output file
 def restore_people_data():
     """
     FabricPeople(BaseMixin, TimestampMixin, db.Model)
-    - active = db.Column(db.Boolean, nullable=False, default=False)
-    - co_person_id = db.Column(db.Integer, nullable=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - display_name = db.Column(db.String(), nullable=False)
+    - * active = db.Column(db.Boolean, nullable=False, default=False)
+    - * co_person_id = db.Column(db.Integer, nullable=True)
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * display_name = db.Column(db.String(), nullable=False)
     - email_addresses = db.relationship('EmailAddresses', backref='people', lazy=True)
-    - eppn = db.Column(db.String(), nullable=True)
-    - fabric_id = db.Column(db.String(), nullable=True)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
-    - oidc_claim_email = db.Column(db.String(), nullable=True)
-    - oidc_claim_family_name = db.Column(db.String(), nullable=True)
-    - oidc_claim_given_name = db.Column(db.String(), nullable=True)
-    - oidc_claim_name = db.Column(db.String(), nullable=True)
-    - oidc_claim_sub = db.Column(db.String(), nullable=True)
-    - org_affiliation = db.Column(db.Integer, db.ForeignKey('people_organizations.id'), nullable=True)
+    - * eppn = db.Column(db.String(), nullable=True)
+    - * fabric_id = db.Column(db.String(), nullable=True)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
+    - * oidc_claim_email = db.Column(db.String(), nullable=True)
+    - * oidc_claim_family_name = db.Column(db.String(), nullable=True)
+    - * oidc_claim_given_name = db.Column(db.String(), nullable=True)
+    - * oidc_claim_name = db.Column(db.String(), nullable=True)
+    - * oidc_claim_sub = db.Column(db.String(), nullable=True)
+    - * org_affiliation = db.Column(db.Integer, db.ForeignKey('people_organizations.id'), nullable=True)
     - preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
-    - preferred_email = db.Column(db.String(), nullable=False)
+    - * preferred_email = db.Column(db.String(), nullable=False)
     - profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
     # - publications = db.relationship('Publications', secondary=publications)
-    - registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - roles = db.relationship('FabricRoles', backref='people', lazy=True)
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
-    - updated = db.Column(db.DateTime(timezone=True), nullable=False)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+    - * updated = db.Column(db.DateTime(timezone=True), nullable=False)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    people = []
-    fab_people = FabricPeople.query.order_by('id').all()
-    for p in fab_people:
-        data = {
-            'active': p.active,
-            'co_person_id': p.co_person_id,
-            'created': normalize_date_format(str(p.created)),
-            'display_name': p.display_name,
-            'email_addresses': [e.id for e in p.email_addresses],
-            'eppn': p.eppn,
-            'fabric_id': p.fabric_id,
-            'id': p.id,
-            'modified': normalize_date_format(str(p.modified)),
-            'oidc_claim_email': p.oidc_claim_email,
-            'oidc_claim_family_name': p.oidc_claim_family_name,
-            'oidc_claim_given_name': p.oidc_claim_given_name,
-            'oidc_claim_name': p.oidc_claim_name,
-            'oidc_claim_sub': p.oidc_claim_sub,
-            'org_affiliation': p.org_affiliation,
-            'preferences': [pr.id for pr in p.preferences],  # [FabricPreferences.id]
-            'preferred_email': p.preferred_email,
-            'profile': p.profile.id,
-            # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
-            'registered_on': normalize_date_format(str(p.registered_on)),
-            'roles': [r.id for r in p.roles],
-            'sshkeys': [s.id for s in p.sshkeys],
-            'updated': normalize_date_format(str(p.updated)),
-            'uuid': p.uuid
-        }
-        people.append(data)
-    output_dict = {'people': people}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        people_dict = json.load(infile)
+    people = people_dict.get('people')
+    for p in people:
+        stmt = insert(db.Table('people')).values(
+            active=int(p.get('active')),
+            co_person_id=int(p.get('co_person_id')) if p.get('co_person_id') else None,
+            created=normalize_date_to_utc(p.get('created')),
+            display_name=p.get('display_name'),
+            # email_addresses=p.get('email_addresses'), <-- restore_people_email_addresses_data()
+            eppn=p.get('eppn') if p.get('eppn') else None,
+            fabric_id=p.get('fabric_id') if p.get('fabric_id') else None,
+            id=int(p.get('id')),
+            modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
+            oidc_claim_email=p.get('oidc_claim_email') if p.get('oidc_claim_email') else None,
+            oidc_claim_family_name=p.get('oidc_claim_family_name') if p.get('oidc_claim_family_name') else None,
+            oidc_claim_given_name=p.get('oidc_claim_given_name') if p.get('oidc_claim_given_name') else None,
+            oidc_claim_name=p.get('oidc_claim_name') if p.get('oidc_claim_name') else None,
+            oidc_claim_sub=p.get('oidc_claim_sub') if p.get('oidc_claim_sub') else None,
+            org_affiliation=int(p.get('org_affiliation')) if p.get('org_affiliation') else None,
+            # preferences=p.get('preferences'), <-- restore_preferences_data()
+            preferred_email=p.get('preferred_email'),
+            # profile=p.get('profile.id'), <-- restore_profiles_people_data()
+            registered_on=normalize_date_to_utc(p.get('registered_on')) if p.get('registered_on') else None,
+            # roles=p.get('roles'), <-- restore_people_roles_data()
+            # sshkeys=p.get('sshkeys'), <-- restore_sshkeys_data()
+            updated=normalize_date_to_utc(p.get('updated')) if p.get('updated') else None,
+            uuid=p.get('uuid')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export people_email_addresses as JSON output file
@@ -218,22 +217,19 @@ def restore_people_email_addresses_data():
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - type = db.Column(db.String())
     """
-    people_email_addresses = []
-    fab_people_email_addresses = EmailAddresses.query.order_by('id').all()
-    for e in fab_people_email_addresses:
-        data = {
-            'co_email_address_id': e.co_email_address_id,
-            'email': e.email,
-            'id': e.id,
-            'people_id': e.people_id,
-            'type': e.type
-        }
-        people_email_addresses.append(data)
-    output_dict = {'people_email_addresses': people_email_addresses}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        people_email_addresses_dict = json.load(infile)
+    people_email_addresses = people_email_addresses_dict.get('people_email_addresses')
+    for e in people_email_addresses:
+        stmt = insert(db.Table('people_email_addresses')).values(
+            co_email_address_id=int(e.get('co_email_address_id')),
+            email=e.get('email'),
+            id=int(e.get('id')),
+            people_id=int(e.get('people_id')),
+            type=e.get('type')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export people_organizations as JSON output file
@@ -245,21 +241,18 @@ def restore_people_organizations_data():
     - org_identity_id = db.Column(db.Integer)
     - organization = db.Column(db.String(), nullable=False)
     """
-    people_organizations = []
-    fab_people_organizations = Organizations.query.order_by('id').all()
-    for o in fab_people_organizations:
-        data = {
-            'affiliation': o.affiliation,
-            'id': o.id,
-            'org_identity_id': o.org_identity_id,
-            'organization': o.organization
-        }
-        people_organizations.append(data)
-    output_dict = {'people_organizations': people_organizations}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        people_organizations_dict = json.load(infile)
+    people_organizations = people_organizations_dict.get('people_organizations')
+    for o in people_organizations:
+        stmt = insert(db.Table('people_organizations')).values(
+            affiliation=o.get('affiliation'),
+            id=int(o.get('id')),
+            org_identity_id=int(o.get('org_identity_id')),
+            organization=o.get('organization')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export people_roles as JSON output file
@@ -276,26 +269,23 @@ def restore_people_roles_data():
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - status = db.Column(db.String(), nullable=False)
     """
-    people_roles = []
-    fab_people_roles = FabricRoles.query.order_by('id').all()
-    for r in fab_people_roles:
-        data = {
-            'affiliation': r.affiliation,
-            'co_cou_id': r.co_cou_id,
-            'co_person_id': r.co_person_id,
-            'co_person_role_id': r.co_person_role_id,
-            'id': r.id,
-            'name': r.name,
-            'description': r.description,
-            'people_id': r.people_id,
-            'status': r.status
-        }
-        people_roles.append(data)
-    output_dict = {'people_roles': people_roles}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        people_roles_dict = json.load(infile)
+    people_roles = people_roles_dict.get('people_roles')
+    for r in people_roles:
+        stmt = insert(db.Table('people_roles')).values(
+            affiliation=r.get('affiliation'),
+            co_cou_id=int(r.get('co_cou_id')),
+            co_person_id=int(r.get('co_person_id')),
+            co_person_role_id=int(r.get('co_person_role_id')),
+            id=int(r.get('id')),
+            name=r.get('name'),
+            description=r.get('description') if r.get('description') else None,
+            people_id=r.get('people_id'),
+            status=r.get('status')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export preferences as JSON output file
@@ -313,27 +303,24 @@ def restore_preferences_data():
     - type = db.Column(db.Enum(EnumPreferenceTypes), nullable=False)
     - value = db.Column(db.Boolean, default=True, nullable=False)
     """
-    preferences = []
-    fab_preferences = FabricPreferences.query.order_by('id').all()
-    for p in fab_preferences:
-        data = {
-            'created': normalize_date_format(str(p.created)),
-            'id': p.id,
-            'key': p.key,
-            'modified': normalize_date_format(str(p.modified)),
-            'people_id': p.people_id,
-            'profiles_people_id': p.profiles_people_id,
-            'profiles_projects_id': p.profiles_projects_id,
-            'projects_id': p.projects_id,
-            'type': p.type.name,
-            'value': p.value,
-        }
-        preferences.append(data)
-    output_dict = {'preferences': preferences}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        preferences_dict = json.load(infile)
+    preferences = preferences_dict.get('preferences')
+    for p in preferences:
+        stmt = insert(db.Table('preferences')).values(
+            created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
+            id=int(p.get('id')) if p.get('id') else None,
+            key=p.get('key'),
+            modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
+            people_id=int(p.get('people_id')) if p.get('people_id') else None,
+            profiles_people_id=int(p.get('profiles_people_id')) if p.get('profiles_people_id') else None,
+            profiles_projects_id=int(p.get('profiles_projects_id')) if p.get('profiles_projects_id') else None,
+            projects_id=int(p.get('projects_id')) if p.get('project_id') else None,
+            type=p.get('type'),
+            value=p.get('value')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_keywords as JSON output file
@@ -344,20 +331,17 @@ def restore_profiles_keywords_data():
     - keyword = db.Column(db.String(), nullable=False)
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     """
-    profiles_keywords = []
-    fab_profiles_keywords = ProfilesKeywords.query.order_by('id').all()
-    for p in fab_profiles_keywords:
-        data = {
-            'id': p.id,
-            'keyword': p.keyword,
-            'profiles_projects_id': p.profiles_projects_id
-        }
-        profiles_keywords.append(data)
-    output_dict = {'profiles_keywords': profiles_keywords}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_keywords_dict = json.load(infile)
+    profiles_keywords = profiles_keywords_dict.get('profiles_keywords')
+    for p in profiles_keywords:
+        stmt = insert(db.Table('profiles_keywords')).values(
+            id=int(p.get('id')),
+            keyword=p.get('keyword'),
+            profiles_projects_id=int(p.get('profiles_projects_id'))
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_other_identities as JSON output file
@@ -369,65 +353,59 @@ def restore_profiles_other_identities_data():
     - profiles_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     - type = db.Column(db.String(), nullable=False)
     """
-    profiles_other_identities = []
-    fab_profiles_other_identities = ProfilesOtherIdentities.query.order_by('id').all()
-    for p in fab_profiles_other_identities:
-        data = {
-            'id': p.id,
-            'identity': p.identity,
-            'profiles_id': p.profiles_id,
-            'type': p.type
-        }
-        profiles_other_identities.append(data)
-    output_dict = {'profiles_other_identities': profiles_other_identities}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_other_identities_dict = json.load(infile)
+    profiles_other_identities = profiles_other_identities_dict.get('profiles_other_identities')
+    for p in profiles_other_identities:
+        stmt = insert(db.Table('profiles_other_identities')).values(
+            id=int(p.get('id')),
+            identity=p.get('identity'),
+            profiles_id=int(p.get('profiles_id')),
+            type=p.get('type')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_people as JSON output file
 def restore_profiles_people_data():
     """
     FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
-    - bio = db.Column(db.String(), nullable=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - cv = db.Column(db.String(), nullable=True)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - job = db.Column(db.String(), nullable=True)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
+    - * bio = db.Column(db.String(), nullable=True)
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * cv = db.Column(db.String(), nullable=True)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * job = db.Column(db.String(), nullable=True)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - other_identities = db.relationship('ProfilesOtherIdentities', backref='profiles_people', lazy=True)
-    - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
+    - * people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - personal_pages = db.relationship('ProfilesPersonalPages', backref='profiles_people', lazy=True)
     - preferences = db.relationship('FabricPreferences', backref='profiles_people', lazy=True)
-    - pronouns = db.Column(db.String(), nullable=True)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-    - website = db.Column(db.String(), nullable=True)
+    - * pronouns = db.Column(db.String(), nullable=True)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
+    - * website = db.Column(db.String(), nullable=True)
     """
-    profiles_people = []
-    fab_profiles_people = FabricProfilesPeople.query.order_by('id').all()
-    for p in fab_profiles_people:
-        data = {
-            'bio': p.bio,
-            'created': normalize_date_format(str(p.created)),
-            'cv': p.cv,
-            'id': p.id,
-            'job': p.job,
-            'modified': normalize_date_format(str(p.modified)),
-            'other_identities': [oi.id for oi in p.other_identities],
-            'people_id': p.people_id,
-            'personal_pages': [pp.id for pp in p.personal_pages],
-            'preferences': [pr.id for pr in p.preferences],
-            'pronouns': p.pronouns,
-            'uuid': p.uuid,
-            'website': p.website
-        }
-        profiles_people.append(data)
-    output_dict = {'profiles_people': profiles_people}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_people_dict = json.load(infile)
+    profiles_people = profiles_people_dict.get('profiles_people')
+    for p in profiles_people:
+        stmt = insert(db.Table('profiles_people')).values(
+            bio=p.get('bio') if p.get('bio') else None,
+            created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
+            cv=p.get('cv') if p.get('cv') else None,
+            id=int(p.get('id')),
+            job=p.get('job') if p.get('job') else None,
+            modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
+            # other_identities=p.get('other_identities'), <-- restore_profiles_other_identities_data()
+            people_id=int(p.get('people_id')),
+            # personal_pages=p.get('personal_pages'), <-- restore_profiles_personal_pages_data()
+            # preferences=p.get('preferences'), <-- restore_preferences_data()
+            pronouns=p.get('pronouns') if p.get('pronouns') else None,
+            uuid=p.get('uuid'),
+            website=p.get('website') if p.get('website') else None
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_personal_pages as JSON output file
@@ -439,65 +417,57 @@ def restore_profiles_personal_pages_data():
     - type = db.Column(db.String(), nullable=False)
     - url = db.Column(db.String(), nullable=False)
     """
-    profiles_personal_pages = []
-    fab_profiles_personal_pages = ProfilesPersonalPages.query.order_by('id').all()
-    for p in fab_profiles_personal_pages:
-        data = {
-            'id': p.id,
-            'profiles_people_id': p.profiles_people_id,
-            'type': p.type,
-            'url': p.url
-        }
-        profiles_personal_pages.append(data)
-    output_dict = {'profiles_personal_pages': profiles_personal_pages}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_personal_pages_dict = json.load(infile)
+    profiles_personal_pages = profiles_personal_pages_dict.get('profiles_personal_pages')
+    for p in profiles_personal_pages:
+        stmt = insert(db.Table('profiles_personal_pages')).values(
+            id=int(p.get('id')),
+            profiles_people_id=int(p.get('profiles_people_id')),
+            type=p.get('type'),
+            url=p.get('url')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_projects as JSON output file
 def restore_profiles_projects_data():
     """
     FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
-    - award_information = db.Column(db.String(), nullable=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - goals = db.Column(db.String(), nullable=True)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * award_information = db.Column(db.String(), nullable=True)
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * goals = db.Column(db.String(), nullable=True)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
     - keywords = db.relationship('ProfilesKeywords', backref='profiles_projects', lazy=True)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
-    # - notebooks = db.relationship('Notebooks', secondary=notebooks, lazy='subquery)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - preferences = db.relationship('FabricPreferences', backref='profiles_projects', lazy=True)
-    - project_status = db.Column(db.String(), nullable=True)
-    - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    - purpose = db.Column(db.String(), nullable=True)
+    - * project_status = db.Column(db.String(), nullable=True)
+    - * projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    - * purpose = db.Column(db.String(), nullable=True)
     - references = db.relationship('ProfilesReferences', backref='profiles_projects', lazy=True)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    profiles_projects = []
-    fab_profiles_projects = FabricProfilesProjects.query.order_by('id').all()
-    for p in fab_profiles_projects:
-        data = {
-            'award_information': p.award_information,
-            'created': normalize_date_format(str(p.created)),
-            'goals': p.goals,
-            'id': p.id,
-            'keywords': [k.id for k in p.keywords],
-            'modified': normalize_date_format(str(p.modified)),
-            # - notebooks = db.relationship('Notebooks', secondary=notebooks, lazy='subquery)
-            'preferences': [pr.id for pr in p.preferences],
-            'project_status': p.project_status,
-            'projects_id': p.projects_id,
-            'purpose': p.purpose,
-            'references': [r.id for r in p.references],
-            'uuid': p.uuid
-        }
-        profiles_projects.append(data)
-    output_dict = {'profiles_projects': profiles_projects}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_projects_dict = json.load(infile)
+    profiles_projects = profiles_projects_dict.get('profiles_projects')
+    for p in profiles_projects:
+        stmt = insert(db.Table('profiles_projects')).values(
+            award_information=p.get('award_information') if p.get('award_information') else None,
+            created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
+            goals=p.get('goals') if p.get('goals') else None,
+            id=int(p.get('id')),
+            # keywords=p.get('keywords'), <-- restore_profiles_keywords_data()
+            modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
+            # preferences=p.get('preferences'), <-- restore_preferences_data()
+            project_status=p.get('project_status') if p.get('project_status') else None,
+            projects_id=int(p.get('projects_id')),
+            purpose=p.get('purpose') if p.get('purpose') else None,
+            # references=p.get('references'), <-- restore_profiles_references_data()
+            uuid=p.get('uuid')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export profiles_references as JSON output file
@@ -509,100 +479,134 @@ def restore_profiles_references_data():
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     - url = db.Column(db.String(), nullable=False)
     """
-    profiles_references = []
-    fab_profiles_references = ProfilesReferences.query.order_by('id').all()
-    for p in fab_profiles_references:
-        data = {
-            'description': p.description,
-            'id': p.id,
-            'profiles_projects_id': p.profiles_projects_id,
-            'url': p.url
-        }
-        profiles_references.append(data)
-    output_dict = {'profiles_references': profiles_references}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        profiles_references_dict = json.load(infile)
+    profiles_references = profiles_references_dict.get('profiles_references')
+    for p in profiles_references:
+        stmt = insert(db.Table('profiles_references')).values(
+            description=p.get('description'),
+            id=int(p.get('id')),
+            profiles_projects_id=int(p.get('profiles_projects_id')),
+            url=p.get('url')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export projects as JSON output file
 def restore_projects_data():
     """
     FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model)
-    - active = db.Column(db.Boolean, default=True, nullable=False)
-    - co_cou_id_pc = db.Column(db.Integer, nullable=True)
-    - co_cou_id_pm = db.Column(db.Integer, nullable=True)
-    - co_cou_id_po = db.Column(db.Integer, nullable=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - created_by_uuid = db.Column(db.String(), nullable=True)
-    - description = db.Column(db.Text, nullable=False)
-    - expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
-    - facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - is_locked = db.Column(db.Boolean, default=False, nullable=False)
-    - is_public = db.Column(db.Boolean, default=True, nullable=False)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
-    - modified_by_uuid = db.Column(db.String(), nullable=True)
-    - name = db.Column(db.String(), nullable=False)
+    - * active = db.Column(db.Boolean, default=True, nullable=False)
+    - * co_cou_id_pc = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_pm = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_po = db.Column(db.Integer, nullable=True)
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * created_by_uuid = db.Column(db.String(), nullable=True)
+    - * description = db.Column(db.Text, nullable=False)
+    - * expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
+    - * facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * is_locked = db.Column(db.Boolean, default=False, nullable=False)
+    - * is_public = db.Column(db.Boolean, default=True, nullable=False)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
+    - * modified_by_uuid = db.Column(db.String(), nullable=True)
+    - * name = db.Column(db.String(), nullable=False)
     - preferences = db.relationship('FabricPreferences', backref='projects', lazy=True)
     - profile = db.relationship('FabricProfilesProjects', backref='projects', uselist=False, lazy=True)
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
-    # - publications = db.relationship('Publications', secondary=publications)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    projects = []
-    fab_projects = FabricProjects.query.order_by('id').all()
-    for p in fab_projects:
-        print(p.tags)
-        data = {
-            'active': p.active,
-            'co_cou_id_pc': p.co_cou_id_pc,
-            'co_cou_id_pm': p.co_cou_id_pm,
-            'co_cou_id_po': p.co_cou_id_po,
-            'created': normalize_date_format(str(p.created)),
-            'created_by_uuid': p.created_by_uuid,
-            'description': p.description,
-            # 'expires_on': normalize_date_format(str(p.expires_on)),
-            'facility': p.facility,
-            'id': p.id,
-            'is_public': p.is_public,
-            'modified': normalize_date_format(str(p.modified)),
-            'modified_by_uuid': p.modified_by_uuid,
-            'name': p.name,
-            'preferences': [pr.id for pr in p.preferences],  # [FabricPreferences.id]
-            'profile': p.profile.id,
-            'project_creators': [pc.id for pc in p.project_creators],  # [FabricPeople.id]
-            'project_members': [pm.id for pm in p.project_members],  # [FabricPeople.id]
-            'project_owners': [po.id for po in p.project_owners],  # [FabricPeople.id]
-            # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
-            'tags': [t.id for t in p.tags],  # [String]
-            'uuid': p.uuid
-        }
-        projects.append(data)
-    output_dict = {'projects': projects}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        projects_dict = json.load(infile)
+    projects = projects_dict.get('projects')
+    for p in projects:
+        stmt = insert(db.Table('projects')).values(
+            active=p.get('active'),
+            co_cou_id_pc=int(p.get('co_cou_id_pc')) if p.get('co_cou_id_pc') else None,
+            co_cou_id_pm=int(p.get('co_cou_id_pm')) if p.get('co_cou_id_pm') else None,
+            co_cou_id_po=int(p.get('co_cou_id_po')) if p.get('co_cou_id_po') else None,
+            created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
+            created_by_uuid=p.get('created_by_uuid') if p.get('created_by_uuid') else None,
+            description=p.get('description'),
+            expires_on=normalize_date_to_utc(p.get('expires_on')) if p.get('expires_on') else None,
+            facility=p.get('facility'),
+            id=int(p.get('id')),
+            is_locked=p.get('is_locked') if p.get('is_locked') else False,
+            is_public=p.get('is_public'),
+            modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
+            modified_by_uuid=p.get('modified_by_uuid') if p.get('modified_by_uuid') else None,
+            name=p.get('name'),
+            # preferences=p.get('preferences'), <-- restore_preferences_data()
+            # profile=p.get('profile.id'), <-- restore_projects_profiles_data()
+            # project_creators=p.get('project_creators'), <-- restore_projects_creators_data()
+            # project_members=p.get('project_members'), <-- restore_projects_members_data()
+            # project_owners=p.get('project_owners'), <-- restore_projects_owners_data()
+            # tags=p.get('tags'), <-- restore_projects_tags_data()
+            uuid=p.get('uuid')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export projects_creators as JSON output file
 def restore_projects_creators_data():
-    pass
+    """
+    projects_creators
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        projects_creators_dict = json.load(infile)
+    projects_creators = projects_creators_dict.get('projects_creators')
+    for pc in projects_creators:
+        stmt = insert(db.Table('projects_creators', metadata=db.Model.metadata)).values(
+            people_id=pc.get('people_id'),
+            projects_id=pc.get('projects_id')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export projects_members as JSON output file
 def restore_projects_members_data():
-    pass
+    """
+    projects_members
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    with open(BACKUP_DATA_DIR + '/projects_members-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        projects_members_dict = json.load(infile)
+    projects_members = projects_members_dict.get('projects_members')
+    for pc in projects_members:
+        stmt = insert(db.Table('projects_members', metadata=db.Model.metadata)).values(
+            people_id=pc.get('people_id'),
+            projects_id=pc.get('projects_id')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export projects_owners as JSON output file
 def restore_projects_owners_data():
-    pass
+    """
+    projects_owners
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    with open(BACKUP_DATA_DIR + '/projects_owners-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        projects_owners_dict = json.load(infile)
+    projects_owners = projects_owners_dict.get('projects_owners')
+    for pc in projects_owners:
+        stmt = insert(db.Table('projects_owners', metadata=db.Model.metadata)).values(
+            people_id=pc.get('people_id'),
+            projects_id=pc.get('projects_id')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export projects_tags as JSON output file
@@ -613,20 +617,17 @@ def restore_projects_tags_data():
     - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     - tag = db.Column(db.Text, nullable=False)
     """
-    projects_tags = []
-    fab_projects_tags = ProjectsTags.query.order_by('id').all()
-    for t in fab_projects_tags:
-        data = {
-            'id': t.id,
-            'projects_id': t.projects_id,
-            'tag': t.tag
-        }
-        projects_tags.append(data)
-    output_dict = {'projects_tags': projects_tags}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        projects_tags_dict = json.load(infile)
+    projects_tags = projects_tags_dict.get('projects_tags')
+    for t in projects_tags:
+        stmt = insert(db.Table('projects_tags')).values(
+            id=int(t.get('id')),
+            projects_id=int(t.get('projects_id')),
+            tag=t.get('tag')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export sshkeys as JSON output file
@@ -650,33 +651,30 @@ def restore_sshkeys_data():
     - status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    sshkeys = []
-    fab_sshkeys = FabricSshKeys.query.order_by('id').all()
-    for k in fab_sshkeys:
-        data = {
-            'active': k.active,
-            'comment': k.comment,
-            'created': normalize_date_format(str(k.created)),
-            'deactivated_on': normalize_date_format(str(k.deactivated_on)),
-            'deactivated_reason': k.deactivated_reason,
-            'description': k.description,
-            'expires_on': normalize_date_format(str(k.expires_on)),
-            'fabric_key_type': str(k.fabric_key_type.name),
-            'fingerprint': k.fingerprint,
-            'id': k.id,
-            'modified': normalize_date_format(str(k.modified)),
-            'people_id': k.people_id,
-            'public_key': k.public_key,
-            'ssh_key_type': str(k.ssh_key_type),
-            'status': str(k.status.name),
-            'uuid': k.uuid
-        }
-        sshkeys.append(data)
-    output_dict = {'sshkeys': sshkeys}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
+    with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        sshkeys_dict = json.load(infile)
+    sshkeys = sshkeys_dict.get('sshkeys')
+    for k in sshkeys:
+        stmt = insert(db.Table('sshkeys')).values(
+            active=k.get('active'),
+            comment=k.get('comment'),
+            created=normalize_date_to_utc(k.get('created')),
+            deactivated_on=normalize_date_to_utc(k.get('deactivated_on')) if k.get('deactivated_on') else None,
+            deactivated_reason=k.get('deactivated_reason') if k.get('deactivated_reason') else None,
+            description=k.get('description') if k.get('description') else None,
+            expires_on=normalize_date_to_utc(k.get('expires_on')) if k.get('expires_on') else None,
+            fabric_key_type=k.get('fabric_key_type'),
+            fingerprint=k.get('fingerprint'),
+            id=int(k.get('id')),
+            modified=normalize_date_to_utc(k.get('modified')) if k.get('modified') else None,
+            people_id=int(k.get('people_id')),
+            public_key=k.get('public_key'),
+            ssh_key_type=k.get('ssh_key_type'),
+            status=k.get('status'),
+            uuid=k.get('uuid')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # export testbed_info as JSON output file
@@ -692,35 +690,22 @@ def restore_testbed_info_data():
     - modified_by_uuid = db.Column(db.String(), nullable=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    testbed_info = []
-    fab_testbed_info = FabricTestbedInfo.query.order_by('id').all()
-    for i in fab_testbed_info:
-        data = {
-            'created': normalize_date_format(str(i.created)),
-            'created_by_uuid': str(i.created_by_uuid),
-            'id': i.id,
-            'is_active': i.is_active,
-            'json_data': i.json_data,
-            'modified': normalize_date_format(str(i.modified)),
-            'modified_by_uuid': str(i.modified_by_uuid),
-            'uuid': str(i.uuid)
-        }
-        testbed_info.append(data)
-    output_dict = {'testbed_info': testbed_info}
-    output_json = json.dumps(output_dict, indent=2)
-    print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
-# normalize datetime format across all objects
-def normalize_date_format(v1_date: str):
-    if len(v1_date) > 8:
-        v2_date = parser.parse(v1_date) + timedelta(milliseconds=100)
-        # print(v2_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z"))
-        return v2_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-    else:
-        return None
+    with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+        testbed_info_dict = json.load(infile)
+    testbed_info = testbed_info_dict.get('testbed_info')
+    for i in testbed_info:
+        stmt = insert(db.Table('testbed_info')).values(
+            created=i.get('created') if i.get('created') else None,
+            created_by_uuid=i.get('created_by_uuid') if i.get('created_by_uuid') else None,
+            id=int(i.get('id')),
+            is_active=i.get('is_active'),
+            json_data=i.get('json_data'),
+            modified=i.get('modified') if i.get('modified') else None,
+            modified_by_uuid=i.get('modified_by_uuid') if i.get('modified_by_uuid') else None,
+            uuid=i.get('uuid')
+        ).on_conflict_do_nothing()
+        db.session.execute(stmt)
+    db.session.commit()
 
 
 # verify project expiry date
@@ -776,88 +761,88 @@ if __name__ == '__main__':
     #  Schema |           Name            | Type  |  Owner
     # --------+---------------------------+-------+----------
     #  public | alembic_version           | table | postgres
-    # consoleLogger.info('dump alembic_version table')
+    # consoleLogger.info('restore alembic_version table')
     # restore_alembic_version_data()
 
     #  public | announcements             | table | postgres
-    # consoleLogger.info('dump announcements table')
-    # restore_announcements_data()
+    consoleLogger.info('restore announcements table')
+    restore_announcements_data()
 
     #  public | groups                    | table | postgres
-    # consoleLogger.info('dump groups table')
-    # restore_groups_data()
-
-    #  public | people                    | table | postgres
-    # consoleLogger.info('dump people table')
-    # restore_people_data()
-
-    #  public | people_email_addresses    | table | postgres
-    # consoleLogger.info('dump people_email_addresses table')
-    # restore_people_email_addresses_data()
+    consoleLogger.info('restore groups table')
+    restore_groups_data()
 
     #  public | people_organizations      | table | postgres
-    # consoleLogger.info('dump people_organizations table')
-    # restore_people_organizations_data()
+    consoleLogger.info('restore people_organizations table')
+    restore_people_organizations_data()
+
+    #  public | people                    | table | postgres
+    consoleLogger.info('restore people table')
+    restore_people_data()
+
+    #  public | people_email_addresses    | table | postgres
+    consoleLogger.info('restore people_email_addresses table')
+    restore_people_email_addresses_data()
 
     #  public | people_roles              | table | postgres
-    # consoleLogger.info('dump people_roles table')
-    # restore_people_roles_data()
-
-    #  public | preferences               | table | postgres
-    # consoleLogger.info('dump preferences table')
-    # restore_preferences_data()
-
-    #  public | profiles_keywords         | table | postgres
-    # consoleLogger.info('dump profiles_keywords table')
-    # restore_profiles_keywords_data()
-
-    #  public | profiles_other_identities | table | postgres
-    # consoleLogger.info('dump profiles_other_identities table')
-    # restore_profiles_other_identities_data()
+    consoleLogger.info('restore people_roles table')
+    restore_people_roles_data()
 
     #  public | profiles_people           | table | postgres
-    # consoleLogger.info('dump profiles_people table')
-    # restore_profiles_people_data()
+    consoleLogger.info('restore profiles_people table')
+    restore_profiles_people_data()
+
+    #  public | profiles_other_identities | table | postgres
+    consoleLogger.info('restore profiles_other_identities table')
+    restore_profiles_other_identities_data()
 
     #  public | profiles_personal_pages   | table | postgres
-    # consoleLogger.info('dump profiles_personal_pages table')
-    # restore_profiles_personal_pages_data()
-
-    #  public | profiles_projects         | table | postgres
-    # consoleLogger.info('dump profiles_projects table')
-    # restore_profiles_projects_data()
-
-    #  public | profiles_references       | table | postgres
-    # consoleLogger.info('dump profiles_references table')
-    # restore_profiles_references_data()
+    consoleLogger.info('restore profiles_personal_pages table')
+    restore_profiles_personal_pages_data()
 
     #  public | projects                  | table | postgres
-    # consoleLogger.info('dump projects table')
-    # restore_projects_data()
+    consoleLogger.info('restore projects table')
+    restore_projects_data()
+
+    #  public | profiles_projects         | table | postgres
+    consoleLogger.info('restore profiles_projects table')
+    restore_profiles_projects_data()
+
+    #  public | profiles_keywords         | table | postgres
+    consoleLogger.info('restore profiles_keywords table')
+    restore_profiles_keywords_data()
+
+    #  public | profiles_references       | table | postgres
+    consoleLogger.info('restore profiles_references table')
+    restore_profiles_references_data()
 
     #  public | projects_creators         | table | postgres
-    # consoleLogger.info('dump projects_creators table <-- generated by db_restore')
-    # restore_projects_creators_data()
+    consoleLogger.info('restore projects_creators table')
+    restore_projects_creators_data()
 
     #  public | projects_members          | table | postgres
-    # consoleLogger.info('dump projects_members table <-- generated by db_restore')
-    # restore_projects_members_data()
+    consoleLogger.info('restore projects_members table')
+    restore_projects_members_data()
 
     #  public | projects_owners           | table | postgres
-    # consoleLogger.info('dump projects_owners table <-- generated by db_restore')
-    # restore_projects_owners_data()
+    consoleLogger.info('restore projects_owners table')
+    restore_projects_owners_data()
 
     #  public | projects_tags             | table | postgres
-    # consoleLogger.info('dump projects_tags table')
-    # restore_projects_tags_data()
+    consoleLogger.info('restore projects_tags table')
+    restore_projects_tags_data()
+
+    #  public | preferences               | table | postgres
+    consoleLogger.info('restore preferences table')
+    restore_preferences_data()
 
     #  public | sshkeys                   | table | postgres
-    # consoleLogger.info('dump sshkeys table')
-    # restore_sshkeys_data()
+    consoleLogger.info('restore sshkeys table')
+    restore_sshkeys_data()
 
     #  public | testbed_info              | table | postgres
-    # consoleLogger.info('dump testbed_info table')
-    # restore_testbed_info_data()
+    consoleLogger.info('restore testbed_info table')
+    restore_testbed_info_data()
 
     #  verify project expiry
     consoleLogger.info('verify project expiry')

@@ -6,7 +6,6 @@ RUN mkdir /code
 
 # copy source files
 COPY ./server /code/server
-COPY ./migrations /code/migrations
 COPY ./.env /code/.env
 COPY ./requirements.txt /code/requirements.txt
 COPY ./docker-entrypoint.sh /code/docker-entrypoint.sh

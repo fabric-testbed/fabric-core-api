@@ -39,7 +39,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import update, MetaData
+from sqlalchemy import update, MetaData, text
 
 from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app
@@ -92,7 +92,11 @@ def restore_announcements_data():
     with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         announcements_dict = json.load(infile)
     announcements = announcements_dict.get('announcements')
+    max_id = 0
     for a in announcements:
+        t_id = int(a.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('announcements')).values(
             announcement_type=a.get('announcement_type'),
             button=a.get('button'),
@@ -101,7 +105,7 @@ def restore_announcements_data():
             created_by_uuid=a.get('created_by_uuid'),
             display_date=normalize_date_to_utc(a.get('display_date')) if a.get('display_date') else None,
             end_date=normalize_date_to_utc(a.get('end_date')) if a.get('end_date') else None,
-            id=int(a.get('id')),
+            id=t_id,
             is_active=a.get('is_active'),
             link=a.get('link'),
             modified=normalize_date_to_utc(a.get('modified')) if a.get('modified') else None,
@@ -112,6 +116,7 @@ def restore_announcements_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='announcements', seq_value=max_id+1)
 
 
 # export groups as JSON output file
@@ -130,19 +135,24 @@ def restore_groups_data():
     with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         groups_dict = json.load(infile)
     groups = groups_dict.get('groups')
+    max_id = 0
     for g in groups:
+        t_id = int(g.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('groups')).values(
             co_cou_id=int(g.get('co_cou_id')),
             co_parent_cou_id=int(g.get('co_parent_cou_id')) if g.get('co_parent_cou_id') else None,
             created=normalize_date_to_utc(g.get('created')) if g.get('created') else None,
             deleted=g.get('deleted'),
             description=g.get('description'),
-            id=int(g.get('id')),
+            id=t_id,
             modified=normalize_date_to_utc(g.get('modified')) if g.get('modified') else None,
             name=g.get('name')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='groups', seq_value=max_id+1)
 
 
 # export people as JSON output file
@@ -177,7 +187,11 @@ def restore_people_data():
     with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         people_dict = json.load(infile)
     people = people_dict.get('people')
+    max_id = 0
     for p in people:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('people')).values(
             active=int(p.get('active')),
             co_person_id=int(p.get('co_person_id')) if p.get('co_person_id') else None,
@@ -186,7 +200,7 @@ def restore_people_data():
             # email_addresses=p.get('email_addresses'), <-- restore_people_email_addresses_data()
             eppn=p.get('eppn') if p.get('eppn') else None,
             fabric_id=p.get('fabric_id') if p.get('fabric_id') else None,
-            id=int(p.get('id')),
+            id=t_id,
             modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
             oidc_claim_email=p.get('oidc_claim_email') if p.get('oidc_claim_email') else None,
             oidc_claim_family_name=p.get('oidc_claim_family_name') if p.get('oidc_claim_family_name') else None,
@@ -205,7 +219,7 @@ def restore_people_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-
+    reset_serial_sequence(db_table='people', seq_value=max_id+1)
 
 # export people_email_addresses as JSON output file
 def restore_people_email_addresses_data():
@@ -220,16 +234,21 @@ def restore_people_email_addresses_data():
     with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         people_email_addresses_dict = json.load(infile)
     people_email_addresses = people_email_addresses_dict.get('people_email_addresses')
+    max_id = 0
     for e in people_email_addresses:
+        t_id = int(e.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('people_email_addresses')).values(
             co_email_address_id=int(e.get('co_email_address_id')),
             email=e.get('email'),
-            id=int(e.get('id')),
+            id=t_id,
             people_id=int(e.get('people_id')),
             type=e.get('type')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='people_email_addresses', seq_value=max_id+1)
 
 
 # export people_organizations as JSON output file
@@ -244,15 +263,20 @@ def restore_people_organizations_data():
     with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         people_organizations_dict = json.load(infile)
     people_organizations = people_organizations_dict.get('people_organizations')
+    max_id = 0
     for o in people_organizations:
+        t_id = int(o.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('people_organizations')).values(
             affiliation=o.get('affiliation'),
-            id=int(o.get('id')),
+            id=t_id,
             org_identity_id=int(o.get('org_identity_id')),
             organization=o.get('organization')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='people_organizations', seq_value=max_id+1)
 
 
 # export people_roles as JSON output file
@@ -272,13 +296,17 @@ def restore_people_roles_data():
     with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         people_roles_dict = json.load(infile)
     people_roles = people_roles_dict.get('people_roles')
+    max_id = 0
     for r in people_roles:
+        t_id = int(r.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('people_roles')).values(
             affiliation=r.get('affiliation'),
             co_cou_id=int(r.get('co_cou_id')),
             co_person_id=int(r.get('co_person_id')),
             co_person_role_id=int(r.get('co_person_role_id')),
-            id=int(r.get('id')),
+            id=t_id,
             name=r.get('name'),
             description=r.get('description') if r.get('description') else None,
             people_id=r.get('people_id'),
@@ -286,6 +314,7 @@ def restore_people_roles_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='people_roles', seq_value=max_id+1)
 
 
 # export preferences as JSON output file
@@ -306,10 +335,14 @@ def restore_preferences_data():
     with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         preferences_dict = json.load(infile)
     preferences = preferences_dict.get('preferences')
+    max_id = 0
     for p in preferences:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('preferences')).values(
             created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
-            id=int(p.get('id')) if p.get('id') else None,
+            id=t_id,
             key=p.get('key'),
             modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
             people_id=int(p.get('people_id')) if p.get('people_id') else None,
@@ -321,6 +354,7 @@ def restore_preferences_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='preferences', seq_value=max_id+1)
 
 
 # export profiles_keywords as JSON output file
@@ -334,14 +368,19 @@ def restore_profiles_keywords_data():
     with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_keywords_dict = json.load(infile)
     profiles_keywords = profiles_keywords_dict.get('profiles_keywords')
+    max_id = 0
     for p in profiles_keywords:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_keywords')).values(
-            id=int(p.get('id')),
+            id=t_id,
             keyword=p.get('keyword'),
             profiles_projects_id=int(p.get('profiles_projects_id'))
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_keywords', seq_value=max_id+1)
 
 
 # export profiles_other_identities as JSON output file
@@ -356,15 +395,20 @@ def restore_profiles_other_identities_data():
     with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_other_identities_dict = json.load(infile)
     profiles_other_identities = profiles_other_identities_dict.get('profiles_other_identities')
+    max_id = 0
     for p in profiles_other_identities:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_other_identities')).values(
-            id=int(p.get('id')),
+            id=t_id,
             identity=p.get('identity'),
             profiles_id=int(p.get('profiles_id')),
             type=p.get('type')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_other_identities', seq_value=max_id+1)
 
 
 # export profiles_people as JSON output file
@@ -388,12 +432,16 @@ def restore_profiles_people_data():
     with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_people_dict = json.load(infile)
     profiles_people = profiles_people_dict.get('profiles_people')
+    max_id = 0
     for p in profiles_people:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_people')).values(
             bio=p.get('bio') if p.get('bio') else None,
             created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
             cv=p.get('cv') if p.get('cv') else None,
-            id=int(p.get('id')),
+            id=t_id,
             job=p.get('job') if p.get('job') else None,
             modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
             # other_identities=p.get('other_identities'), <-- restore_profiles_other_identities_data()
@@ -406,6 +454,7 @@ def restore_profiles_people_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_people', seq_value=max_id+1)
 
 
 # export profiles_personal_pages as JSON output file
@@ -420,15 +469,20 @@ def restore_profiles_personal_pages_data():
     with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_personal_pages_dict = json.load(infile)
     profiles_personal_pages = profiles_personal_pages_dict.get('profiles_personal_pages')
+    max_id = 0
     for p in profiles_personal_pages:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_personal_pages')).values(
-            id=int(p.get('id')),
+            id=t_id,
             profiles_people_id=int(p.get('profiles_people_id')),
             type=p.get('type'),
             url=p.get('url')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_personal_pages', seq_value=max_id+1)
 
 
 # export profiles_projects as JSON output file
@@ -451,12 +505,16 @@ def restore_profiles_projects_data():
     with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_projects_dict = json.load(infile)
     profiles_projects = profiles_projects_dict.get('profiles_projects')
+    max_id = 0
     for p in profiles_projects:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_projects')).values(
             award_information=p.get('award_information') if p.get('award_information') else None,
             created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
             goals=p.get('goals') if p.get('goals') else None,
-            id=int(p.get('id')),
+            id=t_id,
             # keywords=p.get('keywords'), <-- restore_profiles_keywords_data()
             modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
             # preferences=p.get('preferences'), <-- restore_preferences_data()
@@ -468,6 +526,7 @@ def restore_profiles_projects_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_projects', seq_value=max_id+1)
 
 
 # export profiles_references as JSON output file
@@ -482,15 +541,20 @@ def restore_profiles_references_data():
     with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         profiles_references_dict = json.load(infile)
     profiles_references = profiles_references_dict.get('profiles_references')
+    max_id = 0
     for p in profiles_references:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('profiles_references')).values(
             description=p.get('description'),
-            id=int(p.get('id')),
+            id=t_id,
             profiles_projects_id=int(p.get('profiles_projects_id')),
             url=p.get('url')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='profiles_references', seq_value=max_id+1)
 
 
 # export projects as JSON output file
@@ -523,7 +587,11 @@ def restore_projects_data():
     with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         projects_dict = json.load(infile)
     projects = projects_dict.get('projects')
+    max_id = 0
     for p in projects:
+        t_id = int(p.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('projects')).values(
             active=p.get('active'),
             co_cou_id_pc=int(p.get('co_cou_id_pc')) if p.get('co_cou_id_pc') else None,
@@ -534,7 +602,7 @@ def restore_projects_data():
             description=p.get('description'),
             expires_on=normalize_date_to_utc(p.get('expires_on')) if p.get('expires_on') else None,
             facility=p.get('facility'),
-            id=int(p.get('id')),
+            id=t_id,
             is_locked=p.get('is_locked') if p.get('is_locked') else False,
             is_public=p.get('is_public'),
             modified=normalize_date_to_utc(p.get('modified')) if p.get('modified') else None,
@@ -550,6 +618,7 @@ def restore_projects_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='projects', seq_value=max_id+1)
 
 
 # export projects_creators as JSON output file
@@ -620,14 +689,19 @@ def restore_projects_tags_data():
     with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         projects_tags_dict = json.load(infile)
     projects_tags = projects_tags_dict.get('projects_tags')
+    max_id = 0
     for t in projects_tags:
+        t_id = int(t.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('projects_tags')).values(
-            id=int(t.get('id')),
+            id=t_id,
             projects_id=int(t.get('projects_id')),
             tag=t.get('tag')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='projects_tags', seq_value=max_id+1)
 
 
 # export sshkeys as JSON output file
@@ -654,7 +728,11 @@ def restore_sshkeys_data():
     with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         sshkeys_dict = json.load(infile)
     sshkeys = sshkeys_dict.get('sshkeys')
+    max_id = 0
     for k in sshkeys:
+        t_id = int(k.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('sshkeys')).values(
             active=k.get('active'),
             comment=k.get('comment'),
@@ -665,7 +743,7 @@ def restore_sshkeys_data():
             expires_on=normalize_date_to_utc(k.get('expires_on')) if k.get('expires_on') else None,
             fabric_key_type=k.get('fabric_key_type'),
             fingerprint=k.get('fingerprint'),
-            id=int(k.get('id')),
+            id=t_id,
             modified=normalize_date_to_utc(k.get('modified')) if k.get('modified') else None,
             people_id=int(k.get('people_id')),
             public_key=k.get('public_key'),
@@ -675,6 +753,7 @@ def restore_sshkeys_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='sshkeys', seq_value=max_id+1)
 
 
 # export testbed_info as JSON output file
@@ -693,11 +772,15 @@ def restore_testbed_info_data():
     with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(__API_VERSION__), 'r') as infile:
         testbed_info_dict = json.load(infile)
     testbed_info = testbed_info_dict.get('testbed_info')
+    max_id = 0
     for i in testbed_info:
+        t_id = int(i.get('id'))
+        if t_id > max_id:
+            max_id = t_id
         stmt = insert(db.Table('testbed_info')).values(
             created=i.get('created') if i.get('created') else None,
             created_by_uuid=i.get('created_by_uuid') if i.get('created_by_uuid') else None,
-            id=int(i.get('id')),
+            id=t_id,
             is_active=i.get('is_active'),
             json_data=i.get('json_data'),
             modified=i.get('modified') if i.get('modified') else None,
@@ -706,6 +789,7 @@ def restore_testbed_info_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
+    reset_serial_sequence(db_table='testbed_info', seq_value=max_id+1)
 
 
 # verify project expiry date
@@ -752,6 +836,13 @@ def verify_project_expiry():
                 p.is_locked = True
                 p.modified = now
                 consoleLogger.info('Project: {0} is expired'.format(str(p.uuid)))
+
+
+def reset_serial_sequence(db_table: str, seq_value: int):
+    stmt = text('SELECT setval(pg_get_serial_sequence(\'{0}\',\'id\'),{1});'.format(db_table, str(seq_value)))
+    db.session.execute(stmt)
+    db.session.commit()
+    consoleLogger.info('  - Table: {0}, sequence_id: {1}'.format(db_table, str(seq_value)))
 
 
 if __name__ == '__main__':

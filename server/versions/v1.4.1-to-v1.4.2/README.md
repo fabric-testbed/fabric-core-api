@@ -203,19 +203,19 @@ docker exec api-flask-server -ti /bin/bash
 ```
 
 ```console
-$ source .env
-$ source .venv/bin/activate
-$ python -m flask db init
+root@3a4624cc7d51:/code# source .env
+root@3a4624cc7d51:/code# source .venv/bin/activate
+(.venv) root@3a4624cc7d51:/code# python -m flask db init
   Creating directory /code/migrations/versions ...  done
   Generating /code/migrations/README ...  done
   Generating /code/migrations/alembic.ini ...  done
   Generating /code/migrations/env.py ...  done
   Generating /code/migrations/script.py.mako ...  done
   Please edit configuration/connection/logging settings in '/code/migrations/alembic.ini' before proceeding.
-$ python -m flask db migrate -m "initial migration v1.4.2"
+(.venv) root@3a4624cc7d51:/code# python -m flask db migrate -m "initial migration v1.4.2"
 INFO  [alembic.env] No changes in schema detected.
-$ python -m flask db upgrade
-$ python -m server.swagger_server.backup.utils.db_restore
+(.venv) root@3a4624cc7d51:/code# python -m flask db upgrade
+(.venv) root@3a4624cc7d51:/code# python -m server.swagger_server.backup.utils.db_restore
 2023-02-19 14:52:46,205 [INFO] Restorer for API version 1.4.0
 2023-02-19 14:52:46,205 [INFO] restore announcements table
 2023-02-19 14:52:46,240 [INFO]   - Table: announcements, sequence_id: 1
@@ -269,7 +269,7 @@ $ python -m server.swagger_server.backup.utils.db_restore
 2023-02-19 14:52:48,810 [INFO] Project: e8e3ebc2-4cad-4a80-9f17-a516c158b07a set expiry: 2024-02-19 14:52:48.665618+00:00
 2023-02-19 14:52:48,819 [INFO] Project: f87459b8-3cb9-47f8-b91c-ccbcb79268fc set expiry: 2024-02-19 14:52:48.665618+00:00
 2023-02-19 14:52:48,830 [INFO] Project: fb07edb4-6609-477e-a320-4b19dcf4826c set expiry: 2024-02-19 14:52:48.665618+00:00
-$ exit
+(.venv) root@3a4624cc7d51:/code# exit
 ```
 
 Verify contents from api UI as well as portal

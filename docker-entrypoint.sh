@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# NOTE: database must be manually setup the first time
+#    source .env && source .ven/bin/activate
+#    python -m flask db init
+#    python -m flask db migrate
+#    python -m flask db upgrade
+# NOTE: load / verify database against COmanage or restore from backup
 
 if [[ "$1" == 'run_server' ]]; then
     # setup virtual environment
@@ -13,14 +19,6 @@ if [[ "$1" == 'run_server' ]]; then
     if [[ ! -z ${CORE_API_SERVER_URL} ]]; then
         sed -i '/servers:/!b;n;c- url: '${CORE_API_SERVER_URL}'/' /code/server/swagger_server/swagger/swagger.yaml
     fi
-
-    # setup database
-#    python -m flask db init
-#    python -m flask db migrate
-#    python -m flask db upgrade
-
-    # load / verify database against COmanage
-    # TODO: db_load and db_verify scripts
 
     # run the server
     uwsgi --virtualenv ./.venv --ini server/core-api.ini

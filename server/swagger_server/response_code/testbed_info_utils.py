@@ -28,11 +28,14 @@ def create_fabric_testbed_info_from_api(body: TestbedInfoPost, creator: FabricPe
     if prior_testbed_info:
         prior_testbed_info.is_active = False
     # create new Testbed Info
+    now = datetime.now(timezone.utc)
     testbed_info = FabricTestbedInfo()
-    testbed_info.created = datetime.now(timezone.utc)
+    testbed_info.created = now
     testbed_info.created_by_uuid = str(creator.uuid)
     testbed_info.is_active = True
     testbed_info.json_data = body.testbed_info
+    testbed_info.modified = now
+    testbed_info.modified_by_uuid = str(creator.uuid)
     testbed_info.uuid = uuid4()
     db.session.add(testbed_info)
     db.session.commit()

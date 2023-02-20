@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
@@ -40,9 +41,12 @@ def references_to_array(n): return [{'description': x.description, 'url': x.url}
 
 
 def create_profile_people(fab_person: FabricPeople) -> None:
+    now = datetime.now(timezone.utc)
     fab_profile = FabricProfilesPeople()
-    fab_profile.uuid = uuid4()
+    fab_profile.created = now
+    fab_profile.modified = now
     fab_profile.people = fab_person
+    fab_profile.uuid = uuid4()
     db.session.add(fab_profile)
     db.session.commit()
     create_profile_people_preferences(fab_profile=fab_profile)
@@ -109,9 +113,12 @@ def get_profile_personal_pages(profile_people: FabricProfilesPeople) -> [Profile
 
 
 def create_profile_projects(fab_project: FabricProjects) -> None:
+    now = datetime.now(timezone.utc)
     fab_profile = FabricProfilesProjects()
-    fab_profile.uuid = uuid4()
+    fab_profile.created = now
+    fab_profile.modified = now
     fab_profile.projects = fab_project
+    fab_profile.uuid = uuid4()
     db.session.add(fab_profile)
     db.session.commit()
     create_profile_projects_preferences(fab_profile=fab_profile)

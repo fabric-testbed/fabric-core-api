@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
@@ -10,6 +11,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails, ProjectsOne  # noqa: E501
+from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
@@ -19,7 +21,8 @@ from swagger_server.models.status200_ok_no_content import Status200OkNoContent, 
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
 from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
-from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
+from swagger_server.response_code.core_api_utils import normalize_date_to_utc
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
@@ -414,6 +417,66 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
 
 
 @login_required
+def projects_uuid_expires_on_patch(uuid: str,
+                                   body: ProjectsExpiresOnPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Project expires on date as Facility Operator
+
+    Update Project expires on date as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project expires on date as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active facility-operators role
+        if not api_user.active or not api_user.is_facility_operator():
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
+                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+        # check for expires_on
+        try:
+            # validate expires_on
+            try:
+                expires_on = normalize_date_to_utc(date_str=body.expires_on)
+            except ValueError as exc:
+                details = 'Exception: expires_on: {0}'.format(exc)
+                consoleLogger.error(details)
+                return cors_400(details=details)
+            # update project expires_on and set is_locked
+            fab_project.expires_on = expires_on
+            if expires_on < datetime.now(timezone.utc):
+                fab_project.is_locked = True
+            else:
+                fab_project.is_locked = False
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'expires_on' - {0}".format(exc))
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_expires_on_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
 
@@ -435,12 +498,18 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check if the project has exceeded expiry date
+        if fab_project.expires_on < datetime.now(timezone.utc):
+            fab_project.is_locked = True
+            db.session.commit()
         # set ProjectsOne object
         project_one = ProjectsOne()
         # set required attributes for any uuid
         project_one.created = str(fab_project.created)
         project_one.description = fab_project.description
+        project_one.expires_on = str(fab_project.expires_on)
         project_one.facility = fab_project.facility
+        project_one.is_locked = fab_project.is_locked
         project_one.is_public = fab_project.is_public
         project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
         project_one.name = fab_project.name
@@ -515,6 +584,11 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
         # verify active project_creator, project_owner or facility-operator
         if not api_user.active or not api_user.is_facility_operator() and \
                 not api_user.is_project_creator(str(fab_project.uuid)) and \
@@ -664,25 +738,42 @@ def projects_uuid_personnel_patch(uuid: str = None,
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
         # check for project_members
         try:
             if len(body.project_members) == 0:
                 body.project_members = []
             # add project_members
+            fab_project.is_locked = True
+            db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_members,
                                       personnel_type='members')
+            fab_project.is_locked = False
+            db.session.commit()
         except Exception as exc:
-            consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_personnel_patch(): 'project_members' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
 
         # check for project_owners
         try:
             if len(body.project_owners) == 0:
                 body.project_owners = []
             # add project_owners
+            fab_project.is_locked = True
+            db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
                                       personnel_type='owners')
+            fab_project.is_locked = False
+            db.session.commit()
         except Exception as exc:
-            consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_personnel_patch(): 'project_owners' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -727,6 +818,11 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
                     api_user.display_name))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
         fab_profile = FabricProfilesProjects.query.filter_by(id=fab_project.profile.id).one_or_none()
         # check for award_information
         try:
@@ -908,6 +1004,11 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
         # check for tags
         try:
             if len(body.tags) == 0:

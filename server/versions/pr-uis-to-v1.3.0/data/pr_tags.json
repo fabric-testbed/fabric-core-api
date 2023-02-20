@@ -1,0 +1,439 @@
+{
+  "pr_tags": [
+    {
+      "id": 1,
+      "projects_id": 5,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 2,
+      "projects_id": 5,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 3,
+      "projects_id": 5,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 4,
+      "projects_id": 5,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 5,
+      "projects_id": 5,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 6,
+      "projects_id": 5,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 7,
+      "projects_id": 5,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 8,
+      "projects_id": 16,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 9,
+      "projects_id": 16,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 10,
+      "projects_id": 16,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 11,
+      "projects_id": 16,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 12,
+      "projects_id": 16,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 13,
+      "projects_id": 16,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 14,
+      "projects_id": 16,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 15,
+      "projects_id": 15,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 16,
+      "projects_id": 15,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 17,
+      "projects_id": 15,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 18,
+      "projects_id": 15,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 19,
+      "projects_id": 15,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 20,
+      "projects_id": 15,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 21,
+      "projects_id": 15,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 22,
+      "projects_id": 10,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 23,
+      "projects_id": 10,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 24,
+      "projects_id": 10,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 25,
+      "projects_id": 10,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 26,
+      "projects_id": 10,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 27,
+      "projects_id": 10,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 28,
+      "projects_id": 10,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 29,
+      "projects_id": 10,
+      "tag": "Component.FPGA"
+    },
+    {
+      "id": 30,
+      "projects_id": 10,
+      "tag": "Component.GPU"
+    },
+    {
+      "id": 31,
+      "projects_id": 10,
+      "tag": "Component.NVME"
+    },
+    {
+      "id": 32,
+      "projects_id": 10,
+      "tag": "Component.SmartNIC"
+    },
+    {
+      "id": 33,
+      "projects_id": 10,
+      "tag": "Component.Storage"
+    },
+    {
+      "id": 34,
+      "projects_id": 11,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 35,
+      "projects_id": 11,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 36,
+      "projects_id": 11,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 37,
+      "projects_id": 11,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 38,
+      "projects_id": 11,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 39,
+      "projects_id": 11,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 40,
+      "projects_id": 11,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 41,
+      "projects_id": 11,
+      "tag": "Component.FPGA"
+    },
+    {
+      "id": 42,
+      "projects_id": 11,
+      "tag": "Component.GPU"
+    },
+    {
+      "id": 43,
+      "projects_id": 11,
+      "tag": "Component.NVME"
+    },
+    {
+      "id": 44,
+      "projects_id": 11,
+      "tag": "Component.SmartNIC"
+    },
+    {
+      "id": 45,
+      "projects_id": 11,
+      "tag": "Component.Storage"
+    },
+    {
+      "id": 46,
+      "projects_id": 11,
+      "tag": "Net.FacilityPort.RENC-Chameleon"
+    },
+    {
+      "id": 47,
+      "projects_id": 11,
+      "tag": "Net.FacilityPort.RENC-GSU"
+    },
+    {
+      "id": 48,
+      "projects_id": 11,
+      "tag": "Net.NoLimitBW"
+    },
+    {
+      "id": 49,
+      "projects_id": 11,
+      "tag": "Net.Peering"
+    },
+    {
+      "id": 50,
+      "projects_id": 11,
+      "tag": "Net.PortMirroring"
+    },
+    {
+      "id": 51,
+      "projects_id": 11,
+      "tag": "Net.AllFacilityPorts"
+    },
+    {
+      "id": 52,
+      "projects_id": 12,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 53,
+      "projects_id": 12,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 54,
+      "projects_id": 12,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 55,
+      "projects_id": 12,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 56,
+      "projects_id": 12,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 57,
+      "projects_id": 12,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 58,
+      "projects_id": 12,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 59,
+      "projects_id": 12,
+      "tag": "Component.FPGA"
+    },
+    {
+      "id": 60,
+      "projects_id": 12,
+      "tag": "Component.GPU"
+    },
+    {
+      "id": 61,
+      "projects_id": 12,
+      "tag": "Component.NVME"
+    },
+    {
+      "id": 62,
+      "projects_id": 12,
+      "tag": "Component.SmartNIC"
+    },
+    {
+      "id": 63,
+      "projects_id": 12,
+      "tag": "Component.Storage"
+    },
+    {
+      "id": 64,
+      "projects_id": 12,
+      "tag": "Net.FacilityPort.RENC-Chameleon"
+    },
+    {
+      "id": 65,
+      "projects_id": 12,
+      "tag": "Net.FacilityPort.RENC-GSU"
+    },
+    {
+      "id": 66,
+      "projects_id": 12,
+      "tag": "Net.NoLimitBW"
+    },
+    {
+      "id": 67,
+      "projects_id": 12,
+      "tag": "Net.Peering"
+    },
+    {
+      "id": 68,
+      "projects_id": 12,
+      "tag": "Net.PortMirroring"
+    },
+    {
+      "id": 69,
+      "projects_id": 12,
+      "tag": "Net.AllFacilityPorts"
+    },
+    {
+      "id": 70,
+      "projects_id": 9,
+      "tag": "VM.NoLimitRAM"
+    },
+    {
+      "id": 71,
+      "projects_id": 9,
+      "tag": "VM.NoLimitDisk"
+    },
+    {
+      "id": 72,
+      "projects_id": 9,
+      "tag": "VM.NoLimitCPU"
+    },
+    {
+      "id": 73,
+      "projects_id": 9,
+      "tag": "VM.NoLimit"
+    },
+    {
+      "id": 74,
+      "projects_id": 9,
+      "tag": "Slice.NoLimitLifetime"
+    },
+    {
+      "id": 75,
+      "projects_id": 9,
+      "tag": "Slice.Multisite"
+    },
+    {
+      "id": 76,
+      "projects_id": 9,
+      "tag": "Slice.Measurements"
+    },
+    {
+      "id": 77,
+      "projects_id": 9,
+      "tag": "Component.FPGA"
+    },
+    {
+      "id": 78,
+      "projects_id": 9,
+      "tag": "Component.GPU"
+    },
+    {
+      "id": 79,
+      "projects_id": 9,
+      "tag": "Component.NVME"
+    },
+    {
+      "id": 80,
+      "projects_id": 9,
+      "tag": "Component.SmartNIC"
+    },
+    {
+      "id": 81,
+      "projects_id": 9,
+      "tag": "Component.Storage"
+    },
+    {
+      "id": 82,
+      "projects_id": 9,
+      "tag": "Net.FacilityPort.RENC-Chameleon"
+    },
+    {
+      "id": 83,
+      "projects_id": 9,
+      "tag": "Net.FacilityPort.RENC-GSU"
+    },
+    {
+      "id": 84,
+      "projects_id": 9,
+      "tag": "Net.NoLimitBW"
+    },
+    {
+      "id": 85,
+      "projects_id": 9,
+      "tag": "Net.Peering"
+    },
+    {
+      "id": 86,
+      "projects_id": 9,
+      "tag": "Net.PortMirroring"
+    },
+    {
+      "id": 87,
+      "projects_id": 9,
+      "tag": "Net.AllFacilityPorts"
+    }
+  ]
+}

@@ -10,16 +10,19 @@ SCRIPTS_DIR=$(pwd)
 cd ../
 
 FILES_TO_COPY=(
-    requirements.txt
     core-api.ini
+    requirements.txt
     swagger_server/__init__.py
     swagger_server/__main__.py
+    swagger_server/api_logger.py
+    swagger_server/logging.ini
 )
 
 DIRS_TO_COPY=(
-    swagger_server/response_code
+    swagger_server/backup
     swagger_server/database
     swagger_server/pr-uis-migration
+    swagger_server/response_code
 )
 
 # check for STUB_DIR directory

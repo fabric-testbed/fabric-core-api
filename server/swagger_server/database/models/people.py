@@ -87,7 +87,6 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     __allow_unmapped__ = True
 
     active = db.Column(db.Boolean, nullable=False, default=False)
-    # bastion_login = db.Column(db.String(), nullable=True)
     co_person_id = db.Column(db.Integer, nullable=True)
     display_name = db.Column(db.String(), nullable=False)
     email_addresses = db.relationship('EmailAddresses', backref='people', lazy=True)
@@ -102,6 +101,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     preferred_email = db.Column(db.String(), nullable=False)
     profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
+    # TODO: add publications with 1.4.x prior to Sept 2023
     # publications = db.relationship('Publications', secondary=publications, lazy='subquery',
     #                                backref=db.backref('people', lazy=True))
     registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))

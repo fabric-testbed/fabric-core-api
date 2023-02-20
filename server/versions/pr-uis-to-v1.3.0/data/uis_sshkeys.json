@@ -1,0 +1,38 @@
+{
+  "uis_sshkeys": [
+    {
+      "id": 166,
+      "key_uuid": "8cdc786e-7047-483b-9a43-c436322703d1",
+      "comment": "stealey_sliver",
+      "description": "my sliver key",
+      "ssh_key_type": "ssh-rsa",
+      "fabric_key_type": "sliver",
+      "fingerprint": "MD5:1f:b8:e6:22:c5:10:68:61:42:15:6c:24:86:62:ec:77",
+      "created_on": "2022-08-14 20:55:23.016631+00:00",
+      "expires_on": "2022-08-21 20:55:23.016631+00:00",
+      "active": true,
+      "deactivation_reason": null,
+      "deactivated_on": null,
+      "owner_uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
+      "public_key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQCf26i4s9M2vz0sxHex8/6hWYt7EBWbJHd/YgN8f7yekjx8HorSxDLLGI/xdRKgoFspyXe0o3IhweJYvYYyJa8nPJ1WxzhNkVzPUKZi4oFQ48xeuZA+iOnsd0nMnt+KENE8QXyNSBoMRNM26QaV4JFakmO2DvHhzLpo09LI/9AsNgYFwvnBKHyZZxxMu+aw6d/iBBgSZybq8ec66IepCJIM5DNMAIeKNSNEaUu1yb3xe7QRTrWYiDTU9L48G6FBGFMaIJzfEEhjVEwOo+71Sk/Ux8jno+aOxSdyqL3ZsJtsV1CiWdAjCwwV7yKG6UEp81Ywp2OSkooXvGCZInlunF8aAMh4eCl9bp2FE2J96uWxGsluXMhgKciui+WB9PS/viXzTeRJgQW3aIbI4A+YHZe74K3LkrVEMW31ozhM2aD/spUWwoS3mFyGZOI5v1Rn0HdCxjqDrzXIqSpsOGAFwBdYJO+iTEDXrWTN3E2mq2dFPTQpMxt7GzVO6OM5yAVFSls=",
+      "comanage_key_id": "151"
+    },
+    {
+      "id": 167,
+      "key_uuid": "b555a488-b871-4250-9dbd-74ce705cac6e",
+      "comment": "stealey_bastion",
+      "description": "my bastion key",
+      "ssh_key_type": "ssh-rsa",
+      "fabric_key_type": "bastion",
+      "fingerprint": "MD5:81:ec:18:86:d4:74:b8:c1:5d:3f:3e:52:70:9a:87:29",
+      "created_on": "2022-08-14 20:55:41.134745+00:00",
+      "expires_on": "2022-08-19 20:55:41.134745+00:00",
+      "active": true,
+      "deactivation_reason": null,
+      "deactivated_on": null,
+      "owner_uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
+      "public_key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC+gPA5+J732AyxxaOfsf6WsHbP6ouC8KHG0xpCjxg8jnzKlQLEOaYy6wxuj6KEfmhb4zTuyjw+DgW4SIrgHufgxZORTR8ZKhT0IYQX4H/LDzlHxFnrqoXT95SCKeJwBR+/yxrTQK4iv+G6sE/lHr4kpTK6aV/CX67WjLPfvrzsDG85DWRENWJ9DRnLrYPq8665h/+bmnq9PE6QAqq2jNDESHAHoN1LrE7W02lwisXRhzuMp8e4vHyq0R3bnq7ZKyZkBCZZc9NMdawZLCzlw3Fj/PcuEw4tMaPKYnAmqKbetGlkRRNkS/IXN9JzjRBNZKjVFwBP7vNrSoc6VitU2u6oa++KqKNMjjx8d01Igvz0HUWD1aS4ZeK9XZdzSxMQbgRKbonet/iM5EUU8C+qn6MzOJ4aV4xiePagUwjBvobqnZAyFc90fN20K7HRd+bt/k6U7qNbVC7bgUrgQR3Pwz9fg7LT1Z+GayZNFp+k5/I3kK+276eRy40+bghO5GcRgj0=",
+      "comanage_key_id": null
+    }
+  ]
+}

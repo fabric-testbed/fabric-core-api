@@ -118,6 +118,7 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
             db.session.commit()
         consoleLogger.info('FOUND FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
     else:
+        now = datetime.now(timezone.utc)
         fab_person = FabricPeople()
         try:
             fab_person.co_person_id = co_person_id
@@ -144,10 +145,11 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
                 fab_person.created = co_person_created
                 fab_person.registered_on = co_person_created
             else:
-                fab_person.created = datetime.now(timezone.utc)
-                fab_person.registered_on = datetime.now(timezone.utc)
-            fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
+                fab_person.created = now
+                fab_person.registered_on = now
+            fab_person.updated = now - timedelta(seconds=int(
                 os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
+            fab_person.modified = now
             fab_person.uuid = uuid4()
             db.session.add(fab_person)
             db.session.commit()

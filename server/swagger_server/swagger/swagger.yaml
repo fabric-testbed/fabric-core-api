@@ -8,11 +8,11 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.0.0
+  version: 1.4.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.0.0
+- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.4.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
@@ -931,6 +931,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
         "500":
           description: Internal Server Error
           content:
@@ -955,6 +961,68 @@ paths:
           type: string
       requestBody:
         $ref: '#/components/requestBodies/payload_projects_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/expires-on:
+    patch:
+      tags:
+      - projects
+      summary: Update Project expires on date as Facility Operator
+      description: Update Project expires on date as Facility Operator
+      operationId: projects_uuid_expires_on_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_expires_on_patch'
       responses:
         "200":
           description: OK
@@ -1098,6 +1166,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
         "500":
           description: Internal Server Error
           content:
@@ -1154,6 +1228,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
         "500":
           description: Internal Server Error
           content:
@@ -1575,7 +1655,7 @@ paths:
         explode: true
         schema:
           type: string
-          example: 2017-07-21 17:32:28 +00:00
+          example: 2023-01-01 16:20:15 +00:00
       responses:
         "200":
           description: OK
@@ -2129,6 +2209,22 @@ components:
         status:
           type: integer
           default: 404
+    status_423_locked:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/status_423_locked_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 423
     status_500_internal_server_error:
       type: object
       properties:
@@ -2300,8 +2396,13 @@ components:
           format: date-time
         description:
           type: string
+        expires_on:
+          type: string
         facility:
           type: string
+        is_locked:
+          type: boolean
+          default: false
         is_public:
           type: boolean
           default: true
@@ -2594,6 +2695,12 @@ components:
           type: string
         preferences:
           $ref: '#/components/schemas/preferences'
+    projects_expires_on_patch:
+      type: object
+      properties:
+        expires_on:
+          type: string
+          example: 2023-01-01 16:20:15 +00:00
     projects_personnel_patch:
       type: object
       properties:
@@ -2781,6 +2888,14 @@ components:
         message:
           type: string
           default: Not Found
+        details:
+          type: string
+    status_423_locked_errors:
+      type: object
+      properties:
+        message:
+          type: string
+          default: Locked
         details:
           type: string
     status_500_internal_server_error_errors:
@@ -2986,6 +3101,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/status_404_not_found'
+    "423_locked":
+      description: Locked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/status_423_locked'
     "500_internal_server_error":
       description: Internal Server Error
       content:
@@ -3100,7 +3221,7 @@ components:
       explode: true
       schema:
         type: string
-        example: 2017-07-21 17:32:28 +00:00
+        example: 2023-01-01 16:20:15 +00:00
     sort_by:
       name: sort_by
       in: query
@@ -3162,6 +3283,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_patch'
+    payload_expires_on_patch:
+      description: Update Project expires on date as Facility Operator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_expires_on_patch'
     payload_projects_profile_patch:
       description: Update Project Profile details as owner
       content:

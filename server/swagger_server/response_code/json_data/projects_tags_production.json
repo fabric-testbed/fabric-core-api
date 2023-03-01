@@ -15,6 +15,11 @@
     "Net.FacilityPort.Chameleon-StarLight": "Chameleon-StarLight Production",
     "Net.FacilityPort.ESnet-StarLight": "ESnet-StarLight Production",
     "Net.FacilityPort.Internet2-StarLight": "Internet2-StarLight Production",
-    "Net.FacilityPort.Utah-Cloudlab-Powder": "Utah-Cloudlab-Powder Production"
+    "Net.FacilityPort.Utah-Cloudlab-Powder": "Utah-Cloudlab-Powder Production",
+    "Net.FacilityPort.Cloud-Facility-GCP": "Google Cloud Platform Production",
+    "Net.FacilityPort.Cloud-Facility-AWS": "Amazon Web Services Production",
+    "Net.FacilityPort.Chameleon-TACC": "Chameleon@TACC Production",
+    "Net.FacilityPort.Cloud-Facility-Azure-Gov": "Microsoft Azure Gov Cloud Production",
+    "Net.FacilityPort.Cloud-Facility-Azure": "Microsoft Azure Cloud Production"
   }
 }

@@ -32,13 +32,43 @@ def secret_required(f):
             secret = request.args.get('secret')
         except Exception as exc:
             details = 'Exception: {0}'.format(exc)
-            consoleLogger.info("login_required(): {0}".format(details))
+            consoleLogger.info("secret_required(): {0}".format(details))
             return cors_401(details=details)
         if secret != os.getenv('SSH_KEY_SECRET'):
             details = 'Secret required: incorrect secret provided'
-            consoleLogger.info("login_required(): {0}".format(details))
+            consoleLogger.info("secret_required(): {0}".format(details))
             return cors_401(details=details)
 
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def login_or_token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'authorization' in [h.casefold() for h in request.headers.keys()]:
+            if validate_authorization_token(request.headers.get('authorization')):
+                return f(*args, **kwargs)
+            else:
+                details = 'Login or Token required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
+                consoleLogger.info("login_or_token_required(): {0}".format(details))
+                return cors_401(details=details)
+        if os.getenv('VOUCH_COOKIE_NAME') not in request.cookies:
+            details = 'Login or Token required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
+            consoleLogger.info("login_or_token_required(): {0}".format(details))
+            return cors_401(details=details)
+        if not vouch_get_custom_claims():
+            details = 'Cookie signature has expired: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
+            consoleLogger.info("login_or_token_required(): {0}".format(details))
+            return cors_401(details=details)
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def validate_authorization_token(token: str) -> bool:
+    if token == 'Bearer {0}'.format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
+        return True
+    return False

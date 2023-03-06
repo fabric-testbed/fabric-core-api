@@ -106,6 +106,7 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         return cors_500(details=details)
 
 
+@login_required
 def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Preference options
 
@@ -132,6 +133,7 @@ def people_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with People.Preferences.Get()')
 
 
+@login_required
 def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Other Identity Type options
 
@@ -159,6 +161,7 @@ def people_profile_otheridentity_types_get(search=None) -> ApiOptions:  # noqa: 
         return cors_500(details='Ooops! something has gone wrong with People.Profile.OtherIdentity.Types.Get()')
 
 
+@login_required
 def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Personal Page Type options
 
@@ -186,6 +189,7 @@ def people_profile_personalpage_types_get(search=None) -> ApiOptions:  # noqa: E
         return cors_500(details='Ooops! something has gone wrong with People.Profile.PersonalPage.Types.Get()')
 
 
+@login_required
 def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of People Profile Preference options
 

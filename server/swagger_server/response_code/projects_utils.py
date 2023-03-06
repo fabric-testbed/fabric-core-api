@@ -9,6 +9,7 @@ from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.storage_one import StorageOne
 from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
     delete_comanage_role
 from swagger_server.response_code.preferences_utils import create_projects_preferences
@@ -238,6 +239,31 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel_data.append(person)
 
     return personnel_data
+
+
+# Storage - Projects
+def get_projects_storage(fab_project: FabricProjects = None) -> [StorageOne]:
+    """
+    Retrieve storage objects associated to the project
+    """
+    project_storage = []
+    for stg in fab_project.project_storage:
+        # set storage attributes
+        storage = StorageOne()
+        storage.active = stg.active
+        storage.created_on = str(stg.created)
+        storage.expires_on = str(stg.expires_on)
+        # storage.project_name = fab_project.name  # <-- project name already known
+        # storage.project_uuid = str(fab_project.uuid)  # <-- project uuid already known
+        storage.site_list = [s.site for s in stg.sites]
+        storage.uuid = str(stg.uuid)
+        storage.volume_name = stg.volume_name
+        storage.volume_size_gb = stg.volume_size_gb
+
+        # add storage to project_storage
+        project_storage.append(storage)
+
+    return project_storage
 
 
 def update_projects_personnel(api_user: FabricPeople = None, fab_project: FabricProjects = None,

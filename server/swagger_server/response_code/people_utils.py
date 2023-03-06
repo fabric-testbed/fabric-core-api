@@ -207,11 +207,11 @@ def update_fabric_person(fab_person: FabricPeople = None):
         claims = vouch_get_custom_claims()
         if claims.get('sub'):
             fab_person.bastion_login = fab_person.bastion_login()
-            fab_person.oidc_claim_email = claims.get('email')
+            # fab_person.oidc_claim_email = claims.get('email')
             fab_person.oidc_claim_family_name = claims.get('family_name')
             fab_person.oidc_claim_given_name = claims.get('given_name')
             fab_person.oidc_claim_name = claims.get('name')
-            fab_person.oidc_claim_sub = claims.get('sub')
+            # fab_person.oidc_claim_sub = claims.get('sub')
         # determine if active
         fab_person.active = False
         for role in fab_person.roles:

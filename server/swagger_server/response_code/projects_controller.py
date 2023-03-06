@@ -29,7 +29,7 @@ from swagger_server.response_code.preferences_utils import delete_projects_prefe
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
     update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, update_projects_personnel, update_projects_tags
+    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_personnel, update_projects_tags
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
@@ -268,6 +268,7 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         return cors_500(details=details)
 
 
+@login_required
 def projects_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Preference options
 
@@ -294,6 +295,7 @@ def projects_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Preferences.Get()')
 
 
+@login_required
 def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Profile Preference options
 
@@ -321,6 +323,7 @@ def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Profile.Preferences.Get()')
 
 
+@login_required
 def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Tags options
 
@@ -383,6 +386,11 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members')
         # remove project_owners
         update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners')
+        # remove project_storage allocations
+        for s in fab_project.project_storage:
+            s.active = False
+            fab_project.project_storage.remove(s)
+            db.session.commit()
         # remove Publications
         # TODO: define Publications
         # delete COUs -pc, -pm, -po
@@ -458,6 +466,13 @@ def projects_uuid_expires_on_patch(uuid: str,
             else:
                 fab_project.is_locked = False
             db.session.commit()
+            # metrics log - Project expires_on was modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify expires_on by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify \'expires_on={1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                str(fab_project.expires_on),
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'expires_on' - {0}".format(exc))
         # create response
@@ -526,6 +541,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.project_creators = get_projects_personnel(fab_project=fab_project, personnel_type='creators')
             project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
             project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
+            project_one.project_storage = get_projects_storage(fab_project=fab_project)
             # TODO - define publications
             project_one.publications = []
             project_one.tags = [t.tag for t in fab_project.tags]

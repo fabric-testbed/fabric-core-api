@@ -74,6 +74,7 @@ def storage_get(offset: int = None, limit: int = None, project_uuid: str = None)
                     api_user.is_facility_operator() or api_user in prj.project_creators or api_user in prj.project_members or api_user in prj.project_owners):
                 # get Storage attributes
                 storage = StorageOne()
+                storage.active = item.active
                 storage.created_on = str(item.created)
                 storage.expires_on = str(item.expires_on)
                 storage.project_name = prj.name if prj else None
@@ -297,6 +298,7 @@ def storage_uuid_get(uuid: str) -> Storage:  # noqa: E501
         # set ProjectsOne object
         storage_one = StorageOne()
         # set required attributes for any uuid
+        storage_one.active = fab_storage.active
         storage_one.created_on = str(fab_storage.created)
         storage_one.expires_on = str(fab_storage.expires_on)
         storage_one.project_name = fab_project.name

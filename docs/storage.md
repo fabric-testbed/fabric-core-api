@@ -11,9 +11,9 @@ FABRIC Storage Allocations
 ### `/storage`
 
 - GET - retrieve list of storage allocations
-  - param: `project_uuid` - optional project UUID
-  - authz: `facility-operators` see all storage allocations
-  - authz: all others see storage allocations associated to projects they are creator/owner/member of
+  - param: `project_uuid` - optional search by project UUID
+  - authz: `facility-operators` can list all storage allocations
+  - authz: all others can list storage allocations associated to projects they are creator/owner/member of
 - POST - create a new storage allocation
   - data: `expires_on` as string (required)
   - data: `project_uuid` as string (required)
@@ -37,6 +37,7 @@ FABRIC Storage Allocations
   - authz: `Authorization: Bearer $TOKEN` in the request header
   - authz: all others see storage allocations associated to projects they are creator/owner/member of
 - PATCH - update an existing storage allocation
+  - data: `active` as boolean (optional)
   - data: `expires_on` as string (optional)
   - data: `site_list` as array of string (optional)
   - data: `volume_name` as string (optional)
@@ -53,7 +54,7 @@ FABRIC Storage Allocations
 
 ```
 { 
-    "active": <bool>,
+    "active": <boolean>,
     "created_on": "<string>",
     "expires_on": "<string>",
     "project_name": "<string>",
@@ -86,13 +87,12 @@ project_storage: [
 
 ```
 { 
-    "active": <bool>,                 <-- optional
-    "expires_on": "<string>",         <-- required
-    "project_uuid": "<string>",       <-- required
-    "requested_by_uuid": "<string>",  <-- required
-    "site_list": [ "<string>", ... ], <-- optional
-    "volume_name": "<string>",        <-- required
-    "volume_size_gb": <integer>       <-- optional
+    "expires_on": "<string>",         <-- required - Date/Time
+    "project_uuid": "<string>",       <-- required - Project UUID
+    "requested_by_uuid": "<string>",  <-- required - Person UUID
+    "site_list": [ "<string>", ... ], <-- optional - controlled vocabulary (see /storage/site-list)
+    "volume_name": "<string>",        <-- required - min 5 chars
+    "volume_size_gb": <integer>       <-- optional - integer only
 }
 ```
 
@@ -100,7 +100,7 @@ project_storage: [
 
 ```
 { 
-    "active": <bool>,                 <-- optional
+    "active": <boolean>,              <-- optional
     "expires_on": "<string>",         <-- optional
     "site_list": [ "<string>", ... ], <-- optional
     "volume_name": "<string>",        <-- optional

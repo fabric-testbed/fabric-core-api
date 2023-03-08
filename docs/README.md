@@ -1,123 +1,108 @@
 # FABRIC Core API
 
+Python (Flask) based ReSTful API for FABRIC Core Services based on COmanage registry contents
+
 ## Table of Contents
 
-- [API endpoints](#endpoints)
-    - People: [Overview](#people), [Details](./core-api-people.md)
-    - Projects: [Overview](#projects), [Details](./core-api-projects.md)
+API endpoints
 
-- [Pagination](./core-api-pagination.md)
-- [HTTP Status Codes](./core-api-status-codes.md)
+- [/announcements](./announcements.md) - API endpoint
+- [/people](./people.md) - API endpoint
+- [/projects](./projects.md) - API endpoint
+- [/publications](./publications.md) - API endpoint
+- [/sshkeys](./sshkeys.md) - API endpoint
+- [/storage](./storage.md) - API endpoint
+- [/testbed-info](./testbed-info.md) - API endpoint
+- [/version](./version.md) - API endpoint
+- [/whoami](./whoami.md) - API endpoint
 
+Response/Request Formatting
 
-## <a name="endpoints"></a>API endpoints
+- [paginated list of items]()
+- [details for a single item]()
+- [errors and other status codes]()
 
-### <a name="people"></a>People
+## Overview
 
-GET `/people`
+### announcements
+FABRIC Facility & Maintenance Announcements
 
-- params: `search`, `limit`, `offset`
+- GET: `/announcements`
+- POST: `/announcements`
+- GET: `/announcements`
+- PATCH: `/announcements`
+- DELETE: `/announcements`
 
-GET `/people/preferences`
+### people
+FABRIC People
 
-- params: `search`
+- GET: `/people`
+- GET: `/people/{uuid}`
+- PATCH: `/people/{uuid}`
+- PATCH: `/people/{uuid}/profile`
+- GET: `/people/preferences`
+- GET: `/people/profile/otheridentity-types`
+- GET: `/people/profile/preferences`
+- GET: `/people/profile/personalpage-types`
 
-GET `/people/profile/otheridentiy-types`
+### projects
+FABRIC Projects
 
-- params: `search`
+- GET: `/projects`
+- POST: `/projects`
+- GET: `/projects/{uuid}`
+- PATCH: `/projects/{uuid}`
+- DELETE: `/projects/{uuid}`
+- PATCH: `/projects/{uuid}/expires-on`
+- PATCH: `/projects/{uuid}/profile`
+- PATCH: `/projects/{uuid}/personnel`
+- PATCH: `/projects/{uuid}/tags`
+- GET: `/projects/preferences`
+- GET: `/projects/profile/preferences`
+- GET: `/projects/tags`
 
-GET `/people/profile/personalpage-types`
+### publications
+FABRIC Publications (release TBD)
 
-- params: `search`
+- GET: `/publications`
+- POST: `/publications`
+- GET: `/publications/{uuid}`
+- PATCH: `/publications/{uuid}`
+- DELETE: `/publications/{uuid}`
+- GET: `/publications/classification-terms`
 
-GET `/people/profile/preferences`
+### sshkeys
+FABRIC Public SSH Keys
 
-- params: `search`
+- GET: `/bastionkeys`
+- GET: `/sshkeys`
+- POST: `/sshkeys`
+- PUT: `/sshkeys`
+- GET: `/sshkeys/{uuid}`
+- DELETE: `/sshkeys/{uuid}`
 
-GET `/people/{uuid}`
+### storage
+FABRIC Site Storage
 
-- params: `uuid`, `as_self`
+- GET: `/storage`
+- POST: `/storage`
+- GET: `/storage/sites`
+- GET: `/storage/{uuid}`
+- PATCH: `/storage/{uuid}`
+- DELETE: `/storage{uuid}`
 
-PATCH `/people/{uuid}`
+### testbed-info
+FABRIC Testbed Information
 
-- params: `uuid`
-- body: `email`, `name`, `preferences`
+- GET: `/testbed-info`
+- POST: `testbed-info`
 
-PATCH `/people/{uuid}/profile`
+### version
+Core API Version
 
-- params: `uuid`
-- body: `bio`, `cv`, `job`, `other_identities`, `personal_pages`, `preferences`, `pronouns`, `website`
+- GET: `/version`
 
-### <a name="projects"></a>Projects
+### whoami
+Who am I authenticated as
 
-GET `/projects`
-
-- params: `search`, `limit`, `offset`
-
-POST `/projects`
-
-GET `/projects/preferences`
-
-GET `/projects/profile/preferences`
-
-GET `/projects/tags`
-
-DELETE `/projects/{uuid}`
-
-GET `/projects/{uuid}`
-
-PATCH `/projects/{uuid}`
-
-PATCH `/projects/{uuid}/personnel`
-
-PATCH `/projects/{uuid}/profile`
-
-PATCH `/projects/{uuid}/tags`
-
-### Publications
-
-GET `/publications`
-
-POST `/publications`
-
-GET `/publications/classifications-terms`
-
-DELETE `/publications/{uuid}`
-
-GET `/publications/{uuid}`
-
-PATCH `/publications/{uuid}`
-
-### SSH Keys
-
-GET `/bastionkeys`
-
-GET `/sshkeys`
-
-POST `/sshkeys`
-
-PUT `/sshkeys`
-
-DELETE `/sshkeys/{uuid}`
-
-GET `/sshkeys/{uuid}`
-
-### Updates
-
-GET `/updates`
-
-POST `/updates`
-
-DELETE `/updates/{uuid}`
-
-GET `/updates/{uuid}`
-
-PATCH `/updates/{uuid}`
-
-### Version
-
-GET `/version`
-
-### Who am I
-
-GET `/whoami`
+- GET: `/whomai`

@@ -1,4 +1,4 @@
-# FABRIC Core API
+# API documentation
 
 Python (Flask) based ReSTful API for FABRIC Core Services based on COmanage registry contents
 
@@ -95,7 +95,7 @@ FABRIC Site Storage
 FABRIC Testbed Information
 
 - GET: `/testbed-info`
-- POST: `testbed-info`
+- POST: `/testbed-info`
 
 ### version
 Core API Version

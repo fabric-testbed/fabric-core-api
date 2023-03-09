@@ -12,6 +12,8 @@ FABRIC Storage Allocations
 
 - GET - retrieve list of storage allocations
   - param: `project_uuid` - optional search by project UUID
+  - param: `offset` - number of items to skip before starting to collect the result set
+  - param: `limit` - maximum number of results to return per page (1 or more
   - authz: `facility-operators` can list all storage allocations
   - authz: all others can list storage allocations associated to projects they are creator/owner/member of
 - POST - create a new storage allocation
@@ -27,7 +29,7 @@ FABRIC Storage Allocations
 ### `/storage/site-list`
 
 - GET - retrieve list of valid FABRIC site short-names
-  - param: `search` - optional text search, 3 or more letters
+  - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
 
 ### `/storage/{uuid}`

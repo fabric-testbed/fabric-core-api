@@ -351,7 +351,7 @@ def restore_preferences_data():
             people_id=int(p.get('people_id')) if p.get('people_id') else None,
             profiles_people_id=int(p.get('profiles_people_id')) if p.get('profiles_people_id') else None,
             profiles_projects_id=int(p.get('profiles_projects_id')) if p.get('profiles_projects_id') else None,
-            projects_id=int(p.get('projects_id')) if p.get('project_id') else None,
+            projects_id=int(p.get('projects_id')) if p.get('projects_id') else None,
             type=p.get('type'),
             value=p.get('value')
         ).on_conflict_do_nothing()

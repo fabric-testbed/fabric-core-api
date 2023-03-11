@@ -11,7 +11,7 @@ FABRIC People
 - GET - retrieve list of people
   - param: `search` - optional search, 3 or more characters - matches on `name`, `email` or `people_uuid`
   - param: `offset` - number of items to skip before starting to collect the result set
-  - param: `limit` - maximum number of results to return per page (1 or more
+  - param: `limit` - maximum number of results to return per page (1 or more)
   - authz: open to all authenticated users
 
 ### `/people/{uuid}`
@@ -87,7 +87,7 @@ FABRIC People
 }
 ```
 
-### Get response as detail - as self
+### GET response as detail - as self
 
 ```
 {
@@ -99,9 +99,7 @@ FABRIC People
     "cilogon_id": "<string>",
     "cilogon_name": "<string>",
     "email": "<string>",
-    "email_addresses": [
-        "<string>"
-    ],
+    "email_addresses": [ ... ],
     "eppn": "<string>",
     "fabric_id": "<string>",
     "name": "<string>",
@@ -139,7 +137,7 @@ FABRIC People
 }
 ```
 
-### Get response as detail - as other users
+### GET response as detail - as other users
 
 ```
 {
@@ -181,10 +179,10 @@ FABRIC People
 }
 ```
 
-Valid `people_preferences`:
+Valid people `preferences` keys:
 
 ```json
-"people_preferences": [
+"preferences_keys": [
     "show_email",
     "show_eppn",
     "show_profile",
@@ -201,18 +199,8 @@ Valid `people_preferences`:
     "bio": "<string>",                      <-- optional - 5 or more characters
     "cv": "<string>",                       <-- optional - URL format
     "job": "<string>",                      <-- optional - 5 or more characters
-    "other_identities": [
-        {
-        "identity": "<string>",             <-- optional - 5 or more characters
-        "type": "<string>"                  <-- optional - one of "otheridentity_types"
-        }
-    ],
-    "personal_pages": [
-        {
-        "type": "<string>",                 <-- optional - one of "personalpage_types"
-        "url": "<string>"                   <-- optional - URL format
-        }
-    ],
+    "other_identities": [ ... ],            <-- optional - array of other_identities
+    "personal_pages": [ ... ],              <-- optional - array of personal_pages
     "preferences": {
         "show_bio": <boolean>,              <-- optional - true/false
         "show_cv": <boolean>,               <-- optional - true/false
@@ -227,20 +215,42 @@ Valid `people_preferences`:
 }
 ```
 
-Valid `otheridentity_types`:
+Valid `other_identities ` format:
 
 ```json
-"otheridentity_types": [
+"other_identities": [
+    {
+        "identity": "<string_5_or_more_characters>",
+        "type": "<string_otheridentity_types>"
+    }
+]
+```
+
+Valid `string_otheridentity_types ` values:
+
+```json
+"string_otheridentity_types": [
     "google_scholar",
     "orcid",
     "other"
 ]
 ```
 
-Valid `personalpage_types`:
+Valid `personal_pages` format: 
 
 ```json
-"personalpage_types": [
+"personal_pages": [
+    {
+        "type": "<string_personalpage_types>",
+        "url": "<string_as_URL>"
+    }
+]
+```
+
+Valid `string_personalpage_types ` values:
+
+```json
+"string_personalpage_types": [
     "bitbucket",
     "facebook",
     "github",
@@ -256,10 +266,10 @@ Valid `personalpage_types`:
 ]
 ```
 
-Valid `peopleprofile_preferences`:
+Valid people profile `preferences` keys:
 
 ```json
-"peopleprofile_preferences": [
+"preferences_keys": [
     "show_bio",
     "show_cv",
     "show_job",

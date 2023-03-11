@@ -13,7 +13,7 @@ FABRIC Storage Allocations
 - GET - retrieve list of storage allocations
   - param: `project_uuid` - optional search by project UUID
   - param: `offset` - number of items to skip before starting to collect the result set
-  - param: `limit` - maximum number of results to return per page (1 or more
+  - param: `limit` - maximum number of results to return per page (1 or more)
   - authz: `facility-operators` can list all storage allocations
   - authz: all others can list storage allocations associated to projects they are creator/owner/member of
 - POST - create a new storage allocation
@@ -62,7 +62,7 @@ FABRIC Storage Allocations
     "project_name": "<string>",
     "project_uuid": "<string>",
     "requested_by_uuid": "<string>",
-    "site_list": [ "<string>", ... ],
+    "site_list": [ ... ],
     "uuid": "<string>",
     "volume_name": "<string>", 
     "volume_size_gb": <integer>
@@ -89,24 +89,64 @@ project_storage: [
 
 ```
 { 
-    "expires_on": "<string>",         <-- required - Date/Time
-    "project_uuid": "<string>",       <-- required - Project UUID
-    "requested_by_uuid": "<string>",  <-- required - Person UUID
-    "site_list": [ "<string>", ... ], <-- optional - controlled vocabulary (see /storage/site-list)
-    "volume_name": "<string>",        <-- required - min 5 chars
-    "volume_size_gb": <integer>       <-- optional - integer only
+    "expires_on": "<string>",        <-- required - Date/Time
+    "project_uuid": "<string>",      <-- required - Project UUID
+    "requested_by_uuid": "<string>", <-- required - Person UUID
+    "site_list": [ ... ],            <-- optional - array of sites as string
+    "volume_name": "<string>",       <-- required - min 5 chars
+    "volume_size_gb": <integer>      <-- optional - integer only
 }
+```
+
+Valid storage `site_list` sites:
+
+```json
+"sites": [
+    "AMST",
+    "ATLA",
+    "BRIST",
+    "CERN",
+    "CLEM",
+    "DALL",
+    "FIU",
+    "GATECH",
+    "GPN",
+    "HAWI",
+    "INDI",
+    "KANS",
+    "LBNL",
+    "LOSA",
+    "MASS",
+    "MAX",
+    "MICH",
+    "NCSA",
+    "NEWY",
+    "PRIN",
+    "PSC",
+    "RENC",
+    "RUTG",
+    "SALT",
+    "SEAT",
+    "SRI",
+    "STAR",
+    "TACC",
+    "TOKY",
+    "UCSD",
+    "UKY",
+    "UTAH",
+    "WASH"
+]
 ```
 
 ### PATCH request body
 
 ```
 { 
-    "active": <boolean>,              <-- optional
-    "expires_on": "<string>",         <-- optional
-    "site_list": [ "<string>", ... ], <-- optional
-    "volume_name": "<string>",        <-- optional
-    "volume_size_gb": <integer>       <-- optional
+    "active": <boolean>,        <-- optional
+    "expires_on": "<string>",   <-- optional
+    "site_list": [ ... ],       <-- optional - array of sites as string
+    "volume_name": "<string>",  <-- optional
+    "volume_size_gb": <integer> <-- optional
 }
 ```
 

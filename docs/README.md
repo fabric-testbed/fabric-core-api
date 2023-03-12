@@ -18,9 +18,9 @@ API endpoints
 
 Response/Request Formatting
 
-- [paginated list of items]()
-- [details for a single item]()
-- [errors and other status codes]()
+- Response: [paginated - list for multiple items](./pagination.md)
+- Response: [singleton - details for one item](./singleton.md)
+- Information: [http status codes](./status-codes.md)
 
 ## Overview
 

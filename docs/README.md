@@ -6,15 +6,15 @@ Python (Flask) based ReSTful API for FABRIC Core Services based on COmanage regi
 
 API endpoints
 
-- [/announcements](./announcements.md) - API endpoint
-- [/people](./people.md) - API endpoint
-- [/projects](./projects.md) - API endpoint
-- [/publications](./publications.md) - API endpoint
-- [/sshkeys](./sshkeys.md) - API endpoint
-- [/storage](./storage.md) - API endpoint
-- [/testbed-info](./testbed-info.md) - API endpoint
-- [/version](./version.md) - API endpoint
-- [/whoami](./whoami.md) - API endpoint
+- [/announcements](./announcements.md) - API endpoint (release 1.3)
+- [/people](./people.md) - API endpoint (release 1.0)
+- [/projects](./projects.md) - API endpoint (release 1.0)
+- [/publications](./publications.md) - API endpoint (expected release 1.6)
+- [/sshkeys](./sshkeys.md) - API endpoint (release 1.3)
+- [/storage](./storage.md) - API endpoint (release 1.4)
+- [/testbed-info](./testbed-info.md) - API endpoint (release 1.4)
+- [/version](./version.md) - API endpoint (release 1.0)
+- [/whoami](./whoami.md) - API endpoint (release 1.0)
 
 Response/Request Formatting
 

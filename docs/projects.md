@@ -50,6 +50,8 @@ FABRIC Projects
   - param: `search` - optional search, 3 or more characters - matches on `name`
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more)
+  - param: `sort_by` - attribute to sort results by - `created_time`, `modified_time`, `name`
+  - param: `order_by` - attribute to order results by - `asc`, `desc` 
   - authz: open to all authenticated users - results vary by role or membership
 - POST - create a new project
   - data: `description` as string (required)

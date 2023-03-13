@@ -2926,6 +2926,8 @@ components:
           type: string
         project_uuid:
           type: string
+        requested_by_uuid:
+          type: string
         site_list:
           type: array
           items:

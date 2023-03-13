@@ -1,5 +1,4 @@
 import os
-from datetime import datetime, timezone
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
@@ -18,7 +17,7 @@ from swagger_server.models.storage_post import StoragePost  # noqa: E501
 from swagger_server.response_code import STORAGE_SITES
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
-from swagger_server.response_code.decorators import login_or_token_required, login_required
+from swagger_server.response_code.decorators import login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.storage_utils import create_storage_allocation_from_api, update_storage_site_list
 
@@ -309,6 +308,8 @@ def storage_uuid_get(uuid: str) -> Storage:  # noqa: E501
         storage_one.expires_on = str(fab_storage.expires_on)
         storage_one.project_name = fab_project.name
         storage_one.project_uuid = str(fab_project.uuid)
+        storage_one.requested_by_uuid = str(
+            FabricPeople.query.filter_by(id=fab_storage.requested_by_id).one_or_none().uuid)
         storage_one.site_list = [s.site for s in fab_storage.sites]
         storage_one.uuid = str(fab_storage.uuid)
         storage_one.volume_name = fab_storage.volume_name

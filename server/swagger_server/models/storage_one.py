@@ -14,7 +14,7 @@ class StorageOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=None, created_on: datetime=None, expires_on: datetime=None, project_name: str=None, project_uuid: str=None, site_list: List[str]=None, uuid: str=None, volume_name: str=None, volume_size_gb: int=None):  # noqa: E501
+    def __init__(self, active: bool=None, created_on: datetime=None, expires_on: datetime=None, project_name: str=None, project_uuid: str=None, requested_by_uuid: str=None, site_list: List[str]=None, uuid: str=None, volume_name: str=None, volume_size_gb: int=None):  # noqa: E501
         """StorageOne - a model defined in Swagger
 
         :param active: The active of this StorageOne.  # noqa: E501
@@ -27,6 +27,8 @@ class StorageOne(Model):
         :type project_name: str
         :param project_uuid: The project_uuid of this StorageOne.  # noqa: E501
         :type project_uuid: str
+        :param requested_by_uuid: The requested_by_uuid of this StorageOne.  # noqa: E501
+        :type requested_by_uuid: str
         :param site_list: The site_list of this StorageOne.  # noqa: E501
         :type site_list: List[str]
         :param uuid: The uuid of this StorageOne.  # noqa: E501
@@ -42,6 +44,7 @@ class StorageOne(Model):
             'expires_on': datetime,
             'project_name': str,
             'project_uuid': str,
+            'requested_by_uuid': str,
             'site_list': List[str],
             'uuid': str,
             'volume_name': str,
@@ -54,6 +57,7 @@ class StorageOne(Model):
             'expires_on': 'expires_on',
             'project_name': 'project_name',
             'project_uuid': 'project_uuid',
+            'requested_by_uuid': 'requested_by_uuid',
             'site_list': 'site_list',
             'uuid': 'uuid',
             'volume_name': 'volume_name',
@@ -64,6 +68,7 @@ class StorageOne(Model):
         self._expires_on = expires_on
         self._project_name = project_name
         self._project_uuid = project_uuid
+        self._requested_by_uuid = requested_by_uuid
         self._site_list = site_list
         self._uuid = uuid
         self._volume_name = volume_name
@@ -184,6 +189,27 @@ class StorageOne(Model):
         """
 
         self._project_uuid = project_uuid
+
+    @property
+    def requested_by_uuid(self) -> str:
+        """Gets the requested_by_uuid of this StorageOne.
+
+
+        :return: The requested_by_uuid of this StorageOne.
+        :rtype: str
+        """
+        return self._requested_by_uuid
+
+    @requested_by_uuid.setter
+    def requested_by_uuid(self, requested_by_uuid: str):
+        """Sets the requested_by_uuid of this StorageOne.
+
+
+        :param requested_by_uuid: The requested_by_uuid of this StorageOne.
+        :type requested_by_uuid: str
+        """
+
+        self._requested_by_uuid = requested_by_uuid
 
     @property
     def site_list(self) -> List[str]:

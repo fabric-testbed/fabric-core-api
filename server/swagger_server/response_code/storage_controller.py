@@ -26,7 +26,7 @@ from swagger_server.response_code.storage_utils import create_storage_allocation
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
-@login_required
+@login_or_token_required
 def storage_get(offset: int = None, limit: int = None, project_uuid: str = None) -> StorageMany:  # noqa: E501
     """Get active Storage allocations
 
@@ -44,6 +44,11 @@ def storage_get(offset: int = None, limit: int = None, project_uuid: str = None)
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # TODO: token access does not have an api_user --> choose first facility-operator
+        if not api_user.id:
+            fac_op_ids = [r.people_id for r in
+                          FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
+            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -170,7 +175,7 @@ def storage_post(body: StoragePost = None) -> Storage:  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def storage_sites_get(search: str = None) -> ApiOptions:  # noqa: E501
     """List of Storage site options
 
@@ -274,6 +279,7 @@ def storage_uuid_get(uuid: str) -> Storage:  # noqa: E501
     try:
         # get api_user
         api_user = get_person_by_login_claims()
+        # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in
                           FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
@@ -370,27 +376,20 @@ def storage_uuid_patch(uuid: str, body: StoragePatch = None) -> Status200OkNoCon
             consoleLogger.info("NOP: storage_uuid_patch(): 'active' - {0}".format(exc))
         # check for expires_on
         try:
-            try:
-                expires_on = normalize_date_to_utc(date_str=body.expires_on)
-            except ValueError as exc:
-                details = 'Exception: expires_on: {0}'.format(exc)
-                consoleLogger.error(details)
-                return cors_400(details=details)
-            # update project expires_on and set is_locked
-            fab_storage.expires_on = expires_on
-            if expires_on < datetime.now(timezone.utc):
-                fab_storage.is_locked = True
+            expires_on = normalize_date_to_utc(date_str=body.expires_on)
+            if expires_on:
+                fab_storage.expires_on = expires_on
+                db.session.commit()
+                consoleLogger.info('UPDATE: FabricStorage: uuid={0}, expires_on={1}'.format(
+                    fab_storage.uuid, str(fab_storage.expires_on)))
+                # metrics log - Storage expires_on modified:
+                log_msg = 'Storage event stg:{0} modify \'expires_on={1}\' by usr:{2}'.format(
+                    str(fab_storage.uuid),
+                    str(fab_storage.expires_on),
+                    str(api_user.uuid))
+                metricsLogger.info(log_msg)
             else:
-                fab_storage.is_locked = False
-            db.session.commit()
-            consoleLogger.info('UPDATE: FabricStorage: uuid={0}, expires_on={1}'.format(
-                fab_storage.uuid, str(fab_storage.expires_on)))
-            # metrics log - Storage expires_on modified:
-            log_msg = 'Storage event stg:{0} modify \'expires_on={1}\' by usr:{2}'.format(
-                str(fab_storage.uuid),
-                str(fab_storage.expires_on),
-                str(api_user.uuid))
-            metricsLogger.info(log_msg)
+                consoleLogger.info("NOP: storage_uuid_patch(): 'expires_on'")
         except Exception as exc:
             consoleLogger.info("NOP: storage_uuid_patch(): 'expires_on' - {0}".format(exc))
         # check for site_list

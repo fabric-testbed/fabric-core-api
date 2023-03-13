@@ -13,6 +13,10 @@ Version changelog and migration information
 
 Deployed on: TBD
 
+- Add site storage endpoints:
+  - [/storage]() - GET, POST
+  - [/storage/sites]() - GET
+  - [/storage/{uuid}]() - GET, PATCH, DELETE
 - Add `is_locked` and `expires_on` to FabricProjects model
 - Add [/projects/{uuid}/expires-on]() API endpoint
 - Add more robust DB export and restore scripts

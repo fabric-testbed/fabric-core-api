@@ -83,6 +83,8 @@ def storage_get(offset: int = None, limit: int = None, project_uuid: str = None)
                 storage.expires_on = str(item.expires_on)
                 storage.project_name = prj.name if prj else None
                 storage.project_uuid = str(prj.uuid) if prj else None
+                storage.requested_by_uuid = str(
+                    FabricPeople.query.filter_by(id=item.requested_by_id).one_or_none().uuid)
                 storage.site_list = [s.site for s in item.sites]
                 storage.uuid = str(item.uuid)
                 storage.volume_name = item.volume_name

@@ -9,9 +9,12 @@ Python (Flask) based ReSTful API for FABRIC Core Services based on COmanage regi
 
 ## Table of Contents
 
-TODO
+- [API documentation](./docs/README.md)
+- [Configuration](#config)
+- [Usage](#usage)
+- [References](#references)
 
-## Configuration
+## <a name="config"></a>Configuration
 
 Copy the `env.template` file as `.env` and populate according to your environment
 
@@ -60,7 +63,7 @@ export FLASK_APP=swagger_server.__main__:app
 ### Nginx
 ```
 
-## Usage
+## <a name="usage"></a>Usage
 
 ### Local Development
 
@@ -103,7 +106,7 @@ Flask is run on host while database is run in Docker
     ```
 
 
-## References
+## <a name="references"></a>References
 
 - Connexion: [https://connexion.readthedocs.io/en/stable/](https://connexion.readthedocs.io/en/stable/)
 - Flask: [https://flask.palletsprojects.com](https://flask.palletsprojects.com)

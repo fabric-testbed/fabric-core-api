@@ -25,6 +25,8 @@ tags:
   description: FABRIC Publications
 - name: sshkeys
   description: FABRIC Public SSH Keys
+- name: storage
+  description: FABRIC Site Storage
 - name: testbed-info
   description: FABRIC Testbed Information
 - name: version
@@ -742,11 +744,11 @@ paths:
         explode: true
         schema:
           type: string
+          default: name
           enum:
           - created_time
           - modified_time
           - name
-          default: name
       - name: order_by
         in: query
         description: order by
@@ -755,10 +757,10 @@ paths:
         explode: true
         schema:
           type: string
+          default: asc
           enum:
           - asc
           - desc
-          default: asc
       responses:
         "200":
           description: OK
@@ -1923,6 +1925,299 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.sshkeys_controller
+  /storage:
+    get:
+      tags:
+      - storage
+      summary: Get active Storage allocations
+      description: Get active Storage allocations
+      operationId: storage_get
+      parameters:
+      - name: offset
+        in: query
+        description: number of items to skip before starting to collect the result
+          set
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: limit
+        in: query
+        description: maximum number of results to return per page (1 or more)
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 200
+          minimum: 1
+          type: integer
+          format: int32
+          default: 5
+      - name: project_uuid
+        in: query
+        description: project uuid
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/storage_many'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
+    post:
+      tags:
+      - storage
+      summary: Create a Storage allocation
+      description: Create a Storage allocation
+      operationId: storage_post
+      requestBody:
+        $ref: '#/components/requestBodies/payload_storage_post'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/storage'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
+  /storage/sites:
+    get:
+      tags:
+      - storage
+      summary: List of Storage site options
+      description: List of Storage site options
+      operationId: storage_sites_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
+  /storage/{uuid}:
+    get:
+      tags:
+      - storage
+      summary: Storage allocation details by UUID
+      description: Storage allocation details by UUID
+      operationId: storage_uuid_get
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/storage'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
+    delete:
+      tags:
+      - storage
+      summary: Delete Storage allocation by UUID
+      description: Delete Storage allocation by UUID
+      operationId: storage_uuid_delete
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
+    patch:
+      tags:
+      - storage
+      summary: Update existing Storage allocation
+      description: Update existing Storage allocation
+      operationId: storage_uuid_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_storage_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.storage_controller
   /testbed-info:
     get:
       tags:
@@ -2161,6 +2456,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/status_400_bad_request_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 400
     status_401_unauthorized:
       type: object
       properties:
@@ -2429,6 +2733,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/person'
+        project_storage:
+          type: array
+          items:
+            $ref: '#/components/schemas/storage_one'
         publications:
           type: array
           items:
@@ -2545,10 +2853,10 @@ components:
           format: date-time
         fabric_key_type:
           type: string
+          default: sliver
           enum:
           - bastion
           - sliver
-          default: sliver
         fingerprint:
           type: string
         public_key:
@@ -2578,11 +2886,56 @@ components:
           type: string
         status:
           type: string
+          default: active
           enum:
           - active
           - deactivated
           - expired
-          default: active
+    storage_many:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_paginated'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/storage_one'
+    storage:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/storage_one'
+    storage_one:
+      type: object
+      properties:
+        active:
+          type: boolean
+        created_on:
+          type: string
+          format: date-time
+        expires_on:
+          type: string
+          format: date-time
+        project_name:
+          type: string
+        project_uuid:
+          type: string
+        site_list:
+          type: array
+          items:
+            type: string
+        uuid:
+          type: string
+        volume_name:
+          type: string
+        volume_size_gb:
+          type: integer
     testbed_info:
       type: object
       allOf:
@@ -2738,10 +3091,10 @@ components:
           type: string
         keytype:
           type: string
+          default: sliver
           enum:
           - bastion
           - sliver
-          default: sliver
     sshkeys_put:
       required:
       - description
@@ -2756,12 +3109,51 @@ components:
           type: string
         keytype:
           type: string
+          default: sliver
           enum:
           - bastion
           - sliver
-          default: sliver
         public_openssh:
           type: string
+    storage_post:
+      required:
+      - expires_on
+      - project_uuid
+      - requested_by_uuid
+      - volume_name
+      type: object
+      properties:
+        expires_on:
+          type: string
+        project_uuid:
+          type: string
+        requested_by_uuid:
+          type: string
+        site_list:
+          type: array
+          items:
+            type: string
+        volume_name:
+          minLength: 5
+          type: string
+        volume_size_gb:
+          type: integer
+    storage_patch:
+      type: object
+      properties:
+        active:
+          type: boolean
+        expires_on:
+          type: string
+        site_list:
+          type: array
+          items:
+            type: string
+        volume_name:
+          minLength: 5
+          type: string
+        volume_size_gb:
+          type: integer
     announcements_post:
       required:
       - announcement_type
@@ -2773,10 +3165,10 @@ components:
       properties:
         announcement_type:
           type: string
+          default: facility
           enum:
           - facility
           - maintenance
-          default: facility
         button:
           type: string
         content:
@@ -2799,10 +3191,10 @@ components:
       properties:
         announcement_type:
           type: string
+          default: facility
           enum:
           - facility
           - maintenance
-          default: facility
         button:
           type: string
         content:
@@ -2857,15 +3249,6 @@ components:
           default: Bad Request
         details:
           type: string
-        type:
-          type: string
-          default: error
-        size:
-          type: integer
-          default: 1
-        status:
-          type: integer
-          default: 400
     status_401_unauthorized_errors:
       type: object
       properties:
@@ -3029,6 +3412,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sshkey_pair'
+    "200_storage_many":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/storage_many'
+    "200_storage":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/storage'
     "200_testbed_info":
       description: OK
       content:
@@ -3198,10 +3593,10 @@ components:
       explode: true
       schema:
         type: string
+        default: add
         enum:
         - add
         - remove
-        default: add
     secret:
       name: secret
       in: query
@@ -3231,11 +3626,11 @@ components:
       explode: true
       schema:
         type: string
+        default: name
         enum:
         - created_time
         - modified_time
         - name
-        default: name
     order_by:
       name: order_by
       in: query
@@ -3245,10 +3640,10 @@ components:
       explode: true
       schema:
         type: string
+        default: asc
         enum:
         - asc
         - desc
-        default: asc
     uuid:
       name: uuid
       in: path
@@ -3319,6 +3714,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sshkeys_put'
+    payload_storage_post:
+      description: Create a Storage allocation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/storage_post'
+    payload_storage_patch:
+      description: Update an existing Storage allocation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/storage_patch'
     payload_announcements_post:
       description: Create an announcement
       content:

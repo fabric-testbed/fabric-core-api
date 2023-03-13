@@ -22,6 +22,7 @@ from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, \
     ProfilesPersonalPages, ProfilesKeywords, ProfilesOtherIdentities, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
+from swagger_server.database.models.storage import FabricStorage, StorageSites
 """
 -------------------------------------------------------------------------------
 END: Imports needed for alembic and flask using multiple model definition files

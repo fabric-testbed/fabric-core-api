@@ -66,35 +66,3 @@ class FabricSshKeys(BaseMixin, TimestampMixin, db.Model):
 
 Index('idx_owner_keyid_keytype', 'people_id', 'uuid', 'ssh_key_type')
 Index('idx_owner_fingerprint', 'people_id', 'fingerprint')
-
-# class DbSshKey(Base):
-#     """
-#     SSH key storage. Keys can be sliver or bastion.
-#     They can be forcibly deactivated or they can expire.
-#     """
-#     __tablename__ = 'fabric_sshkeys'
-#
-#     id = Column(Integer, primary_key=True)
-#     key_uuid = Column(String)
-#     comment = Column(String)
-#     # When received from user or returned to them
-#     # SSH public key has name, public_key and label in that order
-#     # e.g. 'ssh-dss <base 64 encoded public key> mykey'
-#     description = Column(String)
-#     ssh_key_type = Column(String)
-#     fabric_key_type = Column(String)
-#     fingerprint = Column(String)
-#     created_on = Column(DateTime(timezone=True))
-#     # NOTE: not clear this index is enough to optimize searches for expired keys
-#     expires_on = Column(DateTime(timezone=True), index=True)
-#     active = Column(Boolean)
-#     deactivation_reason = Column(String)
-#     deactivated_on = Column(DateTime(timezone=True))
-#     owner_uuid = Column(String, ForeignKey('fabric_people.uuid'))
-#     # if storing locally
-#     public_key = Column(String)
-#     # if storing in COmanage
-#     comanage_key_id = Column(String)
-#
-#     Index('idx_owner_keyid_keytype', 'type', 'owner_uuid', 'key_uuid')
-#     Index('idx_owner_fingerprint', 'owner_uuid', 'fingerprint')

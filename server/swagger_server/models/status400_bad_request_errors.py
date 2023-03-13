@@ -14,40 +14,25 @@ class Status400BadRequestErrors(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, message: str='Bad Request', details: str=None, type: str='error', size: int=1, status: int=400):  # noqa: E501
+    def __init__(self, message: str='Bad Request', details: str=None):  # noqa: E501
         """Status400BadRequestErrors - a model defined in Swagger
 
         :param message: The message of this Status400BadRequestErrors.  # noqa: E501
         :type message: str
         :param details: The details of this Status400BadRequestErrors.  # noqa: E501
         :type details: str
-        :param type: The type of this Status400BadRequestErrors.  # noqa: E501
-        :type type: str
-        :param size: The size of this Status400BadRequestErrors.  # noqa: E501
-        :type size: int
-        :param status: The status of this Status400BadRequestErrors.  # noqa: E501
-        :type status: int
         """
         self.swagger_types = {
             'message': str,
-            'details': str,
-            'type': str,
-            'size': int,
-            'status': int
+            'details': str
         }
 
         self.attribute_map = {
             'message': 'message',
-            'details': 'details',
-            'type': 'type',
-            'size': 'size',
-            'status': 'status'
+            'details': 'details'
         }
         self._message = message
         self._details = details
-        self._type = type
-        self._size = size
-        self._status = status
 
     @classmethod
     def from_dict(cls, dikt) -> 'Status400BadRequestErrors':
@@ -101,66 +86,3 @@ class Status400BadRequestErrors(Model):
         """
 
         self._details = details
-
-    @property
-    def type(self) -> str:
-        """Gets the type of this Status400BadRequestErrors.
-
-
-        :return: The type of this Status400BadRequestErrors.
-        :rtype: str
-        """
-        return self._type
-
-    @type.setter
-    def type(self, type: str):
-        """Sets the type of this Status400BadRequestErrors.
-
-
-        :param type: The type of this Status400BadRequestErrors.
-        :type type: str
-        """
-
-        self._type = type
-
-    @property
-    def size(self) -> int:
-        """Gets the size of this Status400BadRequestErrors.
-
-
-        :return: The size of this Status400BadRequestErrors.
-        :rtype: int
-        """
-        return self._size
-
-    @size.setter
-    def size(self, size: int):
-        """Sets the size of this Status400BadRequestErrors.
-
-
-        :param size: The size of this Status400BadRequestErrors.
-        :type size: int
-        """
-
-        self._size = size
-
-    @property
-    def status(self) -> int:
-        """Gets the status of this Status400BadRequestErrors.
-
-
-        :return: The status of this Status400BadRequestErrors.
-        :rtype: int
-        """
-        return self._status
-
-    @status.setter
-    def status(self, status: int):
-        """Sets the status of this Status400BadRequestErrors.
-
-
-        :param status: The status of this Status400BadRequestErrors.
-        :type status: int
-        """
-
-        self._status = status

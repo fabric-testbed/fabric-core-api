@@ -1,5 +1,5 @@
 """
-v1.4.0 --> v1.4.1 - database tables
+v1.4.0 --> v1.4.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -28,7 +28,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
 (21 rows)
 
-Changes from v1.4.0 --> v1.4.1
+Changes from v1.4.0 --> v1.4.2
  public | projects                  | table | postgres
  - add: expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
  - add: is_locked = db.Column(db.Boolean, default=False, nullable=False)
@@ -38,15 +38,17 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import text, update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import update, MetaData, text
 
-from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
+
+# API version of data to restore from
+api_version = '1.4.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -58,7 +60,7 @@ def restore_alembic_version_data():
     alembic_version
     - version_num = String
     """
-    with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(api_version), 'r') as infile:
         alembic_version_dict = json.load(infile)
     alembic_version = alembic_version_dict.get('alembic_version')
     for a in alembic_version:
@@ -89,7 +91,7 @@ def restore_announcements_data():
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(api_version), 'r') as infile:
         announcements_dict = json.load(infile)
     announcements = announcements_dict.get('announcements')
     max_id = 0
@@ -116,7 +118,7 @@ def restore_announcements_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='announcements', seq_value=max_id+1)
+    reset_serial_sequence(db_table='announcements', seq_value=max_id + 1)
 
 
 # export groups as JSON output file
@@ -132,7 +134,7 @@ def restore_groups_data():
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - name = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(api_version), 'r') as infile:
         groups_dict = json.load(infile)
     groups = groups_dict.get('groups')
     max_id = 0
@@ -152,7 +154,7 @@ def restore_groups_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='groups', seq_value=max_id+1)
+    reset_serial_sequence(db_table='groups', seq_value=max_id + 1)
 
 
 # export people as JSON output file
@@ -184,7 +186,7 @@ def restore_people_data():
     - * updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(api_version), 'r') as infile:
         people_dict = json.load(infile)
     people = people_dict.get('people')
     max_id = 0
@@ -219,7 +221,8 @@ def restore_people_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='people', seq_value=max_id+1)
+    reset_serial_sequence(db_table='people', seq_value=max_id + 1)
+
 
 # export people_email_addresses as JSON output file
 def restore_people_email_addresses_data():
@@ -231,7 +234,7 @@ def restore_people_email_addresses_data():
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - type = db.Column(db.String())
     """
-    with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/people_email_addresses-v{0}.json'.format(api_version), 'r') as infile:
         people_email_addresses_dict = json.load(infile)
     people_email_addresses = people_email_addresses_dict.get('people_email_addresses')
     max_id = 0
@@ -248,7 +251,7 @@ def restore_people_email_addresses_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='people_email_addresses', seq_value=max_id+1)
+    reset_serial_sequence(db_table='people_email_addresses', seq_value=max_id + 1)
 
 
 # export people_organizations as JSON output file
@@ -260,7 +263,7 @@ def restore_people_organizations_data():
     - org_identity_id = db.Column(db.Integer)
     - organization = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/people_organizations-v{0}.json'.format(api_version), 'r') as infile:
         people_organizations_dict = json.load(infile)
     people_organizations = people_organizations_dict.get('people_organizations')
     max_id = 0
@@ -276,7 +279,7 @@ def restore_people_organizations_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='people_organizations', seq_value=max_id+1)
+    reset_serial_sequence(db_table='people_organizations', seq_value=max_id + 1)
 
 
 # export people_roles as JSON output file
@@ -293,7 +296,7 @@ def restore_people_roles_data():
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - status = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/people_roles-v{0}.json'.format(api_version), 'r') as infile:
         people_roles_dict = json.load(infile)
     people_roles = people_roles_dict.get('people_roles')
     max_id = 0
@@ -314,7 +317,7 @@ def restore_people_roles_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='people_roles', seq_value=max_id+1)
+    reset_serial_sequence(db_table='people_roles', seq_value=max_id + 1)
 
 
 # export preferences as JSON output file
@@ -332,7 +335,7 @@ def restore_preferences_data():
     - type = db.Column(db.Enum(EnumPreferenceTypes), nullable=False)
     - value = db.Column(db.Boolean, default=True, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/preferences-v{0}.json'.format(api_version), 'r') as infile:
         preferences_dict = json.load(infile)
     preferences = preferences_dict.get('preferences')
     max_id = 0
@@ -348,13 +351,13 @@ def restore_preferences_data():
             people_id=int(p.get('people_id')) if p.get('people_id') else None,
             profiles_people_id=int(p.get('profiles_people_id')) if p.get('profiles_people_id') else None,
             profiles_projects_id=int(p.get('profiles_projects_id')) if p.get('profiles_projects_id') else None,
-            projects_id=int(p.get('projects_id')) if p.get('project_id') else None,
+            projects_id=int(p.get('projects_id')) if p.get('projects_id') else None,
             type=p.get('type'),
             value=p.get('value')
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='preferences', seq_value=max_id+1)
+    reset_serial_sequence(db_table='preferences', seq_value=max_id + 1)
 
 
 # export profiles_keywords as JSON output file
@@ -365,7 +368,7 @@ def restore_profiles_keywords_data():
     - keyword = db.Column(db.String(), nullable=False)
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_keywords-v{0}.json'.format(api_version), 'r') as infile:
         profiles_keywords_dict = json.load(infile)
     profiles_keywords = profiles_keywords_dict.get('profiles_keywords')
     max_id = 0
@@ -380,7 +383,7 @@ def restore_profiles_keywords_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_keywords', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_keywords', seq_value=max_id + 1)
 
 
 # export profiles_other_identities as JSON output file
@@ -392,7 +395,7 @@ def restore_profiles_other_identities_data():
     - profiles_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     - type = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_other_identities-v{0}.json'.format(api_version), 'r') as infile:
         profiles_other_identities_dict = json.load(infile)
     profiles_other_identities = profiles_other_identities_dict.get('profiles_other_identities')
     max_id = 0
@@ -408,7 +411,7 @@ def restore_profiles_other_identities_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_other_identities', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_other_identities', seq_value=max_id + 1)
 
 
 # export profiles_people as JSON output file
@@ -429,7 +432,7 @@ def restore_profiles_people_data():
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     - * website = db.Column(db.String(), nullable=True)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_people-v{0}.json'.format(api_version), 'r') as infile:
         profiles_people_dict = json.load(infile)
     profiles_people = profiles_people_dict.get('profiles_people')
     max_id = 0
@@ -454,7 +457,7 @@ def restore_profiles_people_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_people', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_people', seq_value=max_id + 1)
 
 
 # export profiles_personal_pages as JSON output file
@@ -466,7 +469,7 @@ def restore_profiles_personal_pages_data():
     - type = db.Column(db.String(), nullable=False)
     - url = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_personal_pages-v{0}.json'.format(api_version), 'r') as infile:
         profiles_personal_pages_dict = json.load(infile)
     profiles_personal_pages = profiles_personal_pages_dict.get('profiles_personal_pages')
     max_id = 0
@@ -482,7 +485,7 @@ def restore_profiles_personal_pages_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_personal_pages', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_personal_pages', seq_value=max_id + 1)
 
 
 # export profiles_projects as JSON output file
@@ -502,7 +505,7 @@ def restore_profiles_projects_data():
     - references = db.relationship('ProfilesReferences', backref='profiles_projects', lazy=True)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_projects-v{0}.json'.format(api_version), 'r') as infile:
         profiles_projects_dict = json.load(infile)
     profiles_projects = profiles_projects_dict.get('profiles_projects')
     max_id = 0
@@ -526,7 +529,7 @@ def restore_profiles_projects_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_projects', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_projects', seq_value=max_id + 1)
 
 
 # export profiles_references as JSON output file
@@ -538,7 +541,7 @@ def restore_profiles_references_data():
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     - url = db.Column(db.String(), nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/profiles_references-v{0}.json'.format(api_version), 'r') as infile:
         profiles_references_dict = json.load(infile)
     profiles_references = profiles_references_dict.get('profiles_references')
     max_id = 0
@@ -554,7 +557,7 @@ def restore_profiles_references_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='profiles_references', seq_value=max_id+1)
+    reset_serial_sequence(db_table='profiles_references', seq_value=max_id + 1)
 
 
 # export projects as JSON output file
@@ -584,7 +587,7 @@ def restore_projects_data():
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(api_version), 'r') as infile:
         projects_dict = json.load(infile)
     projects = projects_dict.get('projects')
     max_id = 0
@@ -618,7 +621,7 @@ def restore_projects_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='projects', seq_value=max_id+1)
+    reset_serial_sequence(db_table='projects', seq_value=max_id + 1)
 
 
 # export projects_creators as JSON output file
@@ -628,7 +631,7 @@ def restore_projects_creators_data():
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
     """
-    with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(api_version), 'r') as infile:
         projects_creators_dict = json.load(infile)
     projects_creators = projects_creators_dict.get('projects_creators')
     for pc in projects_creators:
@@ -647,7 +650,7 @@ def restore_projects_members_data():
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
     """
-    with open(BACKUP_DATA_DIR + '/projects_members-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/projects_members-v{0}.json'.format(api_version), 'r') as infile:
         projects_members_dict = json.load(infile)
     projects_members = projects_members_dict.get('projects_members')
     for pc in projects_members:
@@ -666,7 +669,7 @@ def restore_projects_owners_data():
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
     """
-    with open(BACKUP_DATA_DIR + '/projects_owners-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/projects_owners-v{0}.json'.format(api_version), 'r') as infile:
         projects_owners_dict = json.load(infile)
     projects_owners = projects_owners_dict.get('projects_owners')
     for pc in projects_owners:
@@ -686,7 +689,7 @@ def restore_projects_tags_data():
     - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     - tag = db.Column(db.Text, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/projects_tags-v{0}.json'.format(api_version), 'r') as infile:
         projects_tags_dict = json.load(infile)
     projects_tags = projects_tags_dict.get('projects_tags')
     max_id = 0
@@ -701,7 +704,7 @@ def restore_projects_tags_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='projects_tags', seq_value=max_id+1)
+    reset_serial_sequence(db_table='projects_tags', seq_value=max_id + 1)
 
 
 # export sshkeys as JSON output file
@@ -725,7 +728,7 @@ def restore_sshkeys_data():
     - status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/sshkeys-v{0}.json'.format(api_version), 'r') as infile:
         sshkeys_dict = json.load(infile)
     sshkeys = sshkeys_dict.get('sshkeys')
     max_id = 0
@@ -753,7 +756,7 @@ def restore_sshkeys_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='sshkeys', seq_value=max_id+1)
+    reset_serial_sequence(db_table='sshkeys', seq_value=max_id + 1)
 
 
 # export testbed_info as JSON output file
@@ -769,7 +772,7 @@ def restore_testbed_info_data():
     - modified_by_uuid = db.Column(db.String(), nullable=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(__API_VERSION__), 'r') as infile:
+    with open(BACKUP_DATA_DIR + '/testbed_info-v{0}.json'.format(api_version), 'r') as infile:
         testbed_info_dict = json.load(infile)
     testbed_info = testbed_info_dict.get('testbed_info')
     max_id = 0
@@ -789,7 +792,7 @@ def restore_testbed_info_data():
         ).on_conflict_do_nothing()
         db.session.execute(stmt)
     db.session.commit()
-    reset_serial_sequence(db_table='testbed_info', seq_value=max_id+1)
+    reset_serial_sequence(db_table='testbed_info', seq_value=max_id + 1)
 
 
 # verify project expiry date
@@ -847,7 +850,7 @@ def reset_serial_sequence(db_table: str, seq_value: int):
 
 if __name__ == '__main__':
     app.app_context().push()
-    consoleLogger.info('Restorer for API version {0}'.format(__API_VERSION__))
+    consoleLogger.info('Restorer for API version {0}'.format(api_version))
     #                    List of relations
     #  Schema |           Name            | Type  |  Owner
     # --------+---------------------------+-------+----------

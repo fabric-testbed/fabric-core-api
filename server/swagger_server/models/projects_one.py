@@ -10,6 +10,7 @@ from swagger_server.models.person import Person  # noqa: F401,E501
 from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
+from swagger_server.models.storage_one import StorageOne  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -18,7 +19,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, publications: List[object]=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, publications: List[object]=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -51,6 +52,8 @@ class ProjectsOne(Model):
         :type project_members: List[Person]
         :param project_owners: The project_owners of this ProjectsOne.  # noqa: E501
         :type project_owners: List[Person]
+        :param project_storage: The project_storage of this ProjectsOne.  # noqa: E501
+        :type project_storage: List[StorageOne]
         :param publications: The publications of this ProjectsOne.  # noqa: E501
         :type publications: List[object]
         :param tags: The tags of this ProjectsOne.  # noqa: E501
@@ -74,6 +77,7 @@ class ProjectsOne(Model):
             'project_creators': List[Person],
             'project_members': List[Person],
             'project_owners': List[Person],
+            'project_storage': List[StorageOne],
             'publications': List[object],
             'tags': List[str],
             'uuid': str
@@ -95,6 +99,7 @@ class ProjectsOne(Model):
             'project_creators': 'project_creators',
             'project_members': 'project_members',
             'project_owners': 'project_owners',
+            'project_storage': 'project_storage',
             'publications': 'publications',
             'tags': 'tags',
             'uuid': 'uuid'
@@ -114,6 +119,7 @@ class ProjectsOne(Model):
         self._project_creators = project_creators
         self._project_members = project_members
         self._project_owners = project_owners
+        self._project_storage = project_storage
         self._publications = publications
         self._tags = tags
         self._uuid = uuid
@@ -455,6 +461,27 @@ class ProjectsOne(Model):
         """
 
         self._project_owners = project_owners
+
+    @property
+    def project_storage(self) -> List[StorageOne]:
+        """Gets the project_storage of this ProjectsOne.
+
+
+        :return: The project_storage of this ProjectsOne.
+        :rtype: List[StorageOne]
+        """
+        return self._project_storage
+
+    @project_storage.setter
+    def project_storage(self, project_storage: List[StorageOne]):
+        """Sets the project_storage of this ProjectsOne.
+
+
+        :param project_storage: The project_storage of this ProjectsOne.
+        :type project_storage: List[StorageOne]
+        """
+
+        self._project_storage = project_storage
 
     @property
     def publications(self) -> List[object]:

@@ -60,6 +60,11 @@ from swagger_server.models.status423_locked import Status423Locked
 from swagger_server.models.status423_locked_errors import Status423LockedErrors
 from swagger_server.models.status500_internal_server_error import Status500InternalServerError
 from swagger_server.models.status500_internal_server_error_errors import Status500InternalServerErrorErrors
+from swagger_server.models.storage import Storage
+from swagger_server.models.storage_many import StorageMany
+from swagger_server.models.storage_one import StorageOne
+from swagger_server.models.storage_patch import StoragePatch
+from swagger_server.models.storage_post import StoragePost
 from swagger_server.models.testbed_info import TestbedInfo
 from swagger_server.models.testbed_info_post import TestbedInfoPost
 from swagger_server.models.testbed_info_results import TestbedInfoResults

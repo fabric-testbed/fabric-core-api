@@ -21,3 +21,6 @@ else:
 
 # Publications Options
 PUBLICATIONS_CLASSIFICATION_TERMS = CoreApiOptions('publications_classification_terms.json')
+
+# Storage Sites
+STORAGE_SITES = CoreApiOptions('storage_sites.json')

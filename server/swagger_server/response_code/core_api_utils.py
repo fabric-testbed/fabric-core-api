@@ -1,6 +1,7 @@
-from dateutil import parser
 from datetime import datetime, timedelta, timezone
 from typing import Union
+
+from dateutil import parser
 
 
 def normalize_date_to_utc(date_str: str, return_type: str = None) -> Union[None, str, datetime]:

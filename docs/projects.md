@@ -53,6 +53,7 @@ FABRIC Projects
   - param: `sort_by` - attribute to sort results by - `created_time`, `modified_time`, `name`
   - param: `order_by` - attribute to order results by - `asc`, `desc` 
   - authz: open to all authenticated users - results vary by role or membership
+  - response type: paginated `projects`
 - POST - create a new project
   - data: `description` as string (required)
   - data: `is_public` as boolean (required)
@@ -60,12 +61,14 @@ FABRIC Projects
   - data: `project_members` as array of string (optional)
   - data: `project_owners` as array of string (optional)
   - authz: `project-leads` - only role allowed to create a new project
+  - response type: singleton `projects.details`
 
 ### `/projects/{uuid}`
 
 - GET - retrieve details about a single project
   - authz: open to all authenticated users - public projects and projects they are creator/member/owner of 
   - authz: `facility-operators` see all projects
+  - response type: singleton `projects.details`
 - PATCH - update an existing project
   - data: `description` as string (optional)
   - data: `is_public` as boolean (optional)
@@ -76,9 +79,11 @@ FABRIC Projects
   - data: `preferences.show_publications` as boolean (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
 - DELETE - remove an existing project
   - authz: project creator/owner can remove their project
   - authz: `facility-operators` can remove any project
+  - response type: 200 OK as `204 no content`
 
 ### `/projects{uuid}/profile`
 
@@ -99,6 +104,7 @@ FABRIC Projects
   - data: `references` as array of references (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
 
 ### `/projects{uuid}/personnel`
 
@@ -107,6 +113,7 @@ FABRIC Projects
   - data: `project_owners` as array of uuid as string (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
 
 ### `/projects{uuid}/tags`
 
@@ -114,24 +121,28 @@ FABRIC Projects
   - data: `tags` as array of string (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
 
 ### `/projects/preferences`
 
 - GET - retrieve list of valid FABRIC project preference types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `projects.preferences`
 
 ### `/projects/profile/preferences`
 
 - GET - retrieve list of valid FABRIC project profile preference types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `projects.profile.preferences`
 
 ### `/projects/tags`
 
 - GET - retrieve list of valid FABRIC project permission tags
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `projects.tags`
 
 ## Response and Request formats
 

@@ -17,6 +17,7 @@ Who am I authenticated as?
 
 - GET - retrieve details about authenticated user
   - authz: open to all
+  - response type: singleton `whoami`
 
 ## Response and Request formats
 

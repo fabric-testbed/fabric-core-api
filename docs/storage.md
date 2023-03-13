@@ -16,6 +16,7 @@ FABRIC Storage Allocations
   - param: `limit` - maximum number of results to return per page (1 or more)
   - authz: `facility-operators` can list all storage allocations
   - authz: all others can list storage allocations associated to projects they are creator/owner/member of
+  - response type: paginated `storage`
 - POST - create a new storage allocation
   - data: `expires_on` as string (required)
   - data: `project_uuid` as string (required)
@@ -25,12 +26,14 @@ FABRIC Storage Allocations
   - data: `volume_size_gb` as integer (optional)
   - authz: `facility-operators` - only role allowed to create storage
   - authz: `Authorization: Bearer $TOKEN` in the request header
+  - response type: singleton `storage.details`
 
 ### `/storage/site-list`
 
 - GET - retrieve list of valid FABRIC site short-names
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `fabric.sites`
 
 ### `/storage/{uuid}`
 
@@ -38,6 +41,7 @@ FABRIC Storage Allocations
   - authz: `facility-operators` see all storage allocations
   - authz: `Authorization: Bearer $TOKEN` in the request header
   - authz: all others see storage allocations associated to projects they are creator/owner/member of
+  - response type: singleton `storage.details`
 - PATCH - update an existing storage allocation
   - data: `active` as boolean (optional)
   - data: `expires_on` as string (optional)
@@ -46,9 +50,11 @@ FABRIC Storage Allocations
   - data: `volume_size_gb` as integer (optional)
   - authz: `facility-operators` - only role allowed to update storage
   - authz: `Authorization: Bearer $TOKEN` in the request header
+  - response type: 200 OK as `204 no content`
 - DELETE - remove an existing storage allocation
   - authz: `facility-operators` - only role allowed to delete storage
   - authz: `Authorization: Bearer $TOKEN` in the request header
+  - response type: 200 OK as `204 no content`
 
 ## Response and Request formats
 

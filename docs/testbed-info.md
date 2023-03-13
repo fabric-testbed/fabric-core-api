@@ -10,9 +10,11 @@ Testbed Information
 
 - GET - retrieve testbed information details
   - authz: open to all
+  - response type: singleton `testbed.info`
 - POST - create new testbed information
   - data: `testbed_info` - required - uuid of person to search by
   - authz: `facility-operators` - only role allowed to create new testbed-info
+  - response type: singleton `testbed.info`
 
 ## Response and Request formats
 

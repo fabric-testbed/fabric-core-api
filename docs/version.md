@@ -13,6 +13,7 @@ Core API Version
 
 - GET - retrieve details about core-api version
   - authz: open to all
+  - response type: singleton `version`
 
 ## Response and Request formats
 

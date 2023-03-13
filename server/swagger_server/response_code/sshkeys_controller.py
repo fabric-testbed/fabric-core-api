@@ -281,7 +281,7 @@ def sshkeys_uuid_get(uuid: str) -> Sshkeys:  # noqa: E501
         response.results = results
         response.size = len(results)
         response.status = 200
-        response.type = 'sshkeys.detail'
+        response.type = 'sshkeys.details'
         return cors_200(response_body=response)
     except Exception as exc:
         details = 'Oops! something went wrong with sshkeys_uuid_get(): {0}'.format(exc)

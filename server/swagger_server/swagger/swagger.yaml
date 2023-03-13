@@ -2456,6 +2456,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/status_400_bad_request_errors'
+        type:
+          type: string
+          default: error
+        size:
+          type: integer
+          default: 1
+        status:
+          type: integer
+          default: 400
     status_401_unauthorized:
       type: object
       properties:
@@ -3240,15 +3249,6 @@ components:
           default: Bad Request
         details:
           type: string
-        type:
-          type: string
-          default: error
-        size:
-          type: integer
-          default: 1
-        status:
-          type: integer
-          default: 400
     status_401_unauthorized_errors:
       type: object
       properties:

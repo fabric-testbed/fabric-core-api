@@ -21,23 +21,29 @@ FABRIC Public SSH Keys
   - param: `secret` - required shared secret between bastion hosts and core-api
   - param: `since_time` - required Date/Time
   - authz: open to all users with the shared secret
+  - response type: singleton `bastionkeys`
 
 ### `sshkeys`
 
 - GET - retrieve list of SSH keys
   - param: `person_uuid` - required - uuid of person to search by
   - authz: open to all authenticated users
+  - response type: paginated `sshkeys`
 - POST - create a new SSH public/private key pair
   - authz: open to all authenticated users
+  - response type: singleton `sshkeys.keypair`
 - PUT - add an existing SSH public key
   - authz: open to all authenticated users
+  - response type: 200 OK as `204 no content`
 
 ### `sshkeys/{uuid}`
 
 - GET - retrieve details about a single SSH key
   - authz: open to all authenticated users
+  - response type: singelton `sshkeys.details`
 - DELETE - remove an existing SSH key
   - authz: open to all authenticated users
+  - response type: 200 OK as `204 no content`
 
 ## Response and Request formats
 

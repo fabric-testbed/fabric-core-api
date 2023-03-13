@@ -15,6 +15,7 @@ FABRIC Facility and Maintenance Announcements
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more
   - authz: open to all 
+  - response type: paginated `announcements`
 - POST - create a new announcement
   - data: `announcement_type` as string (required)
   - data: `button` as string (optional)
@@ -26,11 +27,13 @@ FABRIC Facility and Maintenance Announcements
   - data: `start_date` as string (required)
   - data: `title` as string (required)
   - authz: `portal-admins` - only role allowed to create announcements
+  - response type: singleton `announcemnts.details`
 
 ### `/announcements/{uuid}`
 
 - GET - retrieve details about a single announcement
   - authz: open to all 
+  - response type: singleton `announcemnts.details`
 - PATCH - update an existing announcement
   - data: `announcement_type` as string (optional)
   - data: `button` as string (optional)
@@ -42,8 +45,10 @@ FABRIC Facility and Maintenance Announcements
   - data: `start_date` as string (optional)
   - data: `title` as string (optional)
   - authz: `portal-admins` - only role allowed to update announcements
+  - response type: 200 OK as `204 no content`
 - DELETE - remove an existing announcement
   - authz: `portal-admins` - only role allowed to delete announcements
+  - response type: 200 OK as `204 no content`
 
 ## Response and Request formats
 
@@ -74,7 +79,7 @@ FABRIC Facility and Maintenance Announcements
     "content": "<string>",           <-- required - announcement body
     "display_date": "<string>",      <-- optional - Date/Time shown as part of announcement
     "end_date": "<string>",          <-- optional - Date/Time
-    "is_active": <boolean>,          <-- required - true/false only
+    "is_active": <boolean>,          <-- required - true/false
     "link": "<string>",              <-- optional - URL
     "start_date": "<string>",        <-- required - Date/Time
     "title": "<string>"              <-- required - announcement title
@@ -90,7 +95,7 @@ FABRIC Facility and Maintenance Announcements
     "content": "<string>",           <-- optional
     "display_date": "<string>",      <-- optional
     "end_date": "<string>",          <-- optional
-    "is_active": <boolean>,          <-- optional - true/false only
+    "is_active": <boolean>,          <-- optional - true/false
     "link": "<string>",              <-- optional
     "start_date": "<string>",        <-- optional
     "title": "<string>"              <-- optional

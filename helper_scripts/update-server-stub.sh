@@ -23,6 +23,7 @@ DIRS_TO_COPY=(
     swagger_server/database
     swagger_server/pr-uis-migration
     swagger_server/response_code
+    versions
 )
 
 # check for STUB_DIR directory

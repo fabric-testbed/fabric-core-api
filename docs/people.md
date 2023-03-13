@@ -13,12 +13,14 @@ FABRIC People
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more)
   - authz: open to all authenticated users
+  - response type: paginated `people`
 
 ### `/people/{uuid}`
 
 - GET - retrieve details about a single person
   - param: `as_self` - optional search boolean - default `false`
   - authz: open to all authenticated users
+  - response type: singleton `people.details`
 - PATCH - update an existing person
   - data: `email` as string (optional)
   - data: `name` as string (optional)
@@ -29,6 +31,7 @@ FABRIC People
   - data: `preferences.show_roles` as boolean (optional)
   - data: `preferences.show_sshkeys` as boolean (optional) 
   - authz: open to authenticated user as self
+  - response type: 200 OK as `204 no content`
 
 ### `/people/{uuid}/profile`
 
@@ -49,31 +52,36 @@ FABRIC People
   - data: `preferences.show_website` as boolean (optional)
   - data: `pronouns` as string (optional)
   - data: `website` as string (optional)
-  - ;: open to authenticated user as self
+  - authz: open to authenticated user as self
+  - response type: 200 OK as `204 no content`
 
 ### `/people/preferences`
 
 - GET - retrieve list of valid FABRIC people preference types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `people.preferences`
 
 ### `/people/profile/otheridentity-types`
 
 - GET - retrieve list of valid FABRIC people profile other identity types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `people.profile.otheridentity.types`
 
 ### `/people/profile/preferences`
 
 - GET - retrieve list of valid FABRIC people profile preference types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `people.profile.preferences`
 
 ### `/people/profile/personalpage-types`
 
 - GET - retrieve list of valid FABRIC people profile personal page types
   - param: `search` - optional text search, 3 or more characters
   - authz: open to all authenticated users
+  - response type: singleton `people.profile.personalpage.types`
 
 ## Response and Request formats
 

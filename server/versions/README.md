@@ -4,14 +4,14 @@ Version changelog and migration information
 
 ## Table of Contents
 
-- [v1.4.2](#v142) - released TBD
+- [v1.4.2](#v142) - released 03/16/2023
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
 
 ### <a name="v142"></a>v1.4.2
 
-Deployed on: TBD
+Deployed on: 03/16/2023
 
 - Add site storage endpoints:
   - [/storage]() - GET, POST

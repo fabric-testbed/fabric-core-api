@@ -169,43 +169,6 @@ def update_people_identifiers(fab_person_id: int, co_person_id: int) -> None:
         consoleLogger.error(details)
 
 
-def update_people_names(fab_person_id: int, co_person_id: int) -> None:
-    try:
-        fab_person = FabricPeople.query.filter_by(id=fab_person_id).one_or_none()
-        co_names = api.names_view_per_person(
-            person_type='copersonid', person_id=co_person_id).get('Names', [])
-        for name_set in co_names:
-            if name_set.get('PrimaryName', 'false') == 'true':
-                honorific = name_set.get('Honorific', None)
-                given = name_set.get('Given', None)
-                middle = name_set.get('Middle', None)
-                family = name_set.get('Family', None)
-                suffix = name_set.get('Suffix', None)
-                fab_person.oidc_claim_family_name = family
-                fab_person.oidc_claim_given_name = given
-                display_name = None
-                if len(honorific) > 0:
-                    display_name = honorific + ' '
-                if len(given) > 0:
-                    display_name += given + ' '
-                if len(middle) > 0:
-                    display_name += middle + ' '
-                if len(family) > 0:
-                    display_name += family
-                if len(suffix) > 0:
-                    display_name += ', ' + suffix
-
-                fab_person.oidc_claim_name = display_name
-                if display_name:
-                    fab_person.display_name = display_name
-                else:
-                    fab_person.display_name = fab_person.preferred_email
-        db.session.commit()
-    except Exception as exc:
-        details = 'Oops! something went wrong with update_people_names(): {0}'.format(exc)
-        consoleLogger.error(details)
-
-
 def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
     try:
         fab_person = FabricPeople.query.filter_by(id=fab_person_id).one_or_none()

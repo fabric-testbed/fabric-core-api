@@ -1,18 +1,17 @@
 import os
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
 from typing import Optional
+from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, update_email_addresses, update_org_affiliation, \
-    update_people_identifiers, update_people_roles, update_user_subject_identities, update_user_org_affiliations, update_people_names
+    update_people_identifiers, update_people_roles, update_user_org_affiliations, update_user_subject_identities
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
-from swagger_server.response_code.response_utils import array_difference
 
 
 def get_person_by_login_claims() -> FabricPeople:
@@ -86,17 +85,11 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
                 fab_person.preferred_email = claims.get('email')
                 fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
-                db.session.commit()
                 # generate bastion_login
                 fab_person.bastion_login = generate_bastion_login(fab_person=fab_person)
                 # generate gecos
                 fab_person.gecos = generate_gecos(fab_person=fab_person)
-                # update family, given, name and display_name
-                update_people_names(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
-                # update eppn, fabricid, oidcsub
-                update_people_identifiers(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
-                # update primary org affiliation
-                update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+                db.session.commit()
                 # update user sub identities
                 update_user_subject_identities(fab_person=fab_person)
                 # update user org affiliations
@@ -191,6 +184,7 @@ def create_fabric_person_from_co_person_id(co_person_id: int = None) -> FabricPe
             create_people_preferences(fab_person=fab_person)
             create_profile_people(fab_person=fab_person)
             update_people_identifiers(fab_person_id=fab_person.id, co_person_id=co_person_id)
+            update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
             consoleLogger.info(
                 'CREATE FabricPeople: name={0}, uuid={1}'.format(fab_person.display_name, fab_person.uuid))
             # metrics log - User was created:
@@ -313,5 +307,3 @@ def generate_gecos(fab_person: FabricPeople) -> str:
         oidc_email
         # external email or other contact info
     ])
-
-

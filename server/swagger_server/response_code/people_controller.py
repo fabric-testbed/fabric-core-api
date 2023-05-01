@@ -257,7 +257,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         people_one.uuid = fab_person.uuid
         # set remaining attributes for uuid == self
         if as_self and api_user.uuid == uuid:
-            people_one.bastion_login = fab_person.bastion_login()
+            people_one.bastion_login = fab_person.bastion_login
             people_one.cilogon_email = fab_person.oidc_claim_email
             people_one.cilogon_family_name = fab_person.oidc_claim_family_name
             people_one.cilogon_given_name = fab_person.oidc_claim_given_name

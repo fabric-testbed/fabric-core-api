@@ -87,6 +87,10 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
                 fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
                 db.session.commit()
+                # generate bastion_login
+                fab_person.bastion_login = generate_bastion_login(fab_person=fab_person)
+                # generate gecos
+                fab_person.gecos = generate_gecos(fab_person=fab_person)
                 # update family, given, name and display_name
                 update_people_names(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
                 # update eppn, fabricid, oidcsub

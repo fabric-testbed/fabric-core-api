@@ -38,6 +38,7 @@ def get_person_by_login_claims() -> FabricPeople:
     """
     try:
         claims = vouch_get_custom_claims()
+        print(claims)
         fab_person = FabricPeople.query.filter(
             FabricPeople.oidc_claim_email == str(claims.get('email'))
         ).one_or_none()
@@ -74,7 +75,6 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     """
     fab_person = FabricPeople()
     try:
-        # if claims.get('given_name') and claims.get('family_name') and claims.get('email'):
         if claims.get('email'):
             # search for person by email
             co_person = api.copeople_match(
@@ -82,18 +82,20 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
             if co_person:
                 fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person[0].get('Id'))
                 fab_person.oidc_claim_email = claims.get('email')
-                # fab_person.oidc_claim_family_name = claims.get('family_name')
-                # fab_person.oidc_claim_given_name = claims.get('given_name')
-                # fab_person.oidc_claim_name = claims.get('name')
                 fab_person.oidc_claim_sub = claims.get('sub')
                 fab_person.preferred_email = claims.get('email')
                 fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
                 db.session.commit()
+                # update family, given, name and display_name
                 update_people_names(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+                # update eppn, fabricid, oidcsub
                 update_people_identifiers(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+                # update primary org affiliation
                 update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
+                # update user sub identities
                 update_user_subject_identities(fab_person=fab_person)
+                # update user org affiliations
                 update_user_org_affiliations(fab_person=fab_person)
     except Exception as exc:
         details = 'Oops! something went wrong with create_fabric_person_from_login(): {0}'.format(exc)
@@ -216,41 +218,21 @@ def update_fabric_person(fab_person: FabricPeople = None):
     - updated - timestamp user was last updated against COmanage
     """
     try:
-        # check co_person_id
-        # if not fab_person.co_person_id:
-        #     co_person = api.copeople_match(
-        #         mail=fab_person.oidc_claim_email
-        #     ).get('CoPeople', [])
-        #     if len(co_person) == 1:
-        #         fab_person.co_person_id = co_person[0].get('Id')
-        #         db.session.commit()
-        # check email_addresses
+        # update email_addresses
         update_email_addresses(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
-        # check co_person_roles
+        # update co_person_roles
         update_people_roles(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
         # update user subject identifiers
         update_user_subject_identities(fab_person=fab_person)
-        # update_people_identifiers(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
         # update user org affiliation
         update_user_org_affiliations(fab_person=fab_person)
-        # update_org_affiliation(fab_person_id=fab_person.id, co_person_id=fab_person.co_person_id)
-        # check claims and bastion_login
-        # claims = vouch_get_custom_claims()
-        # print(claims)
-        # if claims.get('sub'):
-        #     fab_person.bastion_login = fab_person.bastion_login()
-        #     # fab_person.oidc_claim_email = claims.get('email')
-        #     fab_person.oidc_claim_family_name = claims.get('family_name')
-        #     fab_person.oidc_claim_given_name = claims.get('given_name')
-        #     fab_person.oidc_claim_name = claims.get('name')
-            # fab_person.oidc_claim_sub = claims.get('sub')
-        # determine if active
+        # determine if user is active
         fab_person.active = False
         for role in fab_person.roles:
             if role.name == os.getenv('COU_NAME_ACTIVE_USERS') and role.status == 'Active':
                 fab_person.active = True
                 break
-        # set updated
+        # set updated timestamp
         fab_person.updated = datetime.now(timezone.utc)
         # commit changes
         db.session.commit()

@@ -8,11 +8,11 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.4.0
+  version: 1.5.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.4.0
+- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.5.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
@@ -2609,6 +2609,8 @@ components:
           type: string
         fabric_id:
           type: string
+        gecos:
+          type: string
         name:
           type: string
         preferences:
@@ -2629,6 +2631,14 @@ components:
           type: array
           items:
             type: object
+        user_sub_identities:
+          type: array
+          items:
+            type: string
+        user_org_affiliations:
+          type: array
+          items:
+            type: string
         uuid:
           type: string
     project:

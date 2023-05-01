@@ -54,12 +54,12 @@ class FabricGroups(BaseMixin, TimestampMixin, db.Model):
 
 class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     """
-    OIDC Claims, COmanage Registry attributes and external table links (* denotes required)
-    - * active - account status
+    OIDC Claims, COmanage Registry attributes and external table links
+    - active - account status
     - bastion_login - generated from initial oidc:email and openid:sub
     - co_person_id - COmanage CoPersonId
     - created - timestamp created (TimestampMixin)
-    - * display_name - initially OIDC scope: profile:name
+    - display_name - initially OIDC scope: profile:name
     - email_addresses = array of COmanage EmailAddresses
     - eppn - edu person principle name
     - fabric_id - unique FABRIC ID set at enrollment
@@ -73,14 +73,14 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     - oidc_claim_sub - OIDC scope openid:sub
     - org_affiliation - foreignkey link to people_organizations table
     - preferences - array of preference booleans
-    - * preferred_email - initially OIDC scope: email:email
+    - preferred_email - initially OIDC scope: email:email
     - profile - one-to-one relationship with profiles_people table
     - publications - array of publications
     - registered_on - timestamp user was registered on
     - roles - array of fabric_roles
     - sshkeys - array of sshkeys
     - updated - timestamp user was last updated against COmanage
-    - * uuid - unique universal identifier
+    - uuid - unique universal identifier
     """
     query: db.Query
     __tablename__ = 'people'

@@ -17,7 +17,7 @@ class PeopleOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, publications: List[object]=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, gecos: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, publications: List[object]=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, user_sub_identities: List[str]=None, user_org_affiliations: List[str]=None, uuid: str=None):  # noqa: E501
         """PeopleOne - a model defined in Swagger
 
         :param affiliation: The affiliation of this PeopleOne.  # noqa: E501
@@ -42,6 +42,8 @@ class PeopleOne(Model):
         :type eppn: str
         :param fabric_id: The fabric_id of this PeopleOne.  # noqa: E501
         :type fabric_id: str
+        :param gecos: The gecos of this PeopleOne.  # noqa: E501
+        :type gecos: str
         :param name: The name of this PeopleOne.  # noqa: E501
         :type name: str
         :param preferences: The preferences of this PeopleOne.  # noqa: E501
@@ -56,6 +58,10 @@ class PeopleOne(Model):
         :type roles: List[PeopleOneRoles]
         :param sshkeys: The sshkeys of this PeopleOne.  # noqa: E501
         :type sshkeys: List[object]
+        :param user_sub_identities: The user_sub_identities of this PeopleOne.  # noqa: E501
+        :type user_sub_identities: List[str]
+        :param user_org_affiliations: The user_org_affiliations of this PeopleOne.  # noqa: E501
+        :type user_org_affiliations: List[str]
         :param uuid: The uuid of this PeopleOne.  # noqa: E501
         :type uuid: str
         """
@@ -71,6 +77,7 @@ class PeopleOne(Model):
             'email_addresses': List[str],
             'eppn': str,
             'fabric_id': str,
+            'gecos': str,
             'name': str,
             'preferences': Preferences,
             'profile': ProfilePeople,
@@ -78,6 +85,8 @@ class PeopleOne(Model):
             'registered_on': str,
             'roles': List[PeopleOneRoles],
             'sshkeys': List[object],
+            'user_sub_identities': List[str],
+            'user_org_affiliations': List[str],
             'uuid': str
         }
 
@@ -93,6 +102,7 @@ class PeopleOne(Model):
             'email_addresses': 'email_addresses',
             'eppn': 'eppn',
             'fabric_id': 'fabric_id',
+            'gecos': 'gecos',
             'name': 'name',
             'preferences': 'preferences',
             'profile': 'profile',
@@ -100,6 +110,8 @@ class PeopleOne(Model):
             'registered_on': 'registered_on',
             'roles': 'roles',
             'sshkeys': 'sshkeys',
+            'user_sub_identities': 'user_sub_identities',
+            'user_org_affiliations': 'user_org_affiliations',
             'uuid': 'uuid'
         }
         self._affiliation = affiliation
@@ -113,6 +125,7 @@ class PeopleOne(Model):
         self._email_addresses = email_addresses
         self._eppn = eppn
         self._fabric_id = fabric_id
+        self._gecos = gecos
         self._name = name
         self._preferences = preferences
         self._profile = profile
@@ -120,6 +133,8 @@ class PeopleOne(Model):
         self._registered_on = registered_on
         self._roles = roles
         self._sshkeys = sshkeys
+        self._user_sub_identities = user_sub_identities
+        self._user_org_affiliations = user_org_affiliations
         self._uuid = uuid
 
     @classmethod
@@ -367,6 +382,27 @@ class PeopleOne(Model):
         self._fabric_id = fabric_id
 
     @property
+    def gecos(self) -> str:
+        """Gets the gecos of this PeopleOne.
+
+
+        :return: The gecos of this PeopleOne.
+        :rtype: str
+        """
+        return self._gecos
+
+    @gecos.setter
+    def gecos(self, gecos: str):
+        """Sets the gecos of this PeopleOne.
+
+
+        :param gecos: The gecos of this PeopleOne.
+        :type gecos: str
+        """
+
+        self._gecos = gecos
+
+    @property
     def name(self) -> str:
         """Gets the name of this PeopleOne.
 
@@ -516,6 +552,48 @@ class PeopleOne(Model):
         """
 
         self._sshkeys = sshkeys
+
+    @property
+    def user_sub_identities(self) -> List[str]:
+        """Gets the user_sub_identities of this PeopleOne.
+
+
+        :return: The user_sub_identities of this PeopleOne.
+        :rtype: List[str]
+        """
+        return self._user_sub_identities
+
+    @user_sub_identities.setter
+    def user_sub_identities(self, user_sub_identities: List[str]):
+        """Sets the user_sub_identities of this PeopleOne.
+
+
+        :param user_sub_identities: The user_sub_identities of this PeopleOne.
+        :type user_sub_identities: List[str]
+        """
+
+        self._user_sub_identities = user_sub_identities
+
+    @property
+    def user_org_affiliations(self) -> List[str]:
+        """Gets the user_org_affiliations of this PeopleOne.
+
+
+        :return: The user_org_affiliations of this PeopleOne.
+        :rtype: List[str]
+        """
+        return self._user_org_affiliations
+
+    @user_org_affiliations.setter
+    def user_org_affiliations(self, user_org_affiliations: List[str]):
+        """Sets the user_org_affiliations of this PeopleOne.
+
+
+        :param user_org_affiliations: The user_org_affiliations of this PeopleOne.
+        :type user_org_affiliations: List[str]
+        """
+
+        self._user_org_affiliations = user_org_affiliations
 
     @property
     def uuid(self) -> str:

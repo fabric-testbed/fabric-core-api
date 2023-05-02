@@ -37,14 +37,23 @@ def get_person_by_login_claims() -> FabricPeople:
     """
     try:
         claims = vouch_get_custom_claims()
-        print(claims)
         fab_person = FabricPeople.query.filter(
             FabricPeople.oidc_claim_email == str(claims.get('email'))
         ).one_or_none()
-        if not fab_person:
-            fab_person = create_fabric_person_from_login(claims=claims)
-        if fab_person and str(claims.get('sub')) not in [i.sub for i in fab_person.user_sub_identities]:
+        # fab_person exists and sub matches existing sub identity
+        if fab_person and str(claims.get('sub')) in [i.sub for i in fab_person.user_sub_identities]:
+            return fab_person
+        # fab_person exists but sub does not match existing sub identity
+        elif fab_person:
+            # check for updates to user identities in COmanage
             update_fabric_person(fab_person=fab_person)
+            if str(claims.get('sub')) in [i.sub for i in fab_person.user_sub_identities]:
+                return fab_person
+            else:
+                fab_person = FabricPeople()
+                return fab_person
+        else:
+            fab_person = create_fabric_person_from_login(claims=claims)
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)

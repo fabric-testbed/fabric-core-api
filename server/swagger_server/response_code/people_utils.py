@@ -51,9 +51,11 @@ def get_person_by_login_claims() -> FabricPeople:
                 return fab_person
             else:
                 fab_person = FabricPeople()
+                consoleLogger.debug('OIDC - invalid sub: {0}'.format(claims))
                 return fab_person
         else:
             fab_person = create_fabric_person_from_login(claims=claims)
+            consoleLogger.debug('OIDC - create user: {0}'.format(claims))
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)

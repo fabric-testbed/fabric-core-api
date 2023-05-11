@@ -224,11 +224,11 @@ def bastionkeys_by_since_date(since_date: datetime = None) -> [BastionkeysOne]:
     for r in results:
         try:
             fab_person = FabricPeople.query.filter_by(id=r.people_id).one_or_none()
-            if fab_person and fab_person.bastion_login():
+            if fab_person:
                 bkey = BastionkeysOne()
                 bkey.status = r.status.name
-                bkey.login = fab_person.bastion_login()
-                bkey.gecos = fab_person.gecos()
+                bkey.login = fab_person.bastion_login
+                bkey.gecos = fab_person.gecos
                 ts = r.expires_on.strftime("_(%Y-%m-%d_%H:%M:%S%z)_")
                 bastion_comment = r.comment.strip()[0:COMMENT_LENGTH - len(ts)] + ts
                 bkey.public_openssh = " ".join([r.ssh_key_type, r.public_key, bastion_comment])

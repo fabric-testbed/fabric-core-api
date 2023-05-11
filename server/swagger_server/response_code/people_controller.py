@@ -254,10 +254,11 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.affiliation = 'Unknown'
         people_one.name = fab_person.display_name
         people_one.registered_on = str(fab_person.registered_on)
+        people_one.user_org_affiliations = [a.affiliation for a in fab_person.user_org_affiliations]
         people_one.uuid = fab_person.uuid
         # set remaining attributes for uuid == self
         if as_self and api_user.uuid == uuid:
-            people_one.bastion_login = fab_person.bastion_login()
+            people_one.bastion_login = fab_person.bastion_login
             people_one.cilogon_email = fab_person.oidc_claim_email
             people_one.cilogon_family_name = fab_person.oidc_claim_family_name
             people_one.cilogon_given_name = fab_person.oidc_claim_given_name
@@ -267,11 +268,13 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.email_addresses = list(set([e.email for e in fab_person.email_addresses]))
             people_one.eppn = fab_person.eppn
             people_one.fabric_id = fab_person.fabric_id
+            people_one.gecos = fab_person.gecos
             people_one.preferences = {p.key: p.value for p in fab_person.preferences}
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
             people_one.publications = []
             people_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person)
+            people_one.user_sub_identities = [i.sub for i in fab_person.user_sub_identities]
         # set remaining attributes for uuid != self based on user preference
         else:
             people_prefs = {p.key: p.value for p in fab_person.preferences}

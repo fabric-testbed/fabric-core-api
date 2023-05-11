@@ -54,15 +54,16 @@ class FabricGroups(BaseMixin, TimestampMixin, db.Model):
 
 class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     """
-    OIDC Claims, COmanage Registry attributes and external table links (* denotes required)
-    - * active - account status
-    - bastion_login - generated from email:email and openid:sub
+    OIDC Claims, COmanage Registry attributes and external table links
+    - active - account status
+    - bastion_login - generated from initial oidc:email and openid:sub
     - co_person_id - COmanage CoPersonId
     - created - timestamp created (TimestampMixin)
-    - * display_name - initially OIDC scope: profile:name
+    - display_name - initially OIDC scope: profile:name
     - email_addresses = array of COmanage EmailAddresses
     - eppn - edu person principle name
     - fabric_id - unique FABRIC ID set at enrollment
+    - gecos - GECOS-formatted string based on db person info
     - id - primary key (BaseMixin)
     - modified - timestamp modified (TimestampMixin)
     - oidc_claim_email - OIDC scope email:email
@@ -72,14 +73,14 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     - oidc_claim_sub - OIDC scope openid:sub
     - org_affiliation - foreignkey link to people_organizations table
     - preferences - array of preference booleans
-    - * preferred_email - initially OIDC scope: email:email
+    - preferred_email - initially OIDC scope: email:email
     - profile - one-to-one relationship with profiles_people table
     - publications - array of publications
     - registered_on - timestamp user was registered on
     - roles - array of fabric_roles
     - sshkeys - array of sshkeys
     - updated - timestamp user was last updated against COmanage
-    - * uuid - unique universal identifier
+    - uuid - unique universal identifier
     """
     query: db.Query
     __tablename__ = 'people'
@@ -87,11 +88,13 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     __allow_unmapped__ = True
 
     active = db.Column(db.Boolean, nullable=False, default=False)
+    bastion_login = db.Column(db.String(), nullable=True)
     co_person_id = db.Column(db.Integer, nullable=True)
     display_name = db.Column(db.String(), nullable=False)
     email_addresses = db.relationship('EmailAddresses', backref='people', lazy=True)
     eppn = db.Column(db.String(), nullable=True)
     fabric_id = db.Column(db.String(), nullable=True)
+    gecos = db.Column(db.String(), nullable=True)
     oidc_claim_email = db.Column(db.String(), nullable=True)
     oidc_claim_family_name = db.Column(db.String(), nullable=True)
     oidc_claim_given_name = db.Column(db.String(), nullable=True)
@@ -108,44 +111,46 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     roles = db.relationship('FabricRoles', backref='people', lazy=True)
     sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
     updated = db.Column(db.DateTime(timezone=True), nullable=False)
+    user_sub_identities = db.relationship('UserSubjectIdentifiers', backref='people', lazy=True)
+    user_org_affiliations = db.relationship('UserOrgAffiliations', backref='people', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
-    def bastion_login(self) -> Optional[str]:
-        """
-        Build a bastion login from oidc claim sub and email
-        """
-        if self.oidc_claim_sub and self.oidc_claim_email:
-            oidcsub_id = str(self.oidc_claim_sub).rsplit('/', 1)[1]
-            prefix = self.oidc_claim_email.split('@', 1)[0]
-            prefix = prefix.replace('.', '_').replace('-', '_').lower()
-            suffix = oidcsub_id.zfill(10)
-            bastion_login = prefix[0:20] + '_' + suffix
-            return bastion_login
-        else:
-            return None
+    # def bastion_login(self) -> Optional[str]:
+    #     """
+    #     Build a bastion login from oidc claim sub and email
+    #     """
+    #     if self.oidc_claim_sub and self.oidc_claim_email:
+    #         oidcsub_id = str(self.oidc_claim_sub).rsplit('/', 1)[1]
+    #         prefix = self.oidc_claim_email.split('@', 1)[0]
+    #         prefix = prefix.replace('.', '_').replace('-', '_').lower()
+    #         suffix = oidcsub_id.zfill(10)
+    #         bastion_login = prefix[0:20] + '_' + suffix
+    #         return bastion_login
+    #     else:
+    #         return None
 
-    def gecos(self) -> str:
-        """
-        Produce a GECOS-formatted string based on db person info
-        """
-        try:
-            full_name = self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip()
-        except Exception as exc:
-            consoleLogger.error('people.FabricPeople.gecos: full_name: {0}'.format(exc))
-            full_name = 'UnknownName'
-        try:
-            oidc_email = self.oidc_claim_email.strip()
-        except Exception as exc:
-            consoleLogger.error('people.FabricPeople.gecos: oidc_email: {0}'.format(exc))
-            oidc_email = 'UnknownEmail'
-        return ','.join([
-            full_name,  # Full Name
-            '',  # Building, room number
-            '',  # Office telephone
-            '',  # Home telephone
-            oidc_email
-            # external email or other contact info
-        ])
+    # def gecos(self) -> str:
+    #     """
+    #     Produce a GECOS-formatted string based on db person info
+    #     """
+    #     try:
+    #         full_name = self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip()
+    #     except Exception as exc:
+    #         consoleLogger.error('people.FabricPeople.gecos: full_name: {0}'.format(exc))
+    #         full_name = 'UnknownName'
+    #     try:
+    #         oidc_email = self.oidc_claim_email.strip()
+    #     except Exception as exc:
+    #         consoleLogger.error('people.FabricPeople.gecos: oidc_email: {0}'.format(exc))
+    #         oidc_email = 'UnknownEmail'
+    #     return ','.join([
+    #         full_name,  # Full Name
+    #         '',  # Building, room number
+    #         '',  # Office telephone
+    #         '',  # Home telephone
+    #         oidc_email
+    #         # external email or other contact info
+    #     ])
 
     def is_active(self) -> bool:
         return self.active
@@ -216,3 +221,33 @@ class Organizations(BaseMixin, db.Model):
     affiliation = db.Column(db.String(), nullable=False)
     org_identity_id = db.Column(db.Integer)
     organization = db.Column(db.String(), nullable=False)
+
+
+class UserOrgAffiliations(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - people_id - foreignkey link to people table
+    - affiliation - affiliation as string
+    """
+    query: db.Query
+    __tablename__ = 'user_org_affiliations'
+    __table_args__ = (db.UniqueConstraint('people_id', 'affiliation', name='constraint_user_org_affiliations'),)
+    __allow_unmapped__ = True
+
+    people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
+    affiliation = db.Column(db.Text, nullable=False)
+
+
+class UserSubjectIdentifiers(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - people_id - foreignkey link to people table
+    - sub - subject identifier as string
+    """
+    query: db.Query
+    __tablename__ = 'user_subject_identifiers'
+    __table_args__ = (db.UniqueConstraint('people_id', 'sub', name='constraint_user_subject_identifiers'),)
+    __allow_unmapped__ = True
+
+    people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
+    sub = db.Column(db.Text, nullable=False)

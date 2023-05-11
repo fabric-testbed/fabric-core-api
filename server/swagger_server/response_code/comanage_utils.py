@@ -5,7 +5,8 @@ from comanage_api import ComanageApi
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
-from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
+from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, \
+    Organizations, UserOrgAffiliations, UserSubjectIdentifiers
 from swagger_server.response_code.response_utils import array_difference
 
 api = ComanageApi(
@@ -403,4 +404,123 @@ def update_organizations() -> None:
                         "FOUND: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))
     except Exception as exc:
         details = 'Oops! something went wrong with update_organizations(): {0}'.format(exc)
+        consoleLogger.error(details)
+
+
+def update_user_subject_identities(fab_person: FabricPeople):
+    try:
+        entity_identifiers = api.identifiers_view_per_entity(
+            entity_type='copersonid',
+            entity_id=fab_person.co_person_id
+        ).get('Identifiers', [])
+        sub_new = []
+        for i in entity_identifiers:
+            if i.get('Type') == 'oidcsub':
+                sub_new.append(i.get('Identifier'))
+
+        sub_orig = [p.sub for p in fab_person.user_sub_identities]
+        sub_add = array_difference(sub_new, sub_orig)
+        sub_remove = array_difference(sub_orig, sub_new)
+        # add user subject identities
+        for sub in sub_add:
+            fab_sub = UserSubjectIdentifiers.query.filter(
+                UserSubjectIdentifiers.people_id == fab_person.id, UserSubjectIdentifiers.sub == sub).one_or_none()
+            if not fab_sub:
+                fab_sub = UserSubjectIdentifiers()
+                fab_sub.people_id = fab_person.id
+                fab_sub.sub = sub
+                fab_person.user_sub_identities.append(fab_sub)
+                db.session.commit()
+                # metrics log - People sub added:
+                # 2022-09-06 19:45:56,022 People event usr:dead-beef-dead-beef modify-add sub <sub> by usr:fead-beaf-fead-beaf
+                log_msg = 'People event usr:{0} modify-add sub \'{1}\' by usr:{2}'.format(str(fab_person.uuid), sub,
+                                                                                          str(fab_person.uuid))
+                metricsLogger.info(log_msg)
+        # remove user subject identities
+        for sub in sub_remove:
+            fab_sub = UserSubjectIdentifiers.query.filter(
+                UserSubjectIdentifiers.people_id == fab_person.id, UserSubjectIdentifiers.sub == sub).one_or_none()
+            if fab_sub:
+                fab_person.user_sub_identities.remove(fab_sub)
+                db.session.delete(fab_sub)
+                db.session.commit()
+                # metrics log - People sub removed:
+                # 2022-09-06 19:45:56,022 People event usr:dead-beef-dead-beef modify-remove sub <sub> by usr:fead-beaf-fead-beaf
+                log_msg = 'People event usr:{0} modify-remove sub \'{1}\' by usr:{2}'.format(str(fab_person.uuid), sub,
+                                                                                             str(fab_person.uuid))
+                metricsLogger.info(log_msg)
+    except Exception as exc:
+        details = 'Oops! something went wrong with update_user_subject_identities(): {0}'.format(exc)
+        consoleLogger.error(details)
+
+
+def update_user_org_affiliations(fab_person: FabricPeople):
+    try:
+        co_orgidentity_links = api.coorg_identity_links_view_by_identity(
+            identity_type='copersonid',
+            identity_id=fab_person.co_person_id
+        ).get('CoOrgIdentityLinks', [])
+        org_new = []
+        for org_link in co_orgidentity_links:
+            org_identity_id = org_link.get('OrgIdentityId')
+            fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
+            if not fab_org:
+                org_identity = api.org_identities_view_one(org_identity_id=org_identity_id).get('OrgIdentities', [])
+                for oi in org_identity:
+                    organization = oi.get('O', None)
+                    affiliation = oi.get('Affiliation', None)
+                    if org_identity_id and organization and affiliation and not oi.get('Deleted'):
+                        try:
+                            fab_org = Organizations()
+                            fab_org.org_identity_id = org_identity_id
+                            fab_org.organization = organization
+                            fab_org.affiliation = affiliation
+                            db.session.add(fab_org)
+                            db.session.commit()
+                            consoleLogger.info(
+                                "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(
+                                    oi.get('Id', None)))
+                            org_new.append(fab_org.organization)
+                        except Exception as exc:
+                            consoleLogger.error(exc)
+                            continue
+                    else:
+                        consoleLogger.warning('[NEEDS REVIEW] org_identity_id = {0}'.format(org_identity_id))
+            else:
+                org_new.append(fab_org.organization)
+        org_orig = [p.affiliation for p in fab_person.user_org_affiliations]
+        org_add = array_difference(org_new, org_orig)
+        org_remove = array_difference(org_orig, org_new)
+        # add user subject identities
+        for org in org_add:
+            fab_org = UserOrgAffiliations.query.filter(
+                UserOrgAffiliations.people_id == fab_person.id, UserOrgAffiliations.affiliation == org).one_or_none()
+            if not fab_org:
+                fab_org = UserOrgAffiliations()
+                fab_org.people_id = fab_person.id
+                fab_org.affiliation = org
+                fab_person.user_org_affiliations.append(fab_org)
+                db.session.commit()
+                # metrics log - People affiliation added:
+                # 2022-09-06 19:45:56,022 People event usr:dead-beef-dead-beef modify-add affiliation <sub> by usr:fead-beaf-fead-beaf
+                log_msg = 'People event usr:{0} modify-add affiliation \'{1}\' by usr:{2}'.format(str(fab_person.uuid),
+                                                                                                  org,
+                                                                                                  str(fab_person.uuid))
+                metricsLogger.info(log_msg)
+        # remove user subject identities
+        for org in org_remove:
+            fab_org = UserOrgAffiliations.query.filter(
+                UserOrgAffiliations.people_id == fab_person.id, UserOrgAffiliations.affiliation == org).one_or_none()
+            if fab_org:
+                fab_person.user_org_affiliations.remove(fab_org)
+                db.session.delete(fab_org)
+                db.session.commit()
+                # metrics log - People affiliation removed:
+                # 2022-09-06 19:45:56,022 People event usr:dead-beef-dead-beef modify-remove affiliation <sub> by usr:fead-beaf-fead-beaf
+                log_msg = 'People event usr:{0} modify-remove affiliation \'{1}\' by usr:{2}'.format(
+                    str(fab_person.uuid), org,
+                    str(fab_person.uuid))
+                metricsLogger.info(log_msg)
+    except Exception as exc:
+        details = 'Oops! something went wrong with update_user_subject_identities(): {0}'.format(exc)
         consoleLogger.error(details)

@@ -21,6 +21,6 @@
     "Net.FacilityPort.Chameleon-TACC": "Chameleon@TACC Production",
     "Net.FacilityPort.Cloud-Facility-Azure-Gov": "Microsoft Azure Gov Cloud Production",
     "Net.FacilityPort.Cloud-Facility-Azure": "Microsoft Azure Cloud Production",
-    "Net.FacilityPort.RCNF": "CryoEM RCNF facility at Rutgers"
+    "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)"
   }
 }

@@ -524,3 +524,21 @@ def update_user_org_affiliations(fab_person: FabricPeople):
     except Exception as exc:
         details = 'Oops! something went wrong with update_user_subject_identities(): {0}'.format(exc)
         consoleLogger.error(details)
+
+
+def is_fabric_active_user(co_person_id: int) -> bool:
+    """
+    Check for active fabric-active-users role in COmanage
+    """
+    try:
+        co_roles = api.coperson_roles_view_per_coperson(coperson_id=co_person_id).get('CoPersonRoles', [])
+        for co_role in co_roles:
+            if int(co_role.get('CouId')) == int(os.getenv('COU_ID_ACTIVE_USERS')) and str(
+                    co_role.get('Status')).casefold() == 'active':
+                return True
+        return False
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with is_fabric_active_user(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return False

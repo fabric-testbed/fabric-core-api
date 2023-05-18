@@ -7,8 +7,9 @@ from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects
-from swagger_server.response_code.comanage_utils import api, update_email_addresses, update_org_affiliation, \
-    update_people_identifiers, update_people_roles, update_user_org_affiliations, update_user_subject_identities
+from swagger_server.response_code.comanage_utils import api, is_fabric_active_user, update_email_addresses, \
+    update_org_affiliation, update_people_identifiers, update_people_roles, update_user_org_affiliations, \
+    update_user_subject_identities
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
@@ -89,7 +90,7 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
             # search for person by email
             co_person = api.copeople_match(
                 mail=claims.get('email')).get('CoPeople', [])
-            if co_person:
+            if co_person and is_fabric_active_user(co_person_id=co_person[0].get('Id')):
                 fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person[0].get('Id'))
                 fab_person.oidc_claim_email = claims.get('email')
                 fab_person.oidc_claim_sub = claims.get('sub')

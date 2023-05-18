@@ -152,6 +152,13 @@ def storage_post(body: StoragePost = None) -> Storage:  # noqa: E501
         fab_project = FabricProjects.query.filter_by(uuid=body.project_uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for project_uuid with uuid = '{0}'".format(body.project_uuid))
+        # check for duplicate entry
+        if FabricStorage.query.filter(
+                FabricStorage.project_id == fab_project.id,
+                FabricStorage.volume_name == body.volume_name
+        ).first():
+            return cors_400(details="Storage already exists (Duplicate): project_uuid='{0}', volume_name='{1}'".format(
+                body.project_uuid, body.volume_name))
         # check requested_by_uuid
         fab_person = FabricPeople.query.filter_by(uuid=body.requested_by_uuid).one_or_none()
         if not fab_person:

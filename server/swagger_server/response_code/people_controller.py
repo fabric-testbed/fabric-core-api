@@ -17,7 +17,7 @@ from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHE
     PEOPLE_PROFILE_PERSONALPAGE_TYPES, PEOPLE_PROFILE_PREFERENCES
 from swagger_server.response_code.comanage_utils import update_org_affiliation
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
-from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.decorators import login_required, login_or_token_required
 from swagger_server.response_code.people_utils import get_people_roles_as_other, get_people_roles_as_self, \
     get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import get_people_preferences
@@ -30,7 +30,7 @@ from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
-@login_required
+@login_or_token_required
 def people_get(search: str = None, offset: int = None, limit: int = None) -> People:  # noqa: E501
     """Search for FABRIC People
 
@@ -216,7 +216,7 @@ def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with People.Profile.Preferences.Get()')
 
 
-@login_required
+@login_or_token_required
 def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
     """Person details by UUID
 

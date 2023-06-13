@@ -21,6 +21,7 @@
     "Net.FacilityPort.Chameleon-TACC": "Chameleon@TACC Production",
     "Net.FacilityPort.Cloud-Facility-Azure-Gov": "Microsoft Azure Gov Cloud Production",
     "Net.FacilityPort.Cloud-Facility-Azure": "Microsoft Azure Cloud Production",
-    "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)"
+    "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)",
+    "Net.FacilityPort.OCT-MGHPCC": "Massachusetts Green High Performance Computing Center (MGHPCC)"
   }
 }

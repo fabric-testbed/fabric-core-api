@@ -102,10 +102,8 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
                 # generate gecos
                 fab_person.gecos = generate_gecos(fab_person=fab_person)
                 db.session.commit()
-                # update user sub identities
-                update_user_subject_identities(fab_person=fab_person)
-                # update user org affiliations
-                update_user_org_affiliations(fab_person=fab_person)
+                # update user
+                update_fabric_person(fab_person=fab_person)
     except Exception as exc:
         details = 'Oops! something went wrong with create_fabric_person_from_login(): {0}'.format(exc)
         consoleLogger.error(details)

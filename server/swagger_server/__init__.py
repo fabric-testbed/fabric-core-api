@@ -1,4 +1,4 @@
-__API_VERSION__ = '1.4.2'
+__API_VERSION__ = '1.5.2'
 __API_REFERENCE__ = 'https://github.com/fabric-testbed/fabric-core-api'
 
 # from logging.config import dictConfig

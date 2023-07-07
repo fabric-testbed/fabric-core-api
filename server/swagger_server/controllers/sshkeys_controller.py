@@ -28,8 +28,9 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
 
     :rtype: Bastionkeys
     """
-    if connexion.request.is_json:
-        secret = str.from_dict(connexion.request.get_json())  # noqa: E501
+    # if connexion.request.is_json:
+    #     secret = str.from_dict(connexion.request.get_json())  # noqa: E501
+    since_date = util.deserialize_datetime(since_date)
     return rc.bastionkeys_get(secret, since_date)
 
 

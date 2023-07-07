@@ -1,5 +1,5 @@
 """
-v1.5.1 - database tables
+v1.4.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -29,9 +29,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
- public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
- public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(26 rows)
+(24 rows)
 """
 
 import json
@@ -43,7 +41,7 @@ from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
-from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations, UserOrgAffiliations, UserSubjectIdentifiers
+from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
@@ -878,52 +876,6 @@ def dump_testbed_info_data():
         outfile.write(output_json)
 
 
-def dump_user_org_affiliations_data():
-    """
-    UserOrgAffiliations(BaseMixin, db.Model):
-    - id - primary key (BaseMixin)
-    - people_id - foreignkey link to people table
-    - affiliation - affiliation as string
-    """
-    user_org_affiliations = []
-    fab_user_org_affiliations = UserOrgAffiliations.query.order_by('id').all()
-    for i in fab_user_org_affiliations:
-        data = {
-            'affiliation': i.affiliation,
-            'id': i.id,
-            'people_id': i.people_id
-        }
-        user_org_affiliations.append(data)
-    output_dict = {'user_org_affiliations': user_org_affiliations}
-    output_json = json.dumps(output_dict, indent=2)
-    # print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/user_org_affiliations-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
-def dump_user_subject_identifiers_data():
-    """
-    UserSubjectIdentifiers(BaseMixin, db.Model):
-    - id - primary key (BaseMixin)
-    - people_id - foreignkey link to people table
-    - sub - subject identifier as string
-    """
-    user_subject_identifiers = []
-    fab_user_subject_identifiers = UserSubjectIdentifiers.query.order_by('id').all()
-    for i in fab_user_subject_identifiers:
-        data = {
-            'id': i.id,
-            'people_id': i.people_id,
-            'sub': i.sub
-        }
-        user_subject_identifiers.append(data)
-    output_dict = {'user_subject_identifiers': user_subject_identifiers}
-    output_json = json.dumps(output_dict, indent=2)
-    # print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/user_subject_identifiers-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
 if __name__ == '__main__':
     app.app_context().push()
     consoleLogger.info('Exporter for API version {0}'.format(__API_VERSION__))
@@ -1002,7 +954,7 @@ if __name__ == '__main__':
     consoleLogger.info('dump projects_owners table')
     dump_projects_owners_data()
 
-    #  public | projects_storage          | table | postgres
+    # public | projects_storage          | table | postgres
     consoleLogger.info('dump projects_storage table')
     dump_projects_storage_data()
 
@@ -1014,22 +966,14 @@ if __name__ == '__main__':
     consoleLogger.info('dump sshkeys table')
     dump_sshkeys_data()
 
-    #  public | storage                   | table | postgres
+    # public | storage                   | table | postgres
     consoleLogger.info('dump storage table')
     dump_storage_data()
 
-    #  public | storage_sites             | table | postgres
+    # public | storage_sites             | table | postgres
     consoleLogger.info('dump storage_sites table')
     dump_storage_sites_data()
 
     #  public | testbed_info              | table | postgres
     consoleLogger.info('dump testbed_info table')
     dump_testbed_info_data()
-
-    #  public | user_org_affiliations     | table | postgres
-    consoleLogger.info('dump user_org_affiliations table')
-    dump_user_org_affiliations_data()
-
-    #  public | user_subject_identifiers  | table | postgres
-    consoleLogger.info('dump user_subject_identifiers table')
-    dump_user_subject_identifiers_data()

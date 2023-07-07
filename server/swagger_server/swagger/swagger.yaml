@@ -2755,6 +2755,10 @@ components:
           type: array
           items:
             type: string
+        token_holders:
+          type: array
+          items:
+            $ref: '#/components/schemas/person'
         uuid:
           type: string
     project_membership:

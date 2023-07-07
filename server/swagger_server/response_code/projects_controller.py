@@ -393,10 +393,11 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             db.session.commit()
         # remove Publications
         # TODO: define Publications
-        # delete COUs -pc, -pm, -po
+        # delete COUs -pc, -pm, -po, -tk
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+        delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
         # delete FabricProject
         details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
         consoleLogger.info(details)
@@ -545,6 +546,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             # TODO - define publications
             project_one.publications = []
             project_one.tags = [t.tag for t in fab_project.tags]
+            project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
         # set remaining attributes for everyone else
         else:
             if not fab_project.is_public:

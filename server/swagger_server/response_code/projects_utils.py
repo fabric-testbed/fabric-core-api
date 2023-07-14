@@ -233,6 +233,8 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel = fab_project.project_owners
     elif personnel_type == 'members':
         personnel = fab_project.project_members
+    elif personnel_type == 'tokens':
+        personnel = fab_project.token_holders
     personnel_data = []
     for p in personnel:
         # get preferences (show_email)

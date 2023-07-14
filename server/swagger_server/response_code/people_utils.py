@@ -10,8 +10,10 @@ from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, is_fabric_active_user, update_email_addresses, \
     update_org_affiliation, update_people_identifiers, update_people_roles, update_user_org_affiliations, \
     update_user_subject_identities
+from swagger_server.response_code.core_api_utils import is_valid_uuid
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
+from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
@@ -234,6 +236,26 @@ def update_fabric_person(fab_person: FabricPeople = None):
         update_user_subject_identities(fab_person=fab_person)
         # update user org affiliation
         update_user_org_affiliations(fab_person=fab_person)
+        # ensure project roles are properly set
+        for role in fab_person.roles:
+            proj_uuid = role.name[:-3]
+            if is_valid_uuid(proj_uuid):
+                # validate that the person is in the project group
+                fab_project = FabricProjects.query.filter_by(uuid=proj_uuid).one_or_none()
+                if fab_project:
+                    # add person to appropriate project role if missing
+                    if role.name[-2:] == 'pc':
+                        if fab_person not in fab_project.project_creators:
+                            fab_project.project_creators.append(fab_person)
+                    if role.name[-2:] == 'pm':
+                        if fab_person not in fab_project.project_members:
+                            fab_project.project_members.append(fab_person)
+                    if role.name[-2:] == 'po':
+                        if fab_person not in fab_project.project_owners:
+                            fab_project.project_owners.append(fab_person)
+                    if role.name[-2:] == 'tk':
+                        if fab_person not in fab_project.token_holders:
+                            fab_project.token_holders.append(fab_person)
         # determine if user is active
         fab_person.active = False
         for role in fab_person.roles:

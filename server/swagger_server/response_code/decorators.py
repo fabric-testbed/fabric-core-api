@@ -1,6 +1,6 @@
 import os
 from functools import wraps
-
+import hashlib
 import jwt
 from flask import request
 
@@ -83,7 +83,32 @@ def validate_authorization_token(token: str) -> bool:
             options={"verify_aud": False}
         )
         print(token_json)
-        return True
+        if not is_token_revoked(token=token):
+            return True
     except Exception as exc:
         print(exc)
     return False
+
+
+def is_token_revoked(token: str) -> bool:
+    """
+    Check all incoming tokens against a token revocation list (TRL)
+    """
+    revocation_list = get_token_revocation_list()
+    try:
+        token_hash = hashlib.new('sha256')
+        token_hash.update(token.encode())
+        if token_hash.hexdigest() in revocation_list:
+            return True
+    except Exception as exc:
+        print(exc)
+        return True
+    return False
+
+
+def get_token_revocation_list() -> []:
+    """
+    - TODO: get revocation list from CM
+    - TODO: SHA256 simple hash <-- needs to mirror whatever CM is doing
+    """
+    return ['ba8a9d292308e55ac9ca1f995625aecb2876fb4ba16935152a69a0efc28e4cbe']

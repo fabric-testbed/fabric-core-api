@@ -5,15 +5,14 @@ from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
-from swagger_server.database.models.people import FabricPeople, FabricRoles
+from swagger_server.database.models.people import FabricPeople, FabricRoles, FabricGroups
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, is_fabric_active_user, update_email_addresses, \
     update_org_affiliation, update_people_identifiers, update_people_roles, update_user_org_affiliations, \
-    update_user_subject_identities
+    update_user_subject_identities, create_comanage_role, delete_comanage_role
 from swagger_server.response_code.core_api_utils import is_valid_uuid
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
-from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
@@ -266,6 +265,23 @@ def update_fabric_person(fab_person: FabricPeople = None):
         fab_person.updated = datetime.now(timezone.utc)
         # commit changes
         db.session.commit()
+        # set Jupyterhub role
+        fab_group = FabricGroups.query.filter_by(name=os.getenv('COU_NAME_JUPYTERHUB')).one_or_none()
+        roles = [r.name for r in fab_person.roles]
+        in_a_project = any([is_valid_uuid(r[:-3]) for r in roles])
+        in_jupyterhub = os.getenv('COU_NAME_JUPYTERHUB') in roles
+        if in_a_project and not in_jupyterhub:
+            create_comanage_role(fab_person=fab_person, fab_group=fab_group)
+        elif not in_a_project and in_jupyterhub:
+            jupyter_role = FabricRoles.query.filter(
+                FabricRoles.name == os.getenv('COU_NAME_JUPYTERHUB'),
+                FabricRoles.people_id == fab_person.id
+            ).one_or_none()
+            if jupyter_role:
+                delete_comanage_role(co_person_role_id=jupyter_role.co_person_role_id)
+            else:
+                details = 'Unable to remove Jupyterhub role for user: {0}'.format(fab_person.uuid)
+                consoleLogger.error(details)
     except Exception as exc:
         details = 'Oops! something went wrong with update_fabric_person(): {0}'.format(exc)
         consoleLogger.error(details)

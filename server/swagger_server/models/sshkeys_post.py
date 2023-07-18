@@ -15,7 +15,7 @@ class SshkeysPost(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, comment: str=None, description: str=None, keytype: str='sliver'):  # noqa: E501
+    def __init__(self, comment: str=None, description: str=None, keytype: str='sliver', store_pubkey: bool=True):  # noqa: E501
         """SshkeysPost - a model defined in Swagger
 
         :param comment: The comment of this SshkeysPost.  # noqa: E501
@@ -24,21 +24,26 @@ class SshkeysPost(Model):
         :type description: str
         :param keytype: The keytype of this SshkeysPost.  # noqa: E501
         :type keytype: str
+        :param store_pubkey: The store_pubkey of this SshkeysPost.  # noqa: E501
+        :type store_pubkey: bool
         """
         self.swagger_types = {
             'comment': str,
             'description': str,
-            'keytype': str
+            'keytype': str,
+            'store_pubkey': bool
         }
 
         self.attribute_map = {
             'comment': 'comment',
             'description': 'description',
-            'keytype': 'keytype'
+            'keytype': 'keytype',
+            'store_pubkey': 'store_pubkey'
         }
         self._comment = comment
         self._description = description
         self._keytype = keytype
+        self._store_pubkey = store_pubkey
 
     @classmethod
     def from_dict(cls, dikt) -> 'SshkeysPost':
@@ -123,3 +128,24 @@ class SshkeysPost(Model):
             )
 
         self._keytype = keytype
+
+    @property
+    def store_pubkey(self) -> bool:
+        """Gets the store_pubkey of this SshkeysPost.
+
+
+        :return: The store_pubkey of this SshkeysPost.
+        :rtype: bool
+        """
+        return self._store_pubkey
+
+    @store_pubkey.setter
+    def store_pubkey(self, store_pubkey: bool):
+        """Sets the store_pubkey of this SshkeysPost.
+
+
+        :param store_pubkey: The store_pubkey of this SshkeysPost.
+        :type store_pubkey: bool
+        """
+
+        self._store_pubkey = store_pubkey

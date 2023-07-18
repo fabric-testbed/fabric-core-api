@@ -53,6 +53,7 @@ paths:
           enum:
           - facility
           - maintenance
+          - news
       - name: is_active
         in: query
         description: is active
@@ -3111,6 +3112,9 @@ components:
           enum:
           - bastion
           - sliver
+        store_pubkey:
+          type: boolean
+          default: true
     sshkeys_put:
       required:
       - description
@@ -3175,7 +3179,6 @@ components:
       - announcement_type
       - content
       - is_active
-      - start_date
       - title
       type: object
       properties:
@@ -3185,6 +3188,7 @@ components:
           enum:
           - facility
           - maintenance
+          - news
         button:
           type: string
         content:
@@ -3211,6 +3215,7 @@ components:
           enum:
           - facility
           - maintenance
+          - news
         button:
           type: string
         content:
@@ -3600,6 +3605,7 @@ components:
         enum:
         - facility
         - maintenance
+        - news
     operation:
       name: operation
       in: query

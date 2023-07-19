@@ -165,12 +165,14 @@ def dump_people_data():
     """
     FabricPeople(BaseMixin, TimestampMixin, db.Model)
     - active = db.Column(db.Boolean, nullable=False, default=False)
+    - bastion_login = db.Column(db.String(), nullable=True)
     - co_person_id = db.Column(db.Integer, nullable=True)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - display_name = db.Column(db.String(), nullable=False)
     - email_addresses = db.relationship('EmailAddresses', backref='people', lazy=True)
     - eppn = db.Column(db.String(), nullable=True)
     - fabric_id = db.Column(db.String(), nullable=True)
+    - gecos = db.Column(db.String(), nullable=True)
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - oidc_claim_email = db.Column(db.String(), nullable=True)
@@ -194,12 +196,14 @@ def dump_people_data():
     for p in fab_people:
         data = {
             'active': p.active,
+            'bastion_login': p.bastion_login,
             'co_person_id': p.co_person_id,
             'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'display_name': p.display_name,
             'email_addresses': [e.id for e in p.email_addresses],
             'eppn': p.eppn,
             'fabric_id': p.fabric_id,
+            'gecos': p.gecos,
             'id': p.id,
             'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'oidc_claim_email': p.oidc_claim_email,
@@ -878,6 +882,31 @@ def dump_testbed_info_data():
         outfile.write(output_json)
 
 
+# export token_holders as JSON output file
+def dump_token_holders_data():
+    """
+    token_holders
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    token_holders = []
+    # TODO: token_holders does not exist in 1.5.1, but will in 1.5.2
+    # query = text("SELECT people_id, projects_id FROM token_holders")
+    # result = db.session.execute(query).fetchall()
+    result = []
+    for row in result:
+        data = {
+            'people_id': row[0],
+            'projects_id': row[1]
+        }
+        token_holders.append(data)
+    output_dict = {'token_holders': token_holders}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/token_holders-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
+
+
 def dump_user_org_affiliations_data():
     """
     UserOrgAffiliations(BaseMixin, db.Model):
@@ -1025,6 +1054,10 @@ if __name__ == '__main__':
     #  public | testbed_info              | table | postgres
     consoleLogger.info('dump testbed_info table')
     dump_testbed_info_data()
+
+    #  public | token_holders             | table | postgres
+    consoleLogger.info('dump token_holders table')
+    dump_token_holders_data()
 
     #  public | user_org_affiliations     | table | postgres
     consoleLogger.info('dump user_org_affiliations table')

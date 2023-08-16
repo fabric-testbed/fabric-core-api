@@ -1,10 +1,15 @@
 import base64
 import gzip
+import json
 import logging
 import os
+from datetime import datetime, timezone
 
 import jwt
+import requests
 from flask import request
+from swagger_server.database.db import db
+from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 
 
 def vouch_get_custom_claims() -> dict:
@@ -78,14 +83,24 @@ def token_get_custom_claims(token: str) -> dict:
         'sub': 'http://cilogon.org/serverA/users/2911496'
     }
     """
+    s = requests.Session()
     try:
+        psk = TaskTimeoutTracker.query.filter_by(name=os.getenv('PSK_NAME')).one_or_none()
+        if not psk.timed_out():
+            public_signing_key = jwt.PyJWK(json.loads(psk.value)).key
+        else:
+            api_call = s.get(url=os.getenv('FABRIC_CREDENTIAL_MANAGER') + '/credmgr/certs')
+            jwks = api_call.json().get('keys')[0]
+            public_signing_key = jwt.PyJWK(jwks).key
+            psk.value = json.dumps(jwks)
+            psk.last_updated = datetime.now(timezone.utc)
+            db.session.commit()
         token_json = jwt.decode(
             jwt=token,
-            key=os.getenv('PUBLIC_SIGNING_KEY'),
+            key=public_signing_key,
             algorithms=["RS256"],
             options={"verify_aud": False}
         )
-        print(token_json)
         claims = {
             'aud': token_json.get('aud'),
             'email': token_json.get('email'),
@@ -95,7 +110,8 @@ def token_get_custom_claims(token: str) -> dict:
             'name': token_json.get('name'),
             'sub': token_json.get('sub')
         }
-        return claims
     except Exception as exc:
         print(exc)
-    return {}
+        claims = {}
+    s.close()
+    return claims

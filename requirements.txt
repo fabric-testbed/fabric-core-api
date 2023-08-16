@@ -12,4 +12,3 @@ sqlalchemy-stubs
 swagger-ui-bundle # connexion[swagger-ui]
 uwsgi
 validators
-

@@ -5,6 +5,7 @@
 #    python -m flask db migrate
 #    python -m flask db upgrade
 # NOTE: load / verify database against COmanage or restore from backup
+#    python -m server.swagger_server.backup.utils.db_restore
 
 if [[ "$1" == 'run_server' ]]; then
     # setup virtual environment

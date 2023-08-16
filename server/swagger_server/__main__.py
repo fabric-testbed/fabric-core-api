@@ -23,6 +23,7 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
     ProfilesPersonalPages, ProfilesKeywords, ProfilesOtherIdentities, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.storage import FabricStorage, StorageSites
+from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 """
 -------------------------------------------------------------------------------
 END: Imports needed for alembic and flask using multiple model definition files
@@ -75,4 +76,4 @@ def create_tables():
 
 if __name__ == '__main__':
     logger.info("Starting FABRIC Core API")
-    app.run(port=5000, debug=True)
+    app.run(port=6000, debug=True)

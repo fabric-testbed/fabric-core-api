@@ -1,10 +1,15 @@
-import os
-from functools import wraps
 import hashlib
-import jwt
-from flask import request
+import json
+import os
+from datetime import datetime, timezone
+from functools import wraps
 
+import jwt
+import requests
+from flask import request
 from swagger_server.api_logger import consoleLogger
+from swagger_server.database.db import db
+from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.response_code.cors_response import cors_401
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
@@ -70,24 +75,38 @@ def login_or_token_required(f):
 
 
 def validate_authorization_token(token: str) -> bool:
-    # TODO: account for Ansible script which uses a static token for now
+    s = requests.Session()
+    is_valid = False
+    # account for Ansible script which uses a static token for now
     if token == 'Bearer {0}'.format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
-        return True
+        is_valid = True
     # Handle CM based tokens
-    try:
-        token = token.replace('Bearer ', '')
-        token_json = jwt.decode(
-            jwt=token,
-            key=os.getenv('PUBLIC_SIGNING_KEY'),
-            algorithms=["RS256"],
-            options={"verify_aud": False}
-        )
-        print(token_json)
-        if not is_token_revoked(token=token):
-            return True
-    except Exception as exc:
-        print(exc)
-    return False
+    else:
+        try:
+            psk = TaskTimeoutTracker.query.filter_by(name=os.getenv('PSK_NAME')).one_or_none()
+            if not psk.timed_out():
+                public_signing_key = jwt.PyJWK(json.loads(psk.value)).key
+            else:
+                api_call = s.get(url=os.getenv('FABRIC_CREDENTIAL_MANAGER') + '/credmgr/certs')
+                jwks = api_call.json().get('keys')[0]
+                public_signing_key = jwt.PyJWK(jwks).key
+                psk.value = json.dumps(jwks)
+                psk.last_updated = datetime.now(timezone.utc)
+                db.session.commit()
+            token = token.replace('Bearer ', '')
+            token_json = jwt.decode(
+                jwt=token,
+                key=public_signing_key,
+                algorithms=["RS256"],
+                options={"verify_aud": False}
+            )
+            if not is_token_revoked(token=token):
+                is_valid = True
+        except Exception as exc:
+            print(exc)
+            is_valid = False
+    s.close()
+    return is_valid
 
 
 def is_token_revoked(token: str) -> bool:
@@ -106,9 +125,23 @@ def is_token_revoked(token: str) -> bool:
     return False
 
 
-def get_token_revocation_list() -> []:
+def get_token_revocation_list() -> [str]:
     """
-    - TODO: get revocation list from CM
-    - TODO: SHA256 simple hash <-- needs to mirror whatever CM is doing
+    Retrieve Token Revocation List (TRL) from CM at some interval
     """
-    return ['ba8a9d292308e55ac9ca1f995625aecb2876fb4ba16935152a69a0efc28e4cbe']
+    s = requests.Session()
+    try:
+        trl = TaskTimeoutTracker.query.filter_by(name=os.getenv('TRL_NAME')).one_or_none()
+        if not trl.timed_out():
+            token_revocation_list = json.loads(trl.value)
+        else:
+            api_call = s.get(url=os.getenv('FABRIC_CREDENTIAL_MANAGER') + '/credmgr/tokens/revoke_list')
+            token_revocation_list = api_call.json().get('data')
+            trl.value = json.dumps(token_revocation_list)
+            trl.last_updated = datetime.now(timezone.utc)
+            trl.save()
+    except Exception as exc:
+        print(exc)
+        token_revocation_list = []
+    s.close()
+    return list(token_revocation_list)

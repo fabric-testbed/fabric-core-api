@@ -8,12 +8,13 @@ from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, Tra
 class EnumAnnouncementTypes(enum.Enum):
     facility = 1
     maintenance = 2
+    news = 3
 
 
 class FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     Announcements - Facility or Maintenance announcements (* denotes required)
-    - * announcement_type - [facility, maintenance]
+    - * announcement_type - [facility, maintenance, news]
     - button - string
     - * content - string
     - * created - timestamp created (TimestampMixin)
@@ -41,6 +42,6 @@ class FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     end_date = db.Column(db.DateTime(timezone=True), nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     link = db.Column(db.String())
-    start_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     title = db.Column(db.String(), nullable=False)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)

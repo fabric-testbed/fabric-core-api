@@ -1,5 +1,5 @@
 """
-v1.5.1 - database tables
+v1.4.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -29,9 +29,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
- public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
- public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(26 rows)
+(24 rows)
 """
 
 import json
@@ -43,7 +41,7 @@ from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
-from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations, UserOrgAffiliations, UserSubjectIdentifiers
+from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
@@ -165,14 +163,12 @@ def dump_people_data():
     """
     FabricPeople(BaseMixin, TimestampMixin, db.Model)
     - active = db.Column(db.Boolean, nullable=False, default=False)
-    - bastion_login = db.Column(db.String(), nullable=True)
     - co_person_id = db.Column(db.Integer, nullable=True)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - display_name = db.Column(db.String(), nullable=False)
     - email_addresses = db.relationship('EmailAddresses', backref='people', lazy=True)
     - eppn = db.Column(db.String(), nullable=True)
     - fabric_id = db.Column(db.String(), nullable=True)
-    - gecos = db.Column(db.String(), nullable=True)
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - oidc_claim_email = db.Column(db.String(), nullable=True)
@@ -196,14 +192,12 @@ def dump_people_data():
     for p in fab_people:
         data = {
             'active': p.active,
-            'bastion_login': p.bastion_login,
             'co_person_id': p.co_person_id,
             'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'display_name': p.display_name,
             'email_addresses': [e.id for e in p.email_addresses],
             'eppn': p.eppn,
             'fabric_id': p.fabric_id,
-            'gecos': p.gecos,
             'id': p.id,
             'modified': normalize_date_to_utc(date_str=str(p.modified), return_type='str') if p.modified else None,
             'oidc_claim_email': p.oidc_claim_email,
@@ -882,77 +876,6 @@ def dump_testbed_info_data():
         outfile.write(output_json)
 
 
-# export token_holders as JSON output file
-def dump_token_holders_data():
-    """
-    token_holders
-    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
-    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
-    """
-    token_holders = []
-    # TODO: token_holders does not exist in 1.5.1, but will in 1.5.2
-    # query = text("SELECT people_id, projects_id FROM token_holders")
-    # result = db.session.execute(query).fetchall()
-    result = []
-    for row in result:
-        data = {
-            'people_id': row[0],
-            'projects_id': row[1]
-        }
-        token_holders.append(data)
-    output_dict = {'token_holders': token_holders}
-    output_json = json.dumps(output_dict, indent=2)
-    # print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/token_holders-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
-def dump_user_org_affiliations_data():
-    """
-    UserOrgAffiliations(BaseMixin, db.Model):
-    - id - primary key (BaseMixin)
-    - people_id - foreignkey link to people table
-    - affiliation - affiliation as string
-    """
-    user_org_affiliations = []
-    fab_user_org_affiliations = UserOrgAffiliations.query.order_by('id').all()
-    for i in fab_user_org_affiliations:
-        data = {
-            'affiliation': i.affiliation,
-            'id': i.id,
-            'people_id': i.people_id
-        }
-        user_org_affiliations.append(data)
-    output_dict = {'user_org_affiliations': user_org_affiliations}
-    output_json = json.dumps(output_dict, indent=2)
-    # print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/user_org_affiliations-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
-def dump_user_subject_identifiers_data():
-    """
-    UserSubjectIdentifiers(BaseMixin, db.Model):
-    - id - primary key (BaseMixin)
-    - people_id - foreignkey link to people table
-    - sub - subject identifier as string
-    """
-    user_subject_identifiers = []
-    fab_user_subject_identifiers = UserSubjectIdentifiers.query.order_by('id').all()
-    for i in fab_user_subject_identifiers:
-        data = {
-            'id': i.id,
-            'people_id': i.people_id,
-            'sub': i.sub
-        }
-        user_subject_identifiers.append(data)
-    output_dict = {'user_subject_identifiers': user_subject_identifiers}
-    output_json = json.dumps(output_dict, indent=2)
-    # print(json.dumps(output_dict, indent=2))
-    with open(BACKUP_DATA_DIR + '/user_subject_identifiers-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-        outfile.write(output_json)
-
-
 if __name__ == '__main__':
     app.app_context().push()
     consoleLogger.info('Exporter for API version {0}'.format(__API_VERSION__))
@@ -1031,7 +954,7 @@ if __name__ == '__main__':
     consoleLogger.info('dump projects_owners table')
     dump_projects_owners_data()
 
-    #  public | projects_storage          | table | postgres
+    # public | projects_storage          | table | postgres
     consoleLogger.info('dump projects_storage table')
     dump_projects_storage_data()
 
@@ -1043,26 +966,14 @@ if __name__ == '__main__':
     consoleLogger.info('dump sshkeys table')
     dump_sshkeys_data()
 
-    #  public | storage                   | table | postgres
+    # public | storage                   | table | postgres
     consoleLogger.info('dump storage table')
     dump_storage_data()
 
-    #  public | storage_sites             | table | postgres
+    # public | storage_sites             | table | postgres
     consoleLogger.info('dump storage_sites table')
     dump_storage_sites_data()
 
     #  public | testbed_info              | table | postgres
     consoleLogger.info('dump testbed_info table')
     dump_testbed_info_data()
-
-    #  public | token_holders             | table | postgres
-    consoleLogger.info('dump token_holders table')
-    dump_token_holders_data()
-
-    #  public | user_org_affiliations     | table | postgres
-    consoleLogger.info('dump user_org_affiliations table')
-    dump_user_org_affiliations_data()
-
-    #  public | user_subject_identifiers  | table | postgres
-    consoleLogger.info('dump user_subject_identifiers table')
-    dump_user_subject_identifiers_data()

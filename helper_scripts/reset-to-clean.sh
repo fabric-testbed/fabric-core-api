@@ -20,8 +20,8 @@ DIRS_TO_RESTORE=(
 
 # stop and remove docker containers
 echo "[INFO] stop and remove docker containers"
-docker-compose stop
-docker-compose rm -fv
+docker compose stop
+docker compose rm -fv
 
 # remove directories from DIRS_TO_REMOVE
 for f in "${DIRS_TO_REMOVE[@]}"; do

@@ -4,12 +4,12 @@ from datetime import datetime, timezone
 from swagger_server.api_logger import consoleLogger
 from swagger_server.models.whoami import Whoami, WhoamiResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_401, cors_500
-from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.decorators import login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
 from swagger_server.response_code.whoami_utils import get_vouch_session_expiry
 
 
-@login_required
+@login_or_token_required
 def whoami_get() -> Whoami:  # noqa: E501
     """Who am I?
 

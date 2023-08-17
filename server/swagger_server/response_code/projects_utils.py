@@ -69,14 +69,21 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     db.session.add(fab_project)
     db.session.commit()
     # create COU groups
+    # COU project creators
     fab_project.co_cou_id_pc = create_comanage_group(
         name=str(fab_project.uuid) + '-pc', description=fab_project.name,
         parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    # COU project members
     fab_project.co_cou_id_pm = create_comanage_group(
         name=str(fab_project.uuid) + '-pm', description=fab_project.name,
         parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    # COU project creators
     fab_project.co_cou_id_po = create_comanage_group(
         name=str(fab_project.uuid) + '-po', description=fab_project.name,
+        parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    # COU project token holders
+    fab_project.co_cou_id_tk = create_comanage_group(
+        name=str(fab_project.uuid) + '-tk', description=fab_project.name,
         parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
     db.session.commit()
     # create preferences
@@ -226,6 +233,8 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel = fab_project.project_owners
     elif personnel_type == 'members':
         personnel = fab_project.project_members
+    elif personnel_type == 'tokens':
+        personnel = fab_project.token_holders
     personnel_data = []
     for p in personnel:
         # get preferences (show_email)
@@ -380,6 +389,48 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
                     # metrics log - Project owner removed:
                     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove owner usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
                     log_msg = 'Project event prj:{0} modify-remove owner usr:{1} by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        str(fab_person.uuid),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
+    elif personnel_type == 'tokens':
+        p_orig = [str(p.uuid) for p in fab_project.token_holders]
+        p_new = personnel
+        p_add = array_difference(p_new, p_orig)
+        p_remove = array_difference(p_orig, p_new)
+        # get FabricGroup information
+        fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-tk').one_or_none()
+        if fab_group:
+            # add token_holders
+            for po in p_add:
+                fab_person = FabricPeople.query.filter_by(uuid=po).one_or_none()
+                if fab_person:
+                    create_comanage_role(fab_person=fab_person, fab_group=fab_group)
+                    fab_project.token_holders.append(fab_person)
+                    db.session.commit()
+                    # metrics log - Project owner added:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
+                    log_msg = 'Project event prj:{0} modify-add token-holder usr:{1} by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        str(fab_person.uuid),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
+            # remove token_holders
+            for po in p_remove:
+                fab_person = FabricPeople.query.filter_by(uuid=po).one_or_none()
+                co_person_role = FabricRoles.query.filter(
+                    FabricRoles.co_person_id == fab_person.co_person_id,
+                    FabricRoles.co_cou_id == fab_group.co_cou_id,
+                    FabricRoles.name == fab_group.name,
+                    FabricRoles.people_id == fab_person.id
+                ).one_or_none()
+                if co_person_role:
+                    fab_project.token_holders.remove(fab_person)
+                    delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
+                    db.session.commit()
+                    # metrics log - Project owner removed:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
+                    log_msg = 'Project event prj:{0} modify-remove token-holder usr:{1} by usr:{2}'.format(
                         str(fab_project.uuid),
                         str(fab_person.uuid),
                         str(api_user.uuid))

@@ -98,7 +98,7 @@ class AnnouncementsPost(Model):
         :param announcement_type: The announcement_type of this AnnouncementsPost.
         :type announcement_type: str
         """
-        allowed_values = ["facility", "maintenance"]  # noqa: E501
+        allowed_values = ["facility", "maintenance", "news"]  # noqa: E501
         if announcement_type not in allowed_values:
             raise ValueError(
                 "Invalid value for `announcement_type` ({0}), must be one of {1}"
@@ -255,8 +255,6 @@ class AnnouncementsPost(Model):
         :param start_date: The start_date of this AnnouncementsPost.
         :type start_date: str
         """
-        if start_date is None:
-            raise ValueError("Invalid value for `start_date`, must not be `None`")  # noqa: E501
 
         self._start_date = start_date
 

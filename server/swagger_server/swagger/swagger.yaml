@@ -53,6 +53,7 @@ paths:
           enum:
           - facility
           - maintenance
+          - news
       - name: is_active
         in: query
         description: is active
@@ -2755,6 +2756,10 @@ components:
           type: array
           items:
             type: string
+        token_holders:
+          type: array
+          items:
+            $ref: '#/components/schemas/person'
         uuid:
           type: string
     project_membership:
@@ -3107,6 +3112,9 @@ components:
           enum:
           - bastion
           - sliver
+        store_pubkey:
+          type: boolean
+          default: true
     sshkeys_put:
       required:
       - description
@@ -3171,7 +3179,6 @@ components:
       - announcement_type
       - content
       - is_active
-      - start_date
       - title
       type: object
       properties:
@@ -3181,6 +3188,7 @@ components:
           enum:
           - facility
           - maintenance
+          - news
         button:
           type: string
         content:
@@ -3207,6 +3215,7 @@ components:
           enum:
           - facility
           - maintenance
+          - news
         button:
           type: string
         content:
@@ -3596,6 +3605,7 @@ components:
         enum:
         - facility
         - maintenance
+        - news
     operation:
       name: operation
       in: query

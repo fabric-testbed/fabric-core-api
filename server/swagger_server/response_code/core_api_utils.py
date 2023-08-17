@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Union
 
@@ -16,3 +17,11 @@ def normalize_date_to_utc(date_str: str, return_type: str = None) -> Union[None,
         return date_parsed.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
     else:
         return date_parsed
+
+
+def is_valid_uuid(val) -> bool:
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False

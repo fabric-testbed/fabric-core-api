@@ -23,7 +23,7 @@ from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
-from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.decorators import login_required, login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
@@ -36,7 +36,7 @@ from swagger_server.response_code.response_utils import is_valid_url
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
-@login_required
+@login_or_token_required
 def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None,
                  order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
@@ -393,10 +393,11 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             db.session.commit()
         # remove Publications
         # TODO: define Publications
-        # delete COUs -pc, -pm, -po
+        # delete COUs -pc, -pm, -po, -tk
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+        delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
         # delete FabricProject
         details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
         consoleLogger.info(details)
@@ -491,7 +492,7 @@ def projects_uuid_expires_on_patch(uuid: str,
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
 
@@ -545,6 +546,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             # TODO - define publications
             project_one.publications = []
             project_one.tags = [t.tag for t in fab_project.tags]
+            project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
         # set remaining attributes for everyone else
         else:
             if not fab_project.is_public:

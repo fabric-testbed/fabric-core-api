@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from comanage_api import ComanageApi
 
@@ -17,6 +17,62 @@ api = ComanageApi(
     co_api_org_name=os.getenv('COMANAGE_API_CO_NAME'),
     co_ssh_key_authenticator_id=os.getenv('COMANAGE_API_SSH_KEY_AUTHENTICATOR_ID')
 )
+
+
+def import_comanage_group(co_cou_id: int) -> bool:
+    """
+    __tablename__ = 'groups'
+
+    co_cou_id = db.Column(db.Integer)
+    co_parent_cou_id = db.Column(db.Integer, nullable=True)
+    name = db.Column(db.String())
+    description = db.Column(db.Text)
+    deleted = db.Column(db.Boolean, default=False)
+    """
+    try:
+        cous = api.cous_view_one(cou_id=co_cou_id).get('Cous', [])
+        for co_cou in cous:
+            co_cou_id = co_cou.get('Id')
+            fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+            if not fab_group:
+                consoleLogger.info(
+                    "CREATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
+                fab_group = FabricGroups()
+                fab_group.co_cou_id = co_cou_id
+                fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
+                fab_group.created = datetime.now(timezone.utc)
+                fab_group.name = co_cou.get('Name')
+                fab_group.description = co_cou.get('Description')
+                fab_group.deleted = co_cou.get('Deleted')
+                db.session.add(fab_group)
+                db.session.commit()
+            else:
+                modified = False
+                if fab_group.name != co_cou.get('Name'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, name = '{1}'".format(
+                        co_cou_id, fab_group.name))
+                    fab_group.name = co_cou.get('Name')
+                    db.session.commit()
+                    modified = True
+                if fab_group.description != co_cou.get('Description'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, description = '{1}'".format(
+                        co_cou_id, fab_group.description))
+                    fab_group.description = co_cou.get('Description')
+                    db.session.commit()
+                    modified = True
+                if fab_group.deleted != co_cou.get('Deleted'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, deleted = '{1}'".format(
+                        co_cou_id, fab_group.deleted))
+                    fab_group.deleted = co_cou.get('Deleted')
+                    db.session.commit()
+                    modified = True
+                if not modified:
+                    consoleLogger.info("NO CHANGE: entry in 'groups' table for co_cou_id: {0}, name = '{1}'".format(
+                        co_cou_id, fab_group.name))
+        return True
+    except Exception as exc:
+        consoleLogger.debug(exc)
+        return False
 
 
 def create_comanage_group(name: str, description: str = None, parent_cou_id: int = None) -> int:
@@ -244,6 +300,11 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
             co_cou_id = co_role.get('CouId')
             fab_role = FabricRoles.query.filter_by(co_person_role_id=co_person_role_id).one_or_none()
             fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+            if not fab_group:
+                # if group isn't in local database try to import it from COmanage
+                import_group = import_comanage_group(co_cou_id=co_cou_id)
+                if import_group:
+                    fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
             if fab_group:
                 if not fab_role:
                     if co_person_role_id in roles_added and str(co_role.get('Status')).casefold() == 'active':

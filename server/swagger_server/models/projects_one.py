@@ -19,7 +19,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, publications: List[object]=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, publications: List[object]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -58,6 +58,8 @@ class ProjectsOne(Model):
         :type publications: List[object]
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
+        :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
+        :type token_holders: List[Person]
         :param uuid: The uuid of this ProjectsOne.  # noqa: E501
         :type uuid: str
         """
@@ -80,6 +82,7 @@ class ProjectsOne(Model):
             'project_storage': List[StorageOne],
             'publications': List[object],
             'tags': List[str],
+            'token_holders': List[Person],
             'uuid': str
         }
 
@@ -102,6 +105,7 @@ class ProjectsOne(Model):
             'project_storage': 'project_storage',
             'publications': 'publications',
             'tags': 'tags',
+            'token_holders': 'token_holders',
             'uuid': 'uuid'
         }
         self._active = active
@@ -122,6 +126,7 @@ class ProjectsOne(Model):
         self._project_storage = project_storage
         self._publications = publications
         self._tags = tags
+        self._token_holders = token_holders
         self._uuid = uuid
 
     @classmethod
@@ -524,6 +529,27 @@ class ProjectsOne(Model):
         """
 
         self._tags = tags
+
+    @property
+    def token_holders(self) -> List[Person]:
+        """Gets the token_holders of this ProjectsOne.
+
+
+        :return: The token_holders of this ProjectsOne.
+        :rtype: List[Person]
+        """
+        return self._token_holders
+
+    @token_holders.setter
+    def token_holders(self, token_holders: List[Person]):
+        """Sets the token_holders of this ProjectsOne.
+
+
+        :param token_holders: The token_holders of this ProjectsOne.
+        :type token_holders: List[Person]
+        """
+
+        self._token_holders = token_holders
 
     @property
     def uuid(self) -> str:

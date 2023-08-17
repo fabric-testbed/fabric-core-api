@@ -3,7 +3,6 @@ import os
 from abc import ABC
 
 import validators
-from validators import ValidationFailure
 
 
 class CoreApiOptions(ABC):
@@ -64,22 +63,9 @@ def is_valid_url(url: str = None) -> bool:
     """
     Validate URL format
     """
-    result = validators.url(url.strip())
-
-    if isinstance(result, ValidationFailure):
-        return False
-
+    try:
+        result = validators.url(url.strip())
+    except Exception as exc:
+        print(exc)
+        result = False
     return result
-
-    # url_regex = ("((http|https)://)(www.)?" +
-    #              "[a-zA-Z0-9@:%._\\+~#?&//=]" +
-    #              "{2,256}\\.[a-z]" +
-    #              "{2,6}\\b([-a-zA-Z0-9@:%" +
-    #              "._\\+~#?&//=]*)")
-    #
-    # url_check = re.compile(url_regex)
-    #
-    # if url and re.search(url_check, url):
-    #     return True
-    # else:
-    #     return False

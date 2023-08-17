@@ -167,7 +167,7 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PORTAL_ADMINS')))
         # validate announcement_type
-        if body.announcement_type == EnumAnnouncementTypes.facility.name:
+        if body.announcement_type in [EnumAnnouncementTypes.facility.name]:
             # required: content, display_date, is_active, start_date, title
             if any(item is None for item in
                    [body.content, body.display_date, body.is_active, body.start_date, body.title]):
@@ -175,12 +175,20 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
                     "Announcements POST: missing required value {content, display_date, is_active, start_date, title}"
                 consoleLogger.error(details)
                 return cors_400(details=details)
-        elif body.announcement_type == EnumAnnouncementTypes.maintenance.name:
+        elif body.announcement_type in [EnumAnnouncementTypes.maintenance.name]:
             # required: content, end_date, is_active, start_date, title
             if any(item is None for item in
                    [body.content, body.end_date, body.is_active, body.start_date, body.title]):
                 details = \
                     "Announcements POST: missing required value {content, end_date, is_active, start_date, title}"
+                consoleLogger.error(details)
+                return cors_400(details=details)
+        elif body.announcement_type in [EnumAnnouncementTypes.news.name]:
+            # required: content, display_date, is_active, link, title
+            if any(item is None for item in
+                   [body.content, body.display_date, body.is_active, body.link, body.title]):
+                details = \
+                    "Announcements POST: missing required value {content, display_date, is_active, link, title}"
                 consoleLogger.error(details)
                 return cors_400(details=details)
         else:

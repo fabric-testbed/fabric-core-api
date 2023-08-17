@@ -37,45 +37,57 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
     status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
-    consoleLogger.info("Generating key of type '{0}' for '{1}' with comment '{2}'".format(
-        body.keytype, fab_person.display_name, body.comment))
     try:
         sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
         response = SshkeyPairResults()
+        if str(body.store_pubkey).casefold() == 'false':
+            store_key = False
+            consoleLogger.info("Generating key of type 'unsaved' for '{0}' with comment '{1}'".format(
+                fab_person.display_name, body.comment))
+        else:
+            store_key = True
+            consoleLogger.info("Generating key of type '{0}' for '{1}' with comment '{2}'".format(
+                body.keytype, fab_person.display_name, body.comment))
         if sshkey:
-            now = datetime.now(timezone.utc)
-            fab_sshkey = FabricSshKeys()
-            fab_sshkey.comment = sshkey.comment
-            fab_sshkey.created = now
-            fab_sshkey.description = body.description
-            if body.keytype == EnumSshKeyTypes.sliver.name:
-                fab_sshkey.expires_on = datetime.now(timezone.utc) + \
-                                        timedelta(days=float(os.getenv('SSH_SLIVER_KEY_VALIDITY_DAYS')))
-                fab_sshkey.fabric_key_type = EnumSshKeyTypes.sliver
+            if store_key:
+                now = datetime.now(timezone.utc)
+                fab_sshkey = FabricSshKeys()
+                fab_sshkey.comment = sshkey.comment
+                fab_sshkey.created = now
+                fab_sshkey.description = body.description
+                if body.keytype == EnumSshKeyTypes.sliver.name:
+                    fab_sshkey.expires_on = datetime.now(timezone.utc) + \
+                                            timedelta(days=float(os.getenv('SSH_SLIVER_KEY_VALIDITY_DAYS')))
+                    fab_sshkey.fabric_key_type = EnumSshKeyTypes.sliver
+                else:
+                    fab_sshkey.expires_on = datetime.now(timezone.utc) + \
+                                            timedelta(days=float(os.getenv('SSH_BASTION_KEY_VALIDITY_DAYS')))
+                    fab_sshkey.fabric_key_type = EnumSshKeyTypes.bastion
+                fab_sshkey.fingerprint = sshkey.get_fingerprint()
+                fab_sshkey.modified = now
+                fab_sshkey.people_id = fab_person.id
+                fab_sshkey.public_key = sshkey.public_key
+                fab_sshkey.ssh_key_type = sshkey.name
+                fab_sshkey.status = EnumSshKeyStatus.active
+                fab_sshkey.uuid = uuid4()
+                db.session.add(fab_sshkey)
+                db.session.commit()
+                # add sshkey to Fabric Person
+                fab_person.sshkeys.append(fab_sshkey)
+                db.session.commit()
+                # metrics log - User SSH Key created:
+                # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 create sshkey KEYTYPE key:feed-beef-feed-beef
+                log_msg = 'User event usr:{0} create sshkey \'{1}\' key:{2}'.format(
+                    str(fab_person.uuid),
+                    fab_sshkey.fabric_key_type.name,
+                    str(fab_sshkey.uuid))
             else:
-                fab_sshkey.expires_on = datetime.now(timezone.utc) + \
-                                        timedelta(days=float(os.getenv('SSH_BASTION_KEY_VALIDITY_DAYS')))
-                fab_sshkey.fabric_key_type = EnumSshKeyTypes.bastion
-            fab_sshkey.fingerprint = sshkey.get_fingerprint()
-            fab_sshkey.modified = now
-            fab_sshkey.people_id = fab_person.id
-            fab_sshkey.public_key = sshkey.public_key
-            fab_sshkey.ssh_key_type = sshkey.name
-            fab_sshkey.status = EnumSshKeyStatus.active
-            fab_sshkey.uuid = uuid4()
-            db.session.add(fab_sshkey)
-            db.session.commit()
-            # add sshkey to Fabric Person
-            fab_person.sshkeys.append(fab_sshkey)
-            db.session.commit()
+                # metrics log - User SSH Key created:
+                # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 create sshkey KEYTYPE key:feed-beef-feed-beef
+                log_msg = 'User event usr:{0} create sshkey \'unsaved\' key:not-stored-by-core-api'.format(
+                    str(fab_person.uuid))
             response.private_openssh = sshkey.as_keypair()[0]
             response.public_openssh = sshkey.as_keypair()[1]
-            # metrics log - User SSH Key created:
-            # 2022-09-06 19:45:56,022 User event usr:0000-0000-0000-0001 create sshkey KEYTYPE key:feed-beef-feed-beef
-            log_msg = 'User event usr:{0} create sshkey \'{1}\' key:{2}'.format(
-                str(fab_person.uuid),
-                fab_sshkey.fabric_key_type.name,
-                str(fab_sshkey.uuid))
             metricsLogger.info(log_msg)
         return response
     except Exception as exc:

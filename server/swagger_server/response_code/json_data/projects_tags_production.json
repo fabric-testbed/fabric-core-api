@@ -23,6 +23,7 @@
     "Net.FacilityPort.Cloud-Facility-Azure": "Microsoft Azure Cloud Production",
     "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)",
     "Net.FacilityPort.OCT-MGHPCC": "Massachusetts Green High Performance Computing Center (MGHPCC)",
-    "Net.FacilityPort.Clemson-CloudLab": "Clemson-CloudLab Production"
+    "Net.FacilityPort.Clemson-CloudLab": "Clemson-CloudLab Production",
+    "Net.FacilityPort.Wisconsin-CloudLab": "Wisconsin-Cloudlab Production"
   }
 }

@@ -24,6 +24,7 @@
     "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)",
     "Net.FacilityPort.OCT-MGHPCC": "Massachusetts Green High Performance Computing Center (MGHPCC)",
     "Net.FacilityPort.Clemson-CloudLab": "Clemson-CloudLab Production",
-    "Net.FacilityPort.Wisconsin-CloudLab": "Wisconsin-Cloudlab Production"
+    "Net.FacilityPort.CloudLab-UWisc-Madison": "Wisconsin-Cloudlab Production",
+    "Net.FacilityPort.ASU-Research-Network-FABRIC": "Wisconsin-Cloudlab Production"
   }
 }

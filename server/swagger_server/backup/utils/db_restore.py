@@ -1012,6 +1012,7 @@ def restore_user_org_affiliations_data():
             ).on_conflict_do_nothing()
             db.session.execute(stmt)
         db.session.commit()
+        # TODO: reset serial sequence data
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1036,6 +1037,7 @@ def restore_user_subject_identifiers_data():
             ).on_conflict_do_nothing()
             db.session.execute(stmt)
         db.session.commit()
+        # TODO: reset serial sequence data
     except Exception as exc:
         consoleLogger.error(exc)
 

@@ -2774,6 +2774,9 @@ components:
         is_owner:
           type: boolean
           default: false
+        is_token_holder:
+          type: boolean
+          default: false
     profile_people:
       type: object
       properties:

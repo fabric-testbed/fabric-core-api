@@ -655,7 +655,8 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                 is_pc_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pc, description=body.name)
                 is_pm_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pm, description=body.name)
                 is_po_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_po, description=body.name)
-                if is_pc_name and is_pm_name and is_po_name:
+                is_tk_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_tk, description=body.name)
+                if is_pc_name and is_pm_name and is_po_name and is_tk_name:
                     fab_project.name = body.name
                     db.session.commit()
                     consoleLogger.info(

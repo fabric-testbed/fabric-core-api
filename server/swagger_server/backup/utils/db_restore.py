@@ -1086,7 +1086,7 @@ def restore_user_org_affiliations_data():
             ).on_conflict_do_nothing()
             db.session.execute(stmt)
         db.session.commit()
-        reset_serial_sequence(db_table='user_org_affiliations_dict', seq_value=max_id + 1)
+        reset_serial_sequence(db_table='user_org_affiliations', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 

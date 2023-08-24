@@ -25,9 +25,10 @@
     "Net.FABNetv6Ext": "allows to create slices with public IPv6 connectivity",
     "Net.NoLimitBW": "allows to provision links over 10 Gbps",
     "Net.PortMirroring": "allows to create slices that include port mirroring",
-    "Net.AllFacilityPorts": "allows to create slices with any stitchport",
+    "Net.AllFacilityPorts": "allows to create slices with any facility port",
     "Slice.Multisite": "allows to create slices spanning multiple sites",
     "Slice.Measurements": "allows to provision measurement VMs",
-    "Slice.NoLimitLifetime": "allows to create slices with a lifetime beyond default limit X time units without the need to renew"
+    "Slice.NoLimitLifetime": "allows to create slices with a lifetime beyond default limit X time units without the need to renew",
+    "Project.Educational": "tags the project as being educational, rather than research"
   }
 }

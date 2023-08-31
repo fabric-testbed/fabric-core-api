@@ -29,75 +29,76 @@ docker exec -ti api-flask-server /bin/bash
 ```
 
 ```console
-root@53bb06d262d6:/code/server/swagger_server/backup/data# cd /code/
-root@53bb06d262d6:/code# ls
-docker-entrypoint.sh  logs  migrations	requirements.txt  server
-root@53bb06d262d6:/code# source .env
-root@53bb06d262d6:/code# source .venv/bin/activate
-(.venv) root@53bb06d262d6:/code# python -m server.swagger_server.backup.utils.db_export
-2023-07-19 19:07:16,855 [INFO] Exporter for API version 1.5.1
-2023-07-19 19:07:16,855 [INFO] dump alembic_version table
-2023-07-19 19:07:16,881 [INFO] dump announcements table
-2023-07-19 19:07:16,941 [INFO] dump groups table
-2023-07-19 19:07:16,954 [INFO] dump people table
-2023-07-19 19:07:17,305 [INFO] dump people_email_addresses table
-2023-07-19 19:07:17,309 [INFO] dump people_organizations table
-2023-07-19 19:07:17,314 [INFO] dump people_roles table
-2023-07-19 19:07:17,356 [INFO] dump preferences table
-2023-07-19 19:07:17,489 [INFO] dump profiles_keywords table
-2023-07-19 19:07:17,495 [INFO] dump profiles_other_identities table
-2023-07-19 19:07:17,498 [INFO] dump profiles_people table
-2023-07-19 19:07:17,674 [INFO] dump profiles_personal_pages table
-2023-07-19 19:07:17,675 [INFO] dump profiles_projects table
-2023-07-19 19:07:17,715 [INFO] dump profiles_references table
-2023-07-19 19:07:17,716 [INFO] dump projects table
-2023-07-19 19:07:17,790 [INFO] dump projects_creators table
-2023-07-19 19:07:17,791 [INFO] dump projects_members table
-2023-07-19 19:07:17,792 [INFO] dump projects_owners table
-2023-07-19 19:07:17,792 [INFO] dump projects_storage table
-2023-07-19 19:07:17,793 [INFO] dump projects_tags table
-2023-07-19 19:07:17,795 [INFO] dump sshkeys table
-2023-07-19 19:07:17,826 [INFO] dump storage table
-2023-07-19 19:07:17,832 [INFO] dump storage_sites table
-2023-07-19 19:07:17,833 [INFO] dump testbed_info table
-2023-07-19 19:07:17,836 [INFO] dump token_holders table
-2023-07-19 19:07:17,837 [INFO] dump user_org_affiliations table
-2023-07-19 19:07:17,841 [INFO] dump user_subject_identifiers table
+root@ff9409aea7a9:/code# source .env
+root@ff9409aea7a9:/code# source .venv/bin/activate
+(.venv) root@ff9409aea7a9:/code# python -m server.swagger_server.backup.utils.db_export
+2023-08-25 19:47:36,977 [INFO] Exporter for API version 1.5.2
+2023-08-25 19:47:36,977 [INFO] dump alembic_version table
+2023-08-25 19:47:37,002 [INFO] dump announcements table
+Unknown string format: None
+Unknown string format: None
+2023-08-25 19:47:37,067 [INFO] dump groups table
+2023-08-25 19:47:37,081 [INFO] dump people table
+2023-08-25 19:47:37,413 [INFO] dump people_email_addresses table
+2023-08-25 19:47:37,418 [INFO] dump people_organizations table
+2023-08-25 19:47:37,422 [INFO] dump people_roles table
+2023-08-25 19:47:37,430 [INFO] dump preferences table
+2023-08-25 19:47:37,565 [INFO] dump profiles_keywords table
+2023-08-25 19:47:37,568 [INFO] dump profiles_other_identities table
+2023-08-25 19:47:37,571 [INFO] dump profiles_people table
+2023-08-25 19:47:37,728 [INFO] dump profiles_personal_pages table
+2023-08-25 19:47:37,729 [INFO] dump profiles_projects table
+2023-08-25 19:47:37,766 [INFO] dump profiles_references table
+2023-08-25 19:47:37,768 [INFO] dump projects table
+2023-08-25 19:47:37,850 [INFO] dump projects_creators table
+2023-08-25 19:47:37,851 [INFO] dump projects_members table
+2023-08-25 19:47:37,852 [INFO] dump projects_owners table
+2023-08-25 19:47:37,852 [INFO] dump projects_storage table
+2023-08-25 19:47:37,853 [INFO] dump projects_tags table
+2023-08-25 19:47:37,855 [INFO] dump sshkeys table
+2023-08-25 19:47:37,900 [INFO] dump storage table
+2023-08-25 19:47:37,906 [INFO] dump storage_sites table
+2023-08-25 19:47:37,907 [INFO] dump task_timeout_tracker table
+2023-08-25 19:47:37,910 [INFO] dump testbed_info table
+2023-08-25 19:47:37,913 [INFO] dump token_holders table
+2023-08-25 19:47:37,914 [INFO] dump user_org_affiliations table
+2023-08-25 19:47:37,918 [INFO] dump user_subject_identifiers table
 ```
 
 Verify the contents of the export
 
 ```console
-(.venv) root@53bb06d262d6:/code# ls -lh /code/server/swagger_server/backup/data/
-total 780K
--rw-r--r-- 1 root root   78 Jul 19 19:07 alembic_version-v1.5.1.json
--rw-r--r-- 1 root root   25 Jul 19 19:07 announcements-v1.5.1.json
--rw-r--r-- 1 root root  15K Jul 19 19:07 groups-v1.5.1.json
--rw-r--r-- 1 root root  83K Jul 19 19:07 people-v1.5.1.json
--rw-r--r-- 1 root root  25K Jul 19 19:07 people_email_addresses-v1.5.1.json
--rw-r--r-- 1 root root  11K Jul 19 19:07 people_organizations-v1.5.1.json
--rw-r--r-- 1 root root  75K Jul 19 19:07 people_roles-v1.5.1.json
--rw-r--r-- 1 root root 337K Jul 19 19:07 preferences-v1.5.1.json
--rw-r--r-- 1 root root   29 Jul 19 19:07 profiles_keywords-v1.5.1.json
--rw-r--r-- 1 root root   37 Jul 19 19:07 profiles_other_identities-v1.5.1.json
--rw-r--r-- 1 root root  34K Jul 19 19:07 profiles_people-v1.5.1.json
--rw-r--r-- 1 root root   35 Jul 19 19:07 profiles_personal_pages-v1.5.1.json
--rw-r--r-- 1 root root 6.4K Jul 19 19:07 profiles_projects-v1.5.1.json
--rw-r--r-- 1 root root   31 Jul 19 19:07 profiles_references-v1.5.1.json
--rw-r--r-- 1 root root  15K Jul 19 19:07 projects-v1.5.1.json
--rw-r--r-- 1 root root  861 Jul 19 19:07 projects_creators-v1.5.1.json
--rw-r--r-- 1 root root 3.5K Jul 19 19:07 projects_members-v1.5.1.json
--rw-r--r-- 1 root root 1.5K Jul 19 19:07 projects_owners-v1.5.1.json
--rw-r--r-- 1 root root   91 Jul 19 19:07 projects_storage-v1.5.1.json
--rw-r--r-- 1 root root 5.0K Jul 19 19:07 projects_tags-v1.5.1.json
--rw-r--r-- 1 root root  79K Jul 19 19:07 sshkeys-v1.5.1.json
--rw-r--r-- 1 root root  586 Jul 19 19:07 storage-v1.5.1.json
--rw-r--r-- 1 root root  174 Jul 19 19:07 storage_sites-v1.5.1.json
--rw-r--r-- 1 root root  585 Jul 19 19:07 testbed_info-v1.5.1.json
--rw-r--r-- 1 root root   25 Jul 19 19:07 token_holders-v1.5.1.json
--rw-r--r-- 1 root root 7.2K Jul 19 19:07 user_org_affiliations-v1.5.1.json
--rw-r--r-- 1 root root 8.3K Jul 19 19:07 user_subject_identifiers-v1.5.1.json
-(.venv) root@53bb06d262d6:/code# exit
+(.venv) root@ff9409aea7a9:/code# ls -lh /code/server/swagger_server/backup/data/
+total 796K
+-rw-r--r-- 1 root root   78 Aug 25 19:47 alembic_version-v1.5.2.json
+-rw-r--r-- 1 root root 3.6K Aug 25 19:47 announcements-v1.5.2.json
+-rw-r--r-- 1 root root  19K Aug 25 19:47 groups-v1.5.2.json
+-rw-r--r-- 1 root root  83K Aug 25 19:47 people-v1.5.2.json
+-rw-r--r-- 1 root root  25K Aug 25 19:47 people_email_addresses-v1.5.2.json
+-rw-r--r-- 1 root root  11K Aug 25 19:47 people_organizations-v1.5.2.json
+-rw-r--r-- 1 root root  75K Aug 25 19:47 people_roles-v1.5.2.json
+-rw-r--r-- 1 root root 338K Aug 25 19:47 preferences-v1.5.2.json
+-rw-r--r-- 1 root root   29 Aug 25 19:47 profiles_keywords-v1.5.2.json
+-rw-r--r-- 1 root root   37 Aug 25 19:47 profiles_other_identities-v1.5.2.json
+-rw-r--r-- 1 root root  34K Aug 25 19:47 profiles_people-v1.5.2.json
+-rw-r--r-- 1 root root   35 Aug 25 19:47 profiles_personal_pages-v1.5.2.json
+-rw-r--r-- 1 root root 6.4K Aug 25 19:47 profiles_projects-v1.5.2.json
+-rw-r--r-- 1 root root   31 Aug 25 19:47 profiles_references-v1.5.2.json
+-rw-r--r-- 1 root root  19K Aug 25 19:47 projects-v1.5.2.json
+-rw-r--r-- 1 root root  861 Aug 25 19:47 projects_creators-v1.5.2.json
+-rw-r--r-- 1 root root 3.5K Aug 25 19:47 projects_members-v1.5.2.json
+-rw-r--r-- 1 root root 1.5K Aug 25 19:47 projects_owners-v1.5.2.json
+-rw-r--r-- 1 root root   91 Aug 25 19:47 projects_storage-v1.5.2.json
+-rw-r--r-- 1 root root 5.1K Aug 25 19:47 projects_tags-v1.5.2.json
+-rw-r--r-- 1 root root  83K Aug 25 19:47 sshkeys-v1.5.2.json
+-rw-r--r-- 1 root root  586 Aug 25 19:47 storage-v1.5.2.json
+-rw-r--r-- 1 root root  174 Aug 25 19:47 storage_sites-v1.5.2.json
+-rw-r--r-- 1 root root 1.6K Aug 25 19:47 task_timeout_tracker-v1.5.2.json
+-rw-r--r-- 1 root root  585 Aug 25 19:47 testbed_info-v1.5.2.json
+-rw-r--r-- 1 root root  145 Aug 25 19:47 token_holders-v1.5.2.json
+-rw-r--r-- 1 root root 7.2K Aug 25 19:47 user_org_affiliations-v1.5.2.json
+-rw-r--r-- 1 root root 8.3K Aug 25 19:47 user_subject_identifiers-v1.5.2.json
+(.venv) root@ff9409aea7a9:/code# exit
 exit
 ```
 
@@ -116,34 +117,35 @@ Verify the contents (match timestamp and file size from above)
 
 ```console
 [nrig-service@beta-3 data]$ ls -lh .
-total 780K
--rw-r--r-- 1 nrig-service nrig-service   78 Jul 19 19:07 alembic_version-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   25 Jul 19 19:07 announcements-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  15K Jul 19 19:07 groups-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  25K Jul 19 19:07 people_email_addresses-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  11K Jul 19 19:07 people_organizations-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  75K Jul 19 19:07 people_roles-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  83K Jul 19 19:07 people-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 337K Jul 19 19:07 preferences-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   29 Jul 19 19:07 profiles_keywords-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   37 Jul 19 19:07 profiles_other_identities-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  34K Jul 19 19:07 profiles_people-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   35 Jul 19 19:07 profiles_personal_pages-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 6.4K Jul 19 19:07 profiles_projects-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   31 Jul 19 19:07 profiles_references-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  861 Jul 19 19:07 projects_creators-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 3.5K Jul 19 19:07 projects_members-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 1.5K Jul 19 19:07 projects_owners-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   91 Jul 19 19:07 projects_storage-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 5.0K Jul 19 19:07 projects_tags-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  15K Jul 19 19:07 projects-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  79K Jul 19 19:07 sshkeys-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  174 Jul 19 19:07 storage_sites-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  586 Jul 19 19:07 storage-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service  585 Jul 19 19:07 testbed_info-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service   25 Jul 19 19:07 token_holders-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 7.2K Jul 19 19:07 user_org_affiliations-v1.5.1.json
--rw-r--r-- 1 nrig-service nrig-service 8.3K Jul 19 19:07 user_subject_identifiers-v1.5.1.json
+total 796K
+-rw-r--r-- 1 nrig-service nrig-service   78 Aug 25 19:47 alembic_version-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 3.6K Aug 25 19:47 announcements-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  19K Aug 25 19:47 groups-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  25K Aug 25 19:47 people_email_addresses-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  11K Aug 25 19:47 people_organizations-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  75K Aug 25 19:47 people_roles-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  83K Aug 25 19:47 people-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 338K Aug 25 19:47 preferences-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service   29 Aug 25 19:47 profiles_keywords-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service   37 Aug 25 19:47 profiles_other_identities-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  34K Aug 25 19:47 profiles_people-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service   35 Aug 25 19:47 profiles_personal_pages-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 6.4K Aug 25 19:47 profiles_projects-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service   31 Aug 25 19:47 profiles_references-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  861 Aug 25 19:47 projects_creators-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 3.5K Aug 25 19:47 projects_members-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 1.5K Aug 25 19:47 projects_owners-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service   91 Aug 25 19:47 projects_storage-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 5.1K Aug 25 19:47 projects_tags-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  19K Aug 25 19:47 projects-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  83K Aug 25 19:47 sshkeys-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  174 Aug 25 19:47 storage_sites-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  586 Aug 25 19:47 storage-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 1.6K Aug 25 19:47 task_timeout_tracker-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  585 Aug 25 19:47 testbed_info-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service  145 Aug 25 19:47 token_holders-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 7.2K Aug 25 19:47 user_org_affiliations-v1.5.2.json
+-rw-r--r-- 1 nrig-service nrig-service 8.3K Aug 25 19:47 user_subject_identifiers-v1.5.2.json
 ```
 
 ## Backup DB
@@ -160,15 +162,16 @@ Verify that the backup was created and save to local host (date and size should 
 
 ```console
 $ docker exec -u postgres api-database ls -lh /tmp
-total 272K
--rw-r--r-- 1 postgres postgres 270K Jul 19 17:47 core_api_backup_07-19-2023
+total 564K
+-rw-r--r-- 1 postgres postgres 279K Aug 17 15:02 core_api_backup_08-17-2023
+-rw-r--r-- 1 postgres postgres 282K Aug 25 19:55 core_api_backup_08-25-2023
 
 $ docker cp api-database:/tmp/core_api_backup_$(date +'%m-%d-%Y') .
 $ ls -lh ./core_api_backup_$(date +'%m-%d-%Y')
--rw-r--r-- 1 nrig-service nrig-service 270K Jul 19 17:47 ./core_api_backup_07-19-2023
+-rw-r--r-- 1 nrig-service nrig-service 282K Aug 25 19:55 ./core_api_backup_08-25-2023
 ```
 
-## Deploy v1.5.2
+## Deploy v1.5.3
 
 Stop and remove existing containers (easiest to start as the `root` user)
 

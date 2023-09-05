@@ -87,15 +87,31 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
     """
     fab_person = FabricPeople()
     try:
-        if claims.get('email'):
-            # search for person by email
-            co_person = api.copeople_match(
-                mail=claims.get('email')).get('CoPeople', [])
+        if claims.get('sub'):
+            # search for person by sub
+            co_person = api.copeople_view_per_identifier(
+                identifier=claims.get('sub'), distinct_by_id=True
+            ).get('CoPeople', [])
+            # get official email address            
+            if claims.get('email'):
+                fab_person_email = claims.get('email')
+            else:
+                try:
+                    per_person_email_addresses = api.email_addresses_view_per_person(
+                        person_type='copersonid',
+                        person_id=co_person[0].get('Id')
+                    )
+                    fab_person_email = per_person_email_addresses.get('EmailAddresses')[0].get('Mail')
+                    consoleLogger.info('OIDC_CLAIM_EMAIL: not found, retrieved from COmanage')
+                except Exception as exc:
+                    # set fab_person_email to None which will not allow a user account to be created
+                    consoleLogger.error('OIDC_CLAIM_EMAIL: not found, unable to retrieve from COmanage', exc)
+                    fab_person_email = None
             if co_person and is_fabric_active_user(co_person_id=co_person[0].get('Id')):
                 fab_person = create_fabric_person_from_co_person_id(co_person_id=co_person[0].get('Id'))
-                fab_person.oidc_claim_email = claims.get('email')
+                fab_person.oidc_claim_email = fab_person_email
                 fab_person.oidc_claim_sub = claims.get('sub')
-                fab_person.preferred_email = claims.get('email')
+                fab_person.preferred_email = fab_person_email
                 fab_person.updated = datetime.now(timezone.utc) - timedelta(seconds=int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')))
                 # generate bastion_login

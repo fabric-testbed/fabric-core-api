@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
-from swagger_server.database.models.people import FabricPeople, FabricRoles, FabricGroups
+from swagger_server.database.models.people import FabricPeople, FabricRoles, FabricGroups, UserSubjectIdentifiers
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, is_fabric_active_user, update_email_addresses, \
     update_org_affiliation, update_people_identifiers, update_people_roles, update_user_org_affiliations, \
@@ -39,9 +39,20 @@ def get_person_by_login_claims() -> FabricPeople:
     """
     try:
         claims = vouch_get_custom_claims()
-        fab_person = FabricPeople.query.filter(
-            FabricPeople.oidc_claim_email == str(claims.get('email'))
-        ).one_or_none()
+        if claims.get('email'):
+            fab_person = FabricPeople.query.filter(
+                FabricPeople.oidc_claim_email == str(claims.get('email'))
+            ).one_or_none()
+        else:
+            fab_person_id = UserSubjectIdentifiers.query.filter(
+                UserSubjectIdentifiers.sub == str(claims.get('sub'))
+            ).one_or_none()
+            if fab_person_id:
+                fab_person = FabricPeople.query.filter_by(
+                    id=fab_person_id.people_id
+                ).first()
+            else:
+                fab_person = None
         # fab_person exists and sub matches existing sub identity
         if fab_person and str(claims.get('sub')) in [i.sub for i in fab_person.user_sub_identities]:
             return fab_person

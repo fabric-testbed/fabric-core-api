@@ -19,8 +19,5 @@ elif os.getenv('CORE_API_DEPLOYMENT_TIER') == 'beta':
 else:
     PROJECTS_TAGS = PROJECTS_TAGS + CoreApiOptions('projects_tags_alpha.json')
 
-# Publications Options
-PUBLICATIONS_CLASSIFICATION_TERMS = CoreApiOptions('publications_classification_terms.json')
-
 # Storage Sites
 STORAGE_SITES = CoreApiOptions('storage_sites.json')

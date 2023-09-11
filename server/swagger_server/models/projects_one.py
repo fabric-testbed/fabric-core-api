@@ -19,7 +19,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, publications: List[object]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -54,8 +54,6 @@ class ProjectsOne(Model):
         :type project_owners: List[Person]
         :param project_storage: The project_storage of this ProjectsOne.  # noqa: E501
         :type project_storage: List[StorageOne]
-        :param publications: The publications of this ProjectsOne.  # noqa: E501
-        :type publications: List[object]
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
         :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
@@ -80,7 +78,6 @@ class ProjectsOne(Model):
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
-            'publications': List[object],
             'tags': List[str],
             'token_holders': List[Person],
             'uuid': str
@@ -103,7 +100,6 @@ class ProjectsOne(Model):
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
-            'publications': 'publications',
             'tags': 'tags',
             'token_holders': 'token_holders',
             'uuid': 'uuid'
@@ -124,7 +120,6 @@ class ProjectsOne(Model):
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
-        self._publications = publications
         self._tags = tags
         self._token_holders = token_holders
         self._uuid = uuid
@@ -487,27 +482,6 @@ class ProjectsOne(Model):
         """
 
         self._project_storage = project_storage
-
-    @property
-    def publications(self) -> List[object]:
-        """Gets the publications of this ProjectsOne.
-
-
-        :return: The publications of this ProjectsOne.
-        :rtype: List[object]
-        """
-        return self._publications
-
-    @publications.setter
-    def publications(self, publications: List[object]):
-        """Sets the publications of this ProjectsOne.
-
-
-        :param publications: The publications of this ProjectsOne.
-        :type publications: List[object]
-        """
-
-        self._publications = publications
 
     @property
     def tags(self) -> List[str]:

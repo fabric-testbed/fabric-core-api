@@ -2,7 +2,6 @@ import os
 
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
-from swagger_server.database.models.storage import FabricStorage
 
 projects_creators = db.Table('projects_creators',
                              db.Model.metadata,
@@ -23,16 +22,16 @@ projects_owners = db.Table('projects_owners',
                            )
 
 projects_storage = db.Table('projects_storage',
-                           db.Model.metadata,
-                           db.Column('storage_id', db.Integer, db.ForeignKey('storage.id'), primary_key=True),
-                           db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
-                           )
+                            db.Model.metadata,
+                            db.Column('storage_id', db.Integer, db.ForeignKey('storage.id'), primary_key=True),
+                            db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+                            )
 
 token_holders = db.Table('token_holders',
-                           db.Model.metadata,
-                           db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
-                           db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
-                           )
+                         db.Model.metadata,
+                         db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+                         db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+                         )
 
 
 class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
@@ -55,7 +54,6 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - project_members - one-to-many people
     - project_owners - one-to-many people
     - projects_storage - one-to-many storage
-    - publications - publications linked to project
     - tags - array of tag strings
     - token_holders - one-to-many people
     - uuid - unique universal identifier
@@ -85,12 +83,9 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
                                      backref=db.backref('project_owners', lazy=True))
     project_storage = db.relationship('FabricStorage', secondary=projects_storage, lazy='subquery',
                                       backref=db.backref('projects_storage', lazy=True))
-    # TODO: add publications with 1.6.x prior to Sept 2023
-    # publications = db.relationship('Publications', secondary=publications, lazy='subquery',
-    #                                backref=db.backref('projects', lazy=True))
     tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     token_holders = db.relationship('FabricPeople', secondary=token_holders, lazy='subquery',
-                                     backref=db.backref('token_holders', lazy=True))
+                                    backref=db.backref('token_holders', lazy=True))
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
 

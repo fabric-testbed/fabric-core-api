@@ -391,8 +391,6 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             s.active = False
             fab_project.project_storage.remove(s)
             db.session.commit()
-        # remove Publications
-        # TODO: define Publications
         # delete COUs -pc, -pm, -po, -tk
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
@@ -543,8 +541,6 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
             project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
             project_one.project_storage = get_projects_storage(fab_project=fab_project)
-            # TODO - define publications
-            project_one.publications = []
             project_one.tags = [t.tag for t in fab_project.tags]
             project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
         # set remaining attributes for everyone else
@@ -567,7 +563,6 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.project_owners = get_projects_personnel(fab_project=fab_project,
                                                                 personnel_type='owners') if project_prefs.get(
                 'show_project_owners') else None
-            project_one.publications = []
             project_one.tags = []
         # set project_details response
         response = ProjectsDetails()

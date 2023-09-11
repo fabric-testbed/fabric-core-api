@@ -15,6 +15,8 @@ from swagger_server.models.api_options_one import ApiOptionsOne
 from swagger_server.models.api_options_one_api_endpoints import ApiOptionsOneApiEndpoints
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.bastionkeys_one import BastionkeysOne
+from swagger_server.models.check_cookie import CheckCookie
+from swagger_server.models.check_cookie_results import CheckCookieResults
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.people_one import PeopleOne
@@ -37,6 +39,7 @@ from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
+from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkey_pair_results import SshkeyPairResults
 from swagger_server.models.sshkeys import Sshkeys

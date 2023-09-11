@@ -1,9 +1,8 @@
 import os
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlalchemy.schema import Index
-from swagger_server.api_logger import consoleLogger
+
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin
 
@@ -75,7 +74,6 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     - preferences - array of preference booleans
     - preferred_email - initially OIDC scope: email:email
     - profile - one-to-one relationship with profiles_people table
-    - publications - array of publications
     - registered_on - timestamp user was registered on
     - roles - array of fabric_roles
     - sshkeys - array of sshkeys
@@ -104,9 +102,6 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     preferred_email = db.Column(db.String(), nullable=False)
     profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
-    # TODO: add publications with 1.4.x prior to Sept 2023
-    # publications = db.relationship('Publications', secondary=publications, lazy='subquery',
-    #                                backref=db.backref('people', lazy=True))
     registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     roles = db.relationship('FabricRoles', backref='people', lazy=True)
     sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
@@ -114,43 +109,6 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     user_sub_identities = db.relationship('UserSubjectIdentifiers', backref='people', lazy=True)
     user_org_affiliations = db.relationship('UserOrgAffiliations', backref='people', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    # def bastion_login(self) -> Optional[str]:
-    #     """
-    #     Build a bastion login from oidc claim sub and email
-    #     """
-    #     if self.oidc_claim_sub and self.oidc_claim_email:
-    #         oidcsub_id = str(self.oidc_claim_sub).rsplit('/', 1)[1]
-    #         prefix = self.oidc_claim_email.split('@', 1)[0]
-    #         prefix = prefix.replace('.', '_').replace('-', '_').lower()
-    #         suffix = oidcsub_id.zfill(10)
-    #         bastion_login = prefix[0:20] + '_' + suffix
-    #         return bastion_login
-    #     else:
-    #         return None
-
-    # def gecos(self) -> str:
-    #     """
-    #     Produce a GECOS-formatted string based on db person info
-    #     """
-    #     try:
-    #         full_name = self.oidc_claim_given_name.strip() + ' ' + self.oidc_claim_family_name.strip()
-    #     except Exception as exc:
-    #         consoleLogger.error('people.FabricPeople.gecos: full_name: {0}'.format(exc))
-    #         full_name = 'UnknownName'
-    #     try:
-    #         oidc_email = self.oidc_claim_email.strip()
-    #     except Exception as exc:
-    #         consoleLogger.error('people.FabricPeople.gecos: oidc_email: {0}'.format(exc))
-    #         oidc_email = 'UnknownEmail'
-    #     return ','.join([
-    #         full_name,  # Full Name
-    #         '',  # Building, room number
-    #         '',  # Office telephone
-    #         '',  # Home telephone
-    #         oidc_email
-    #         # external email or other contact info
-    #     ])
 
     def is_active(self) -> bool:
         return self.active

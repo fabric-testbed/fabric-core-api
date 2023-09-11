@@ -271,7 +271,6 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.gecos = fab_person.gecos
             people_one.preferences = {p.key: p.value for p in fab_person.preferences}
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
-            people_one.publications = []
             people_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person)
             people_one.user_sub_identities = [i.sub for i in fab_person.user_sub_identities]
@@ -282,7 +281,6 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.eppn = fab_person.eppn if people_prefs.get('show_eppn') else None
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id,
                                                     as_self=False) if people_prefs.get('show_profile') else None
-            people_one.publications = [] if people_prefs.get('show_publications') else None
             people_one.roles = get_people_roles_as_other(people_roles=fab_person.roles) if people_prefs.get(
                 'show_roles') else None
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person) if people_prefs.get(

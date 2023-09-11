@@ -14,7 +14,7 @@ class ProjectMembership(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, is_creator: bool=False, is_member: bool=False, is_owner: bool=False):  # noqa: E501
+    def __init__(self, is_creator: bool=False, is_member: bool=False, is_owner: bool=False, is_token_holder: bool=False):  # noqa: E501
         """ProjectMembership - a model defined in Swagger
 
         :param is_creator: The is_creator of this ProjectMembership.  # noqa: E501
@@ -23,21 +23,26 @@ class ProjectMembership(Model):
         :type is_member: bool
         :param is_owner: The is_owner of this ProjectMembership.  # noqa: E501
         :type is_owner: bool
+        :param is_token_holder: The is_token_holder of this ProjectMembership.  # noqa: E501
+        :type is_token_holder: bool
         """
         self.swagger_types = {
             'is_creator': bool,
             'is_member': bool,
-            'is_owner': bool
+            'is_owner': bool,
+            'is_token_holder': bool
         }
 
         self.attribute_map = {
             'is_creator': 'is_creator',
             'is_member': 'is_member',
-            'is_owner': 'is_owner'
+            'is_owner': 'is_owner',
+            'is_token_holder': 'is_token_holder'
         }
         self._is_creator = is_creator
         self._is_member = is_member
         self._is_owner = is_owner
+        self._is_token_holder = is_token_holder
 
     @classmethod
     def from_dict(cls, dikt) -> 'ProjectMembership':
@@ -112,3 +117,24 @@ class ProjectMembership(Model):
         """
 
         self._is_owner = is_owner
+
+    @property
+    def is_token_holder(self) -> bool:
+        """Gets the is_token_holder of this ProjectMembership.
+
+
+        :return: The is_token_holder of this ProjectMembership.
+        :rtype: bool
+        """
+        return self._is_token_holder
+
+    @is_token_holder.setter
+    def is_token_holder(self, is_token_holder: bool):
+        """Sets the is_token_holder of this ProjectMembership.
+
+
+        :param is_token_holder: The is_token_holder of this ProjectMembership.
+        :type is_token_holder: bool
+        """
+
+        self._is_token_holder = is_token_holder

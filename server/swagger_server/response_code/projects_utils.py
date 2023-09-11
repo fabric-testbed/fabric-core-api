@@ -33,7 +33,6 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     - project_creators
     - project_members
     - project_owners
-    - publications
     - tags
     - *uuid
 
@@ -63,8 +62,6 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.modified = now
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
-    # TODO: publications - v1.5.x
-    # fab_project.publications = []
     fab_project.uuid = uuid4()
     db.session.add(fab_project)
     db.session.commit()
@@ -142,7 +139,6 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
     - project_creators
     - project_members
     - project_owners
-    - publications
     - tags
     - *uuid
     """

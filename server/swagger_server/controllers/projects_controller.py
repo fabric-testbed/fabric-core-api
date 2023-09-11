@@ -22,13 +22,15 @@ from swagger_server import util
 from swagger_server.response_code import projects_controller as rc
 
 
-def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
+def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param exact_match: Exact Match for Search term
+    :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
@@ -42,7 +44,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
 
     :rtype: Projects
     """
-    return rc.projects_get(search, offset, limit, person_uuid, sort_by, order_by)
+    return rc.projects_get(search, exact_match, offset, limit, person_uuid, sort_by, order_by)
 
 
 def projects_post(body=None):  # noqa: E501

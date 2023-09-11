@@ -349,6 +349,15 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: exact_match
+        in: query
+        description: Exact Match for Search term
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
       - name: offset
         in: query
         description: number of items to skip before starting to collect the result
@@ -726,6 +735,15 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: exact_match
+        in: query
+        description: Exact Match for Search term
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
       - name: offset
         in: query
         description: number of items to skip before starting to collect the result
@@ -3385,6 +3403,16 @@ components:
         type: integer
         format: int32
         default: 5
+    exact_match:
+      name: exact_match
+      in: query
+      description: Exact Match for Search term
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+        default: false
     search:
       name: search
       in: query

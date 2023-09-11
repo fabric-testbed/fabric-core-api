@@ -34,6 +34,7 @@ class TestProjectsController(BaseTestCase):
         Search for FABRIC Projects
         """
         query_string = [('search', 'search_example'),
+                        ('exact_match', false),
                         ('offset', 1),
                         ('limit', 200),
                         ('person_uuid', 'person_uuid_example'),

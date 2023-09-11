@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timezone
-
+from sqlalchemy import func
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
@@ -37,7 +37,7 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
 @login_or_token_required
-def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None,
+def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None,
                  order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
 
@@ -45,6 +45,8 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
 
     :param search: search term applied
     :type search: str
+    :param exact_match: Exact Match for Search term
+    :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
@@ -131,13 +133,23 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
                 page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
             base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
-            results_page = FabricProjects.query.filter(
-                is_public_check &
-                (FabricProjects.active.is_(True)) &
-                ((FabricProjects.name.ilike("%" + search + "%")) |
-                 (FabricProjects.description.ilike("%" + search + "%")) |
-                 (FabricProjects.uuid == search))
-            ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+            if exact_match:
+                search_term = func.lower(search)
+                results_page = FabricProjects.query.filter(
+                    is_public_check &
+                    (FabricProjects.active.is_(True)) &
+                    ((func.lower(FabricProjects.name) == search_term) |
+                     (func.lower(FabricProjects.description) == search_term) |
+                     (func.lower(FabricProjects.uuid) == search_term))
+                ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+            else:
+                results_page = FabricProjects.query.filter(
+                    is_public_check &
+                    (FabricProjects.active.is_(True)) &
+                    ((FabricProjects.name.ilike("%" + search + "%")) |
+                     (FabricProjects.description.ilike("%" + search + "%")) |
+                     (FabricProjects.uuid == search))
+                ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:

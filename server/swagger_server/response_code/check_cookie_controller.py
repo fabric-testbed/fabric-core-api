@@ -22,11 +22,11 @@ def check_cookie_get():  # noqa: E501
         # get claims from cookie
         claims = vouch_get_custom_claims()
         check_cookie = CheckCookieResults()
-        check_cookie.email = claims.get('email')
-        check_cookie.family_name = claims.get('family_name')
-        check_cookie.given_name = claims.get('given_name')
-        check_cookie.name = claims.get('name')
-        check_cookie.sub = claims.get('sub')
+        check_cookie.email = claims.get('email') if claims.get('email') else 'CLAIM_NOT_FOUND'
+        check_cookie.family_name = claims.get('family_name') if claims.get('family_name') else 'CLAIM_NOT_FOUND'
+        check_cookie.given_name = claims.get('given_name') if claims.get('given_name') else 'CLAIM_NOT_FOUND'
+        check_cookie.name = claims.get('name') if claims.get('name') else 'CLAIM_NOT_FOUND'
+        check_cookie.sub = claims.get('sub') if claims.get('sub') else 'CLAIM_NOT_FOUND'
         # set CheckCookie object and return
         response = CheckCookie()
         response.results = [check_cookie]

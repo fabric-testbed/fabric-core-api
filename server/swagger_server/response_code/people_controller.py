@@ -1,5 +1,5 @@
 import os
-
+from sqlalchemy import func
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
@@ -31,13 +31,15 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
 @login_or_token_required
-def people_get(search: str = None, offset: int = None, limit: int = None) -> People:  # noqa: E501
+def people_get(search: str = None, exact_match: bool = False, offset: int = None, limit: int = None) -> People:  # noqa: E501
     """Search for FABRIC People
 
     Search for FABRIC People by name or email # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param exact_match: Exact Match for Search term
+    :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
@@ -56,14 +58,25 @@ def people_get(search: str = None, offset: int = None, limit: int = None) -> Peo
         _page = int((offset + limit) / limit)
         # get paginated search results
         if search:
-            results_page = FabricPeople.query.filter(
-                (FabricPeople.active.is_(True)) &
-                ((FabricPeople.display_name.ilike("%" + search + "%")) |
-                 (FabricPeople.oidc_claim_family_name.ilike("%" + search + "%")) |
-                 (FabricPeople.oidc_claim_given_name.ilike("%" + search + "%")) |
-                 (FabricPeople.preferred_email.ilike("%" + search + "%")) |
-                 (FabricPeople.uuid == search))
-            ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
+            if exact_match:
+                search_term = func.lower(search)
+                results_page = FabricPeople.query.filter(
+                    (FabricPeople.active.is_(True)) &
+                    ((func.lower(FabricPeople.display_name) == search_term) |
+                     (func.lower(FabricPeople.oidc_claim_family_name) == search_term) |
+                     (func.lower(FabricPeople.oidc_claim_given_name) == search_term) |
+                     (func.lower(FabricPeople.preferred_email) == search_term) |
+                     (func.lower(FabricPeople.uuid) == search_term))
+                ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
+            else:
+                results_page = FabricPeople.query.filter(
+                    (FabricPeople.active.is_(True)) &
+                    ((FabricPeople.display_name.ilike("%" + search + "%")) |
+                     (FabricPeople.oidc_claim_family_name.ilike("%" + search + "%")) |
+                     (FabricPeople.oidc_claim_given_name.ilike("%" + search + "%")) |
+                     (FabricPeople.preferred_email.ilike("%" + search + "%")) |
+                     (FabricPeople.uuid == search))
+                ).order_by(FabricPeople.display_name).paginate(page=_page, per_page=limit, error_out=False)
         else:
             results_page = FabricPeople.query.filter(
                 FabricPeople.active.is_(True)

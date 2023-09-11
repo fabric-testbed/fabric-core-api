@@ -1,11 +1,11 @@
 """
-v1.5.1 - database tables
+v1.5.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
  Schema |           Name            | Type  |  Owner
 --------+---------------------------+-------+----------
- public | alembic_version           | table | postgres
+ public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
@@ -28,10 +28,12 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
+ public | task_timeout_tracker      | table | postgres  <-- task_timeout_tracker-v<VERSION>.json
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
+ public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(26 rows)
+(28 rows)
 """
 
 import json
@@ -43,15 +45,17 @@ from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
-from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, Organizations, UserOrgAffiliations, UserSubjectIdentifiers
+from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, \
+    Organizations, UserOrgAffiliations, UserSubjectIdentifiers
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.sshkeys import FabricSshKeys
+from swagger_server.database.models.storage import FabricStorage, StorageSites
+from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
-from swagger_server.database.models.storage import FabricStorage, StorageSites
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -557,6 +561,7 @@ def dump_projects_data():
     - co_cou_id_pc = db.Column(db.Integer, nullable=True)
     - co_cou_id_pm = db.Column(db.Integer, nullable=True)
     - co_cou_id_po = db.Column(db.Integer, nullable=True)
+    - co_cou_id_tk = db.Column(db.Integer, nullable=True)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - created_by_uuid = db.Column(db.String(), nullable=True)
     - description = db.Column(db.Text, nullable=False)
@@ -576,6 +581,7 @@ def dump_projects_data():
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
     # - publications = db.relationship('Publications', secondary=publications)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
+    - token_holders = db.relationship('FabricPeople', secondary=token_holders)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
     projects = []
@@ -586,6 +592,7 @@ def dump_projects_data():
             'co_cou_id_pc': p.co_cou_id_pc,
             'co_cou_id_pm': p.co_cou_id_pm,
             'co_cou_id_po': p.co_cou_id_po,
+            'co_cou_id_tk': p.co_cou_id_tk,
             'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
             'created_by_uuid': p.created_by_uuid,
             'description': p.description,
@@ -605,6 +612,7 @@ def dump_projects_data():
             'project_storage': [ps.id for ps in p.project_storage],  # [FabricStorage.id]
             # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
             'tags': [t.id for t in p.tags],  # [String]
+            'token_holders': [tk.id for tk in p.token_holders],  # [FabricPeople.id]
             'uuid': p.uuid
         }
         projects.append(data)
@@ -848,6 +856,37 @@ def dump_storage_sites_data():
         outfile.write(output_json)
 
 
+def dump_task_timeout_tracker_data():
+    """
+    Task Timeout Tracker
+    - description
+    - * id - primary key (BaseMixin)
+    - last_updated
+    - name
+    - timeout_in_seconds
+    - uuid
+    - value
+    """
+    task_timeout_tracker = []
+    fab_storage_sites = TaskTimeoutTracker.query.order_by('id').all()
+    for t in fab_storage_sites:
+        data = {
+            'description': t.description,
+            'id': t.id,
+            'last_updated': normalize_date_to_utc(date_str=str(t.last_updated), return_type='str'),
+            'name': t.name,
+            'timeout_in_seconds': int(t.timeout_in_seconds),
+            'uuid': t.uuid,
+            'value': t.value
+        }
+        task_timeout_tracker.append(data)
+    output_dict = {'task_timeout_tracker': task_timeout_tracker}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(task_timeout_tracker, indent=2))
+    with open(BACKUP_DATA_DIR + '/task_timeout_tracker-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
+
+
 # export testbed_info as JSON output file
 def dump_testbed_info_data():
     """
@@ -890,10 +929,8 @@ def dump_token_holders_data():
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
     """
     token_holders = []
-    # TODO: token_holders does not exist in 1.5.1, but will in 1.5.2
-    # query = text("SELECT people_id, projects_id FROM token_holders")
-    # result = db.session.execute(query).fetchall()
-    result = []
+    query = text("SELECT people_id, projects_id FROM token_holders")
+    result = db.session.execute(query).fetchall()
     for row in result:
         data = {
             'people_id': row[0],
@@ -1050,6 +1087,10 @@ if __name__ == '__main__':
     #  public | storage_sites             | table | postgres
     consoleLogger.info('dump storage_sites table')
     dump_storage_sites_data()
+
+    #  public | task_timeout_tracker      | table | postgres
+    consoleLogger.info('dump task_timeout_tracker table')
+    dump_task_timeout_tracker_data()
 
     #  public | testbed_info              | table | postgres
     consoleLogger.info('dump testbed_info table')

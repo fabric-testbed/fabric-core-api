@@ -9,6 +9,7 @@ vouch/config*
 server/swagger_server/pr-uis-migration/data/*.json
 server/swagger_server/backup/data/*.json
 server/swagger_server/backup/data/
+local/
 
 ### VirtualEnv template
 # Virtualenv

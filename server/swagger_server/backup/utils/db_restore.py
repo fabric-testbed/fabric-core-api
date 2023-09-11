@@ -1,5 +1,5 @@
 """
-v1.5.1 --> v1.5.2 - database tables
+v1.5.2 --> v1.5.3 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -19,7 +19,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | profiles_personal_pages   | table | postgres  <-- profiles_personal_pages-v<VERSION>.json
  public | profiles_projects         | table | postgres  <-- profiles_projects-v<VERSION>.json
  public | profiles_references       | table | postgres  <-- profiles_references-v<VERSION>.json
- * public | projects                  | table | postgres  <-- projects-v<VERSION>.json
+ public | projects                  | table | postgres  <-- projects-v<VERSION>.json
  public | projects_creators         | table | postgres  <-- projects_creators-v<VERSION>.json
  public | projects_members          | table | postgres  <-- projects_members-v<VERSION>.json
  public | projects_owners           | table | postgres  <-- projects_owners-v<VERSION>.json
@@ -28,18 +28,49 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
+ public | task_timeout_tracker      | table | postgres  <-- task_timeout_tracker-v<VERSION>.json
  public | testbed_info              | table | postgres  <-- testbed_info-v<VERSION>.json
- * public | token_holders             | table | postgres
- * public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
- * public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
+ public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
+ public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
+ public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
+(28 rows)
+
+ Schema |           Name            | Type  |  Owner
+--------+---------------------------+-------+----------
+ public | alembic_version           | table | postgres
+ public | announcements             | table | postgres
+ public | groups                    | table | postgres
+ public | people                    | table | postgres
+ public | people_email_addresses    | table | postgres
+ public | people_organizations      | table | postgres
+ public | people_roles              | table | postgres
+ public | preferences               | table | postgres
+ public | profiles_keywords         | table | postgres
+ public | profiles_other_identities | table | postgres
+ public | profiles_people           | table | postgres
+ public | profiles_personal_pages   | table | postgres
+ public | profiles_projects         | table | postgres
+ public | profiles_references       | table | postgres
+ public | projects                  | table | postgres
+ public | projects_creators         | table | postgres
+ public | projects_members          | table | postgres
+ public | projects_owners           | table | postgres
+ public | projects_storage          | table | postgres
+ public | projects_tags             | table | postgres
+ public | sshkeys                   | table | postgres
+ public | storage                   | table | postgres
+ public | storage_sites             | table | postgres
+ public | task_timeout_tracker      | table | postgres
+ public | testbed_info              | table | postgres
+ public | token_holders             | table | postgres
+ public | user_org_affiliations     | table | postgres
+ public | user_subject_identifiers  | table | postgres
 (26 rows)
 
-Changes from v1.5.1 --> v1.5.2
- public | projects                  | table | postgres
- - add: token_holders = db.relationship('FabricPeople', backref=db.backref('token_holders', lazy=True))
-
- public | token_holders             | table | postgres
- - add table - no import needed
+Changes from v1.5.2 --> v1.5.3
+- add table task_timeout_tracker
+- fix table index for user_org_affiliations
+- fix table index for user_subject_identifiers
 """
 
 import json
@@ -54,7 +85,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.5.1'
+api_version = '1.5.2'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -620,6 +651,7 @@ def restore_projects_data():
     - * co_cou_id_pc = db.Column(db.Integer, nullable=True)
     - * co_cou_id_pm = db.Column(db.Integer, nullable=True)
     - * co_cou_id_po = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_tk = db.Column(db.Integer, nullable=True)
     - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - * created_by_uuid = db.Column(db.String(), nullable=True)
     - * description = db.Column(db.Text, nullable=False)
@@ -638,7 +670,7 @@ def restore_projects_data():
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
-    - token_holders = db.relationship('FabricPeople', backref=db.backref('token_holders', lazy=True))
+    - token_holders = db.relationship('FabricPeople', secondary=token_holders)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
     try:
@@ -655,6 +687,7 @@ def restore_projects_data():
                 co_cou_id_pc=int(p.get('co_cou_id_pc')) if p.get('co_cou_id_pc') else None,
                 co_cou_id_pm=int(p.get('co_cou_id_pm')) if p.get('co_cou_id_pm') else None,
                 co_cou_id_po=int(p.get('co_cou_id_po')) if p.get('co_cou_id_po') else None,
+                co_cou_id_tk=int(p.get('co_cou_id_tk')) if p.get('co_cou_id_tk') else None,
                 created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
                 created_by_uuid=p.get('created_by_uuid') if p.get('created_by_uuid') else None,
                 description=p.get('description'),
@@ -931,6 +964,43 @@ def restore_storage_sites_data():
         consoleLogger.error(exc)
 
 
+#  public | task_timeout_tracker | table | postgres  <-- task_timeout_tracker-v<VERSION>.json
+def restore_task_timeout_tracker_data():
+    """
+    Task Timeout Tracker
+    - description
+    - * id - primary key (BaseMixin)
+    - last_updated
+    - name
+    - timeout_in_seconds
+    - uuid
+    - value
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/task_timeout_tracker-v{0}.json'.format(api_version), 'r') as infile:
+            task_timeout_tracker_dict = json.load(infile)
+        task_timeout_tracker = task_timeout_tracker_dict.get('task_timeout_tracker')
+        max_id = 0
+        for t in task_timeout_tracker:
+            t_id = int(t.get('id'))
+            if t_id > max_id:
+                max_id = t_id
+            stmt = insert(db.Table('task_timeout_tracker')).values(
+                description=t.get('description'),
+                id=t_id,
+                last_updated=normalize_date_to_utc(t.get('last_updated')) if t.get('last_updated') else None,
+                name=t.get('name'),
+                timeout_in_seconds=int(t.get('timeout_in_seconds')),
+                uuid=t.get('uuid'),
+                value=t.get('value')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='task_timeout_tracker', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
 # export testbed_info as JSON output file
 def restore_testbed_info_data():
     """
@@ -1004,14 +1074,19 @@ def restore_user_org_affiliations_data():
         with open(BACKUP_DATA_DIR + '/user_org_affiliations-v{0}.json'.format(api_version), 'r') as infile:
             user_org_affiliations_dict = json.load(infile)
         user_org_affiliations = user_org_affiliations_dict.get('user_org_affiliations')
+        max_id = 0
         for oa in user_org_affiliations:
+            t_id = int(oa.get('id'))
+            if t_id > max_id:
+                max_id = t_id
             stmt = insert(db.Table('user_org_affiliations', metadata=db.Model.metadata)).values(
                 affiliation=oa.get('affiliation'),
-                id=oa.get('id'),
+                id=t_id,
                 people_id=oa.get('people_id')
             ).on_conflict_do_nothing()
             db.session.execute(stmt)
         db.session.commit()
+        reset_serial_sequence(db_table='user_org_affiliations', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1028,14 +1103,19 @@ def restore_user_subject_identifiers_data():
         with open(BACKUP_DATA_DIR + '/user_subject_identifiers-v{0}.json'.format(api_version), 'r') as infile:
             user_subject_identifiers_dict = json.load(infile)
         user_subject_identifiers = user_subject_identifiers_dict.get('user_subject_identifiers')
+        max_id = 0
         for si in user_subject_identifiers:
+            t_id = int(si.get('id'))
+            if t_id > max_id:
+                max_id = t_id
             stmt = insert(db.Table('user_subject_identifiers', metadata=db.Model.metadata)).values(
-                id=si.get('id'),
+                id=t_id,
                 people_id=si.get('people_id'),
                 sub=si.get('sub')
             ).on_conflict_do_nothing()
             db.session.execute(stmt)
         db.session.commit()
+        reset_serial_sequence(db_table='user_subject_identifiers', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1387,6 +1467,10 @@ if __name__ == '__main__':
     #  public | projects_storage          | table | postgres
     consoleLogger.info('restore projects_storage table')
     restore_projects_storage_data()
+
+    #  public | task_timeout_tracker | table | postgres
+    consoleLogger.info('restore task_timeout_tracker table')
+    restore_task_timeout_tracker_data()
 
     #  public | testbed_info              | table | postgres
     consoleLogger.info('restore testbed_info table')

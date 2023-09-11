@@ -204,6 +204,7 @@ def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople
     membership.is_creator = str(fab_project.uuid) + '-pc' in person_roles
     membership.is_member = str(fab_project.uuid) + '-pm' in person_roles
     membership.is_owner = str(fab_project.uuid) + '-po' in person_roles
+    membership.is_token_holder = str(fab_project.uuid) + '-tk' in person_roles
 
     return membership
 

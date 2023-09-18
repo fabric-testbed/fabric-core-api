@@ -469,3 +469,84 @@ def update_projects_tags(api_user: FabricPeople = None, fab_project: FabricProje
             log_msg = 'Project event prj:{0} modify-remove tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
                                                                                           str(api_user.uuid))
             metricsLogger.info(log_msg)
+
+
+def update_projects_token_holders(api_user: FabricPeople = None, fab_project: FabricProjects = None,
+                                  token_holders: [FabricPeople] = None,
+                                  operation: str = None) -> None:
+    # get list of token holders to add/batch/remove
+    token_holders = list(set(token_holders))
+    # get FabricGroup information
+    fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-tk').one_or_none()
+    # add
+    if operation == 'add':
+        if fab_group:
+            # add token holders
+            add_project_token_holders(api_user, fab_project, fab_group, token_holders)
+    # batch
+    elif operation == 'batch':
+        p_orig = [str(p.uuid) for p in fab_project.token_holders]
+        p_new = token_holders
+        p_add = array_difference(p_new, p_orig)
+        p_remove = array_difference(p_orig, p_new)
+        if fab_group:
+            # add token holders
+            add_project_token_holders(api_user, fab_project, fab_group, p_add)
+            # remove token holders
+            remove_project_token_holders(api_user, fab_project, fab_group, p_remove)
+    # remove
+    elif operation == 'remove':
+        if fab_group:
+            # remove token-holders
+            remove_project_token_holders(api_user, fab_project, fab_group, token_holders)
+    else:
+        consoleLogger.error('Invalid operation provided')
+
+
+def add_project_token_holders(api_user: FabricPeople, fab_project: FabricProjects, fab_group: FabricGroups,
+                              token_holders: [str]):
+    # add token holders
+    for uuid in token_holders:
+        p = FabricPeople.query.filter_by(uuid=uuid).one_or_none()
+        if p and not p.is_token_holder(project_uuid=fab_project.uuid) and (
+                p.is_project_creator(project_uuid=fab_project.uuid) or p.is_project_member(
+            project_uuid=fab_project.uuid) or p.is_project_owner(project_uuid=fab_project.uuid)):
+            create_comanage_role(fab_person=p, fab_group=fab_group)
+            fab_project.token_holders.append(p)
+            db.session.commit()
+            # metrics log - Project token-holder added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-add token-holder usr:{1} by usr:{2}'.format(
+                str(fab_project.uuid),
+                str(p.uuid),
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
+        else:
+            consoleLogger.error(
+                'AddTokenHolder: unable to add usr: {0} to project: {1} as a token holder'.format(p.uuid,
+                                                                                                  fab_project.uuid))
+
+
+def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProjects, fab_group: FabricGroups,
+                                 token_holders: [str]):
+    # remove token-holders
+    for uuid in token_holders:
+        p = FabricPeople.query.filter_by(uuid=uuid).one_or_none()
+        if p.is_token_holder(project_uuid=fab_project.uuid):
+            co_person_role = FabricRoles.query.filter(
+                FabricRoles.co_person_id == p.co_person_id,
+                FabricRoles.co_cou_id == fab_group.co_cou_id,
+                FabricRoles.name == fab_group.name,
+                FabricRoles.people_id == p.id
+            ).one_or_none()
+            if co_person_role:
+                fab_project.token_holders.remove(p)
+                delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
+                db.session.commit()
+                # metrics log - Project token-holder removed:
+                # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
+                log_msg = 'Project event prj:{0} modify-remove token-holder usr:{1} by usr:{2}'.format(
+                    str(fab_project.uuid),
+                    str(p.uuid),
+                    str(api_user.uuid))
+                metricsLogger.info(log_msg)

@@ -1,6 +1,8 @@
 import os
 from datetime import datetime, timezone
+
 from sqlalchemy import func
+
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
@@ -16,6 +18,7 @@ from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
+from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
@@ -23,13 +26,14 @@ from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
-from swagger_server.response_code.decorators import login_required, login_or_token_required
+from swagger_server.response_code.decorators import login_or_token_required, login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
     update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_personnel, update_projects_tags
+    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_personnel, update_projects_tags, \
+    update_projects_token_holders
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
@@ -1064,5 +1068,74 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_required
+def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
+                                      body: ProjectsTokenHoldersPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Project Long-Lived Token Holders as facility-operator
+
+    Update Project Long-Lived Token Holders as facility-operator # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Long-Lived Token Holders as facility-operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active facility-operator
+        if not api_user.active or not api_user.is_facility_operator():
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not a facility operator".format(
+                    api_user.display_name))
+        # ensure all users are valid project creators/members/owners
+        for p_uuid in body.token_holders:
+            if not FabricPeople.query.filter_by(uuid=p_uuid).one_or_none():
+                return cors_404(details="No match for People with uuid = '{0}'".format(p_uuid))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # check for token_holders
+        try:
+            if len(body.token_holders) == 0:
+                body.token_holders = []
+            # add project_members
+            fab_project.is_locked = True
+            db.session.commit()
+            update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=body.token_holders,
+                                          operation=operation)
+            fab_project.is_locked = False
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_token_holders_patch(): 'token_holders' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
+
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_token_holders_patch(): {0}'.format(exc)
         consoleLogger.error(details)
         return cors_500(details=details)

@@ -15,7 +15,7 @@ from swagger_server.models.sshkeys_put import SshkeysPut
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
-from swagger_server.response_code.decorators import login_required, secret_required
+from swagger_server.response_code.decorators import login_or_token_required, secret_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, \
     deactivate_expired_keys, delete_sshkey, garbage_collect_expired_keys, put_sshkey, sshkey_from_fab_sshkey, \
@@ -75,7 +75,7 @@ def bastionkeys_get(secret, since_date):  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
     """Get active SSH Keys
 
@@ -115,7 +115,7 @@ def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def sshkeys_post(body: SshkeysPost = None) -> SshkeyPair:  # noqa: E501
     """Create a public/private SSH Key Pair
 
@@ -156,7 +156,7 @@ def sshkeys_post(body: SshkeysPost = None) -> SshkeyPair:  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def sshkeys_put(body: SshkeysPut = None):  # noqa: E501
     """Add a public SSH Key
 
@@ -209,7 +209,7 @@ def sshkeys_put(body: SshkeysPut = None):  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def sshkeys_uuid_delete(uuid) -> Status200OkNoContent:  # noqa: E501
     """Delete SSH Key by UUID
 
@@ -249,7 +249,7 @@ def sshkeys_uuid_delete(uuid) -> Status200OkNoContent:  # noqa: E501
         return cors_500(details=details)
 
 
-@login_required
+@login_or_token_required
 def sshkeys_uuid_get(uuid: str) -> Sshkeys:  # noqa: E501
     """SSH Key details by UUID
 

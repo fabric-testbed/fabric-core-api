@@ -3142,16 +3142,12 @@ components:
           type: string
     check_cookie_results:
       properties:
-        email:
+        cookie_name:
           type: string
-        family_name:
-          type: string
-        given_name:
-          type: string
-        name:
-          type: string
-        sub:
-          type: string
+        cookie_attributes:
+          type: object
+        fabric_attributes:
+          type: object
     people_one_roles:
       type: object
       properties:

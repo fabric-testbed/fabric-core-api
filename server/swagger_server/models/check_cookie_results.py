@@ -14,40 +14,30 @@ class CheckCookieResults(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, email: str=None, family_name: str=None, given_name: str=None, name: str=None, sub: str=None):  # noqa: E501
+    def __init__(self, cookie_name: str=None, cookie_attributes: object=None, fabric_attributes: object=None):  # noqa: E501
         """CheckCookieResults - a model defined in Swagger
 
-        :param email: The email of this CheckCookieResults.  # noqa: E501
-        :type email: str
-        :param family_name: The family_name of this CheckCookieResults.  # noqa: E501
-        :type family_name: str
-        :param given_name: The given_name of this CheckCookieResults.  # noqa: E501
-        :type given_name: str
-        :param name: The name of this CheckCookieResults.  # noqa: E501
-        :type name: str
-        :param sub: The sub of this CheckCookieResults.  # noqa: E501
-        :type sub: str
+        :param cookie_name: The cookie_name of this CheckCookieResults.  # noqa: E501
+        :type cookie_name: str
+        :param cookie_attributes: The cookie_attributes of this CheckCookieResults.  # noqa: E501
+        :type cookie_attributes: object
+        :param fabric_attributes: The fabric_attributes of this CheckCookieResults.  # noqa: E501
+        :type fabric_attributes: object
         """
         self.swagger_types = {
-            'email': str,
-            'family_name': str,
-            'given_name': str,
-            'name': str,
-            'sub': str
+            'cookie_name': str,
+            'cookie_attributes': object,
+            'fabric_attributes': object
         }
 
         self.attribute_map = {
-            'email': 'email',
-            'family_name': 'family_name',
-            'given_name': 'given_name',
-            'name': 'name',
-            'sub': 'sub'
+            'cookie_name': 'cookie_name',
+            'cookie_attributes': 'cookie_attributes',
+            'fabric_attributes': 'fabric_attributes'
         }
-        self._email = email
-        self._family_name = family_name
-        self._given_name = given_name
-        self._name = name
-        self._sub = sub
+        self._cookie_name = cookie_name
+        self._cookie_attributes = cookie_attributes
+        self._fabric_attributes = fabric_attributes
 
     @classmethod
     def from_dict(cls, dikt) -> 'CheckCookieResults':
@@ -61,106 +51,64 @@ class CheckCookieResults(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def email(self) -> str:
-        """Gets the email of this CheckCookieResults.
+    def cookie_name(self) -> str:
+        """Gets the cookie_name of this CheckCookieResults.
 
 
-        :return: The email of this CheckCookieResults.
+        :return: The cookie_name of this CheckCookieResults.
         :rtype: str
         """
-        return self._email
+        return self._cookie_name
 
-    @email.setter
-    def email(self, email: str):
-        """Sets the email of this CheckCookieResults.
+    @cookie_name.setter
+    def cookie_name(self, cookie_name: str):
+        """Sets the cookie_name of this CheckCookieResults.
 
 
-        :param email: The email of this CheckCookieResults.
-        :type email: str
+        :param cookie_name: The cookie_name of this CheckCookieResults.
+        :type cookie_name: str
         """
 
-        self._email = email
+        self._cookie_name = cookie_name
 
     @property
-    def family_name(self) -> str:
-        """Gets the family_name of this CheckCookieResults.
+    def cookie_attributes(self) -> object:
+        """Gets the cookie_attributes of this CheckCookieResults.
 
 
-        :return: The family_name of this CheckCookieResults.
-        :rtype: str
+        :return: The cookie_attributes of this CheckCookieResults.
+        :rtype: object
         """
-        return self._family_name
+        return self._cookie_attributes
 
-    @family_name.setter
-    def family_name(self, family_name: str):
-        """Sets the family_name of this CheckCookieResults.
+    @cookie_attributes.setter
+    def cookie_attributes(self, cookie_attributes: object):
+        """Sets the cookie_attributes of this CheckCookieResults.
 
 
-        :param family_name: The family_name of this CheckCookieResults.
-        :type family_name: str
+        :param cookie_attributes: The cookie_attributes of this CheckCookieResults.
+        :type cookie_attributes: object
         """
 
-        self._family_name = family_name
+        self._cookie_attributes = cookie_attributes
 
     @property
-    def given_name(self) -> str:
-        """Gets the given_name of this CheckCookieResults.
+    def fabric_attributes(self) -> object:
+        """Gets the fabric_attributes of this CheckCookieResults.
 
 
-        :return: The given_name of this CheckCookieResults.
-        :rtype: str
+        :return: The fabric_attributes of this CheckCookieResults.
+        :rtype: object
         """
-        return self._given_name
+        return self._fabric_attributes
 
-    @given_name.setter
-    def given_name(self, given_name: str):
-        """Sets the given_name of this CheckCookieResults.
-
-
-        :param given_name: The given_name of this CheckCookieResults.
-        :type given_name: str
-        """
-
-        self._given_name = given_name
-
-    @property
-    def name(self) -> str:
-        """Gets the name of this CheckCookieResults.
+    @fabric_attributes.setter
+    def fabric_attributes(self, fabric_attributes: object):
+        """Sets the fabric_attributes of this CheckCookieResults.
 
 
-        :return: The name of this CheckCookieResults.
-        :rtype: str
-        """
-        return self._name
-
-    @name.setter
-    def name(self, name: str):
-        """Sets the name of this CheckCookieResults.
-
-
-        :param name: The name of this CheckCookieResults.
-        :type name: str
+        :param fabric_attributes: The fabric_attributes of this CheckCookieResults.
+        :type fabric_attributes: object
         """
 
-        self._name = name
-
-    @property
-    def sub(self) -> str:
-        """Gets the sub of this CheckCookieResults.
-
-
-        :return: The sub of this CheckCookieResults.
-        :rtype: str
-        """
-        return self._sub
-
-    @sub.setter
-    def sub(self, sub: str):
-        """Sets the sub of this CheckCookieResults.
-
-
-        :param sub: The sub of this CheckCookieResults.
-        :type sub: str
-        """
-
-        self._sub = sub
+        self._fabric_attributes = fabric_attributes

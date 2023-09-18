@@ -131,6 +131,9 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     def is_project_owner(self, project_uuid: str = None) -> bool:
         return project_uuid + '-po' in [r.name.casefold() for r in self.roles]
 
+    def is_token_holder(self, project_uuid: str = None) -> bool:
+        return project_uuid + '-tk' in [r.name.casefold() for r in self.roles]
+
 
 Index('idx_people', FabricPeople.uuid, FabricPeople.co_person_id, FabricPeople.id)
 

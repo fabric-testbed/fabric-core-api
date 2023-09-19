@@ -1,5 +1,5 @@
 """
-v1.5.2 --> v1.5.3 - database tables
+v1.5.2 --> v1.6.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -35,39 +35,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (28 rows)
 
- Schema |           Name            | Type  |  Owner
---------+---------------------------+-------+----------
- public | alembic_version           | table | postgres
- public | announcements             | table | postgres
- public | groups                    | table | postgres
- public | people                    | table | postgres
- public | people_email_addresses    | table | postgres
- public | people_organizations      | table | postgres
- public | people_roles              | table | postgres
- public | preferences               | table | postgres
- public | profiles_keywords         | table | postgres
- public | profiles_other_identities | table | postgres
- public | profiles_people           | table | postgres
- public | profiles_personal_pages   | table | postgres
- public | profiles_projects         | table | postgres
- public | profiles_references       | table | postgres
- public | projects                  | table | postgres
- public | projects_creators         | table | postgres
- public | projects_members          | table | postgres
- public | projects_owners           | table | postgres
- public | projects_storage          | table | postgres
- public | projects_tags             | table | postgres
- public | sshkeys                   | table | postgres
- public | storage                   | table | postgres
- public | storage_sites             | table | postgres
- public | task_timeout_tracker      | table | postgres
- public | testbed_info              | table | postgres
- public | token_holders             | table | postgres
- public | user_org_affiliations     | table | postgres
- public | user_subject_identifiers  | table | postgres
-(26 rows)
-
-Changes from v1.5.2 --> v1.5.3
+Changes from v1.5.2 --> v1.6.0
 - add table task_timeout_tracker
 - fix table index for user_org_affiliations
 - fix table index for user_subject_identifiers
@@ -1372,7 +1340,7 @@ def token_cou_backfill_existing_projects():
 if __name__ == '__main__':
     app.app_context().push()
 
-    consoleLogger.info('Restorer for API version {0}'.format(api_version))
+    consoleLogger.info('Restore data from API version {0}'.format(api_version))
     #                    List of relations
     #  Schema |           Name            | Type  |  Owner
     # --------+---------------------------+-------+----------

@@ -1,14 +1,15 @@
 # Projects
 
-When a project is created it also triggers the remote creation of three COUs in COmanage (API call to COmanage registry)
+When a project is created it also triggers the remote creation of four COUs in COmanage (API call to COmanage registry)
 
 - COU: `uuid-pc` - group to associate project creator to
 - COU: `uuid-pm` - group to associate project members to
 - COU: `uuid-po` - group to associate project owners to
+- COU: `uuid-tk` - group to associate project long lived token holders to
 
 The notation `uuid` from above is a universal unique identifier (e.g. `990d8a8b-7e50-4d13-a3be-0f133ffa8653`) - all COUs for the same project would have the same `uuid` value which matches the core-api `uuid` for the project object.
 
-All endpoints are "WYSIWYG" in nature 
+Endpoints are generally "WYSIWYG" in nature 
 
  - The API will attempt to modify the data object to match the data provided by the `api_user`
  - There are no "*add*" or "*remove*" endpoints, but rather **_what you see is what you get_** (assuming valid data is passed to the endpoint)
@@ -40,6 +41,19 @@ For example:
 "project_members": []
 ```
 
+The exception to "WYSIWYG" behaviour is the `token-holders` endpoint which has an "operation" parameter which can be `add`, `remove`, `batch` (default is `add`)
+
+```json
+"token_holders": [
+    "uuid-1",
+    "uuid-4"
+]
+```
+
+- operation `add`: attempt to add one or more users from the `uuid-tk` group identified by UUID
+- operation `remove`: attempt to remove one or more users from the `uuid-tk` group identified by UUID
+- operation `batch`: attempt to re-balance the users in the `uuid-tk` group to exactly match the passed in list of users identified by UUID (sending an empty list `[]` will delete all users from the `uuid-tk` group)
+
 ## API Endpoints
 
 FABRIC Projects
@@ -48,6 +62,7 @@ FABRIC Projects
 
 - GET - retrieve list of projects
   - param: `search` - optional search, 3 or more characters - matches on `name`
+  - param: `exact_match` - boolean flag that when true will only return exact matches found for a search query (default is false)
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more)
   - param: `person_uuid` - return only projects where `person_uuid` is a project creator/owner/member (private projects are enforced by the calling user permissions)
@@ -145,6 +160,14 @@ FABRIC Projects
   - authz: open to all authenticated users
   - response type: singleton `projects.tags`
 
+### `/projects{uuid}/token-holders`
+
+- PATCH - update an existing project personnel
+  - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
+  - data: `token-holders` as array of uuid as string (optional)
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
 ## Response and Request formats
 
 ### GET response as list
@@ -212,7 +235,6 @@ FABRIC Projects
     "project_members": [ ... ],
     "project_owners": [ ... ],
     "project_storage": [ ... ],
-    "publications": [ ... ],
     "tags": [ ... ],
     "uuid": "<string>"
 }
@@ -322,7 +344,6 @@ Valid project `preferences` keys:
         "show_references": <boolean>         <-- optional - true/false
     },
     "project_status": "<string>",            <-- optional - 5 or more characters
-    "publications": [ ... ],                 <-- optional - array of publications
     "purpose": "<string>",                   <-- optional - 5 or more characters
     "references": [ ... ]                    <-- optional - array of references
 }
@@ -434,4 +455,14 @@ Valid `project_tags`:
     "VM.NoLimitDisk",
     "VM.NoLimitRAM"
 ]
+```
+
+### PATCH project token-holders request body
+
+```
+{
+    "token_holders": [       <-- optional - array of uuid as string
+        "<string>"
+    ]
+}
 ```

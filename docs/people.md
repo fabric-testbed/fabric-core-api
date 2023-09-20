@@ -10,6 +10,7 @@ FABRIC People
 
 - GET - retrieve list of people
   - param: `search` - optional search, 3 or more characters - matches on `name`, `email` or `people_uuid`
+  - param: `exact_match` - boolean flag that when true will only return exact matches found for a search query (default is false)
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more)
   - authz: open to all authenticated users
@@ -137,7 +138,6 @@ FABRIC People
         "pronouns": "<string>",
         "website": "<string>"
     },
-    "publications": [ ... ],
     "registered_on": "<string>",
     "roles": [ ... ],
     "sshkeys": [ ... ],
@@ -162,7 +162,6 @@ FABRIC People
         "pronouns": "<string>",      <-- based on preference "show_pronouns"
         "website": "<string>"        <-- based on preference "show_website"
     },
-    "publications": [ ... ],         <-- based on preference "show_publications"
     "registered_on": "<string>",
     "roles": [ ... ],                <-- based on preference "show_roles"
     "sshkeys": [ ... ],              <-- based on preference "show_sshkeys"

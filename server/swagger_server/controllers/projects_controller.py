@@ -10,6 +10,7 @@ from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
+from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -21,13 +22,15 @@ from swagger_server import util
 from swagger_server.response_code import projects_controller as rc
 
 
-def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
+def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param exact_match: Exact Match for Search term
+    :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
@@ -41,7 +44,7 @@ def projects_get(search=None, offset=None, limit=None, person_uuid=None, sort_by
 
     :rtype: Projects
     """
-    return rc.projects_get(search, offset, limit, person_uuid, sort_by, order_by)
+    return rc.projects_get(search, exact_match, offset, limit, person_uuid, sort_by, order_by)
 
 
 def projects_post(body=None):  # noqa: E501
@@ -207,3 +210,22 @@ def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProjectsTagsPatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_tags_patch(uuid, body)
+
+
+def projects_uuid_token_holders_patch(operation, uuid, body=None):  # noqa: E501
+    """Update Project Long-Lived Token Holders as facility-operator
+
+    Update Project Long-Lived Token Holders as facility-operator # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Long-Lived Token Holders as facility-operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsTokenHoldersPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_token_holders_patch(operation, uuid, body)

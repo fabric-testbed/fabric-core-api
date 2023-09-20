@@ -8,21 +8,21 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.5.0
+  version: 1.6.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.5.0
+- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.6.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
   description: FABRIC Facility & Maintenance Announcements
+- name: check-cookie
+  description: FABRIC Check Cookie
 - name: people
   description: FABRIC People
 - name: projects
   description: FABRIC Projects
-- name: publications
-  description: FABRIC Publications
 - name: sshkeys
   description: FABRIC Public SSH Keys
 - name: storage
@@ -311,6 +311,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.announcements_controller
+  /check-cookie:
+    get:
+      tags:
+      - check-cookie
+      summary: Check Cookie
+      description: Check Cookie
+      operationId: check_cookie_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/check_cookie'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.check_cookie_controller
   /people:
     get:
       tags:
@@ -328,6 +349,15 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: exact_match
+        in: query
+        description: Exact Match for Search term
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
       - name: offset
         in: query
         description: number of items to skip before starting to collect the result
@@ -705,6 +735,15 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: exact_match
+        in: query
+        description: Exact Match for Search term
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
       - name: offset
         in: query
         description: number of items to skip before starting to collect the result
@@ -1244,6 +1283,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/token-holders:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Long-Lived Token Holders as facility-operator
+      description: Update Project Long-Lived Token Holders as facility-operator
+      operationId: projects_uuid_token_holders_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: operation
+        in: query
+        description: operation to be performed
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: add
+          enum:
+          - add
+          - remove
+          - batch
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_token_holders_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /projects/preferences:
     get:
       tags:
@@ -1337,302 +1451,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
-  /publications:
-    get:
-      tags:
-      - publications
-      summary: Publications (placeholder)
-      description: Search for Publications by author or title
-      operationId: publications_get
-      parameters:
-      - name: search
-        in: query
-        description: search term applied
-        required: false
-        style: form
-        explode: true
-        schema:
-          minLength: 3
-          type: string
-      - name: offset
-        in: query
-        description: number of items to skip before starting to collect the result
-          set
-        required: false
-        style: form
-        explode: true
-        schema:
-          minimum: 0
-          type: integer
-          format: int32
-          default: 0
-      - name: limit
-        in: query
-        description: maximum number of results to return per page (1 or more)
-        required: false
-        style: form
-        explode: true
-        schema:
-          maximum: 200
-          minimum: 1
-          type: integer
-          format: int32
-          default: 5
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_400_bad_request'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
-    post:
-      tags:
-      - publications
-      summary: Publications (placeholder)
-      description: Publications (placeholder)
-      operationId: publications_post
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_400_bad_request'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
-  /publications/{uuid}:
-    get:
-      tags:
-      - publications
-      summary: Publications (placeholder)
-      description: Publications (placeholder)
-      operationId: publications_uuid_get
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
-    delete:
-      tags:
-      - publications
-      summary: Publications (placeholder)
-      description: Publications (placeholder)
-      operationId: publications_uuid_delete
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
-    patch:
-      tags:
-      - publications
-      summary: Publications (placeholder)
-      description: Publications (placeholder)
-      operationId: publications_uuid_patch
-      parameters:
-      - name: uuid
-        in: path
-        description: universally unique identifier
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_200_ok_no_content'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_400_bad_request'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_401_unauthorized'
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_403_forbidden'
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_404_not_found'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
-  /publications/classification-terms:
-    get:
-      tags:
-      - publications
-      summary: List of Classification Terms
-      description: List of Classification Terms
-      operationId: publications_classification_terms_get
-      parameters:
-      - name: search
-        in: query
-        description: search term applied
-        required: false
-        style: form
-        explode: true
-        schema:
-          minLength: 3
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/api_options'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status_500_internal_server_error'
-      x-openapi-router-controller: swagger_server.controllers.publications_controller
   /bastionkeys:
     get:
       tags:
@@ -2546,6 +2364,16 @@ components:
         status:
           type: integer
           default: 500
+    check_cookie:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/check_cookie_results'
     person:
       required:
       - name
@@ -2618,10 +2446,6 @@ components:
           $ref: '#/components/schemas/preferences'
         profile:
           $ref: '#/components/schemas/profile_people'
-        publications:
-          type: array
-          items:
-            type: object
         registered_on:
           type: string
         roles:
@@ -2748,10 +2572,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/storage_one'
-        publications:
-          type: array
-          items:
-            type: object
         tags:
           type: array
           items:
@@ -2772,6 +2592,9 @@ components:
           type: boolean
           default: false
         is_owner:
+          type: boolean
+          default: false
+        is_token_holder:
           type: boolean
           default: false
     profile_people:
@@ -3082,6 +2905,13 @@ components:
           type: array
           items:
             type: string
+    projects_token_holders_patch:
+      type: object
+      properties:
+        token_holders:
+          type: array
+          items:
+            type: string
     projects_tags_patch:
       type: object
       properties:
@@ -3310,6 +3140,14 @@ components:
           default: Internal Server Error
         details:
           type: string
+    check_cookie_results:
+      properties:
+        cookie_name:
+          type: string
+        cookie_attributes:
+          type: object
+        fabric_attributes:
+          type: object
     people_one_roles:
       type: object
       properties:
@@ -3391,6 +3229,12 @@ components:
         endpoint:
           type: string
   responses:
+    "200_check_cookie":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/check_cookie'
     "200_people":
       description: OK
       content:
@@ -3555,6 +3399,16 @@ components:
         type: integer
         format: int32
         default: 5
+    exact_match:
+      name: exact_match
+      in: query
+      description: Exact Match for Search term
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: boolean
+        default: false
     search:
       name: search
       in: query
@@ -3619,6 +3473,7 @@ components:
         enum:
         - add
         - remove
+        - batch
     secret:
       name: secret
       in: query
@@ -3718,6 +3573,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_personnel_patch'
+    payload_projects_token_holders_patch:
+      description: Update Project Long-Lived Token Holders as facility-operator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_token_holders_patch'
     payload_projects_tags_patch:
       description: Update Project Tags as Facility Operator
       content:

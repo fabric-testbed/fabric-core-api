@@ -5,14 +5,15 @@ from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
-from swagger_server.database.models.people import FabricPeople, FabricRoles, FabricGroups, UserSubjectIdentifiers
+from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles, UserSubjectIdentifiers
 from swagger_server.database.models.projects import FabricProjects
-from swagger_server.response_code.comanage_utils import api, is_fabric_active_user, update_email_addresses, \
-    update_org_affiliation, update_people_identifiers, update_people_roles, update_user_org_affiliations, \
-    update_user_subject_identities, create_comanage_role, delete_comanage_role
+from swagger_server.response_code.comanage_utils import api, create_comanage_role, delete_comanage_role, \
+    is_fabric_active_user, update_email_addresses, update_org_affiliation, update_people_identifiers, \
+    update_people_roles, update_user_org_affiliations, update_user_subject_identities
 from swagger_server.response_code.core_api_utils import is_valid_uuid
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
+from swagger_server.response_code.projects_utils import remove_project_token_holders
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
@@ -282,6 +283,8 @@ def update_fabric_person(fab_person: FabricPeople = None):
                     if role.name[-2:] == 'tk':
                         if fab_person not in fab_project.token_holders:
                             fab_project.token_holders.append(fab_person)
+        # check for token holders that are no longer project members
+        verify_token_holder_membership(fab_person=fab_person)
         # determine if user is active
         fab_person.active = False
         for role in fab_person.roles:
@@ -382,3 +385,20 @@ def generate_gecos(fab_person: FabricPeople) -> str:
         oidc_email
         # external email or other contact info
     ])
+
+
+def verify_token_holder_membership(fab_person: FabricPeople):
+    """
+    Remove user from token holders group if they no longer have a role in the project
+    """
+    role_names = [r.name for r in fab_person.roles]
+    for role in fab_person.roles:
+        if role.name.endswith('-tk'):
+            project_uuid = role.name[:-3]
+            p_count = sum(project_uuid in r for r in role_names)
+            if p_count < 2:
+                fab_project = FabricProjects.query.filter_by(uuid=project_uuid).one_or_none()
+                fab_group = FabricGroups.query.filter_by(name=role.name).one_or_none()
+                if fab_project and fab_group:
+                    remove_project_token_holders(api_user=fab_person, fab_project=fab_project, fab_group=fab_group,
+                                                 token_holders=[str(fab_person.uuid)])

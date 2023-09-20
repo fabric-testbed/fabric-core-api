@@ -27,6 +27,7 @@ from swagger_server.models.storage_many import StorageMany
 from swagger_server.models.testbed_info import TestbedInfo
 from swagger_server.models.version import Version
 from swagger_server.models.whoami import Whoami
+from swagger_server.models.check_cookie import CheckCookie
 
 # Constants
 _INDENT = int(os.getenv('CORE_API_JSON_RESPONSE_INDENT', '0'))
@@ -71,7 +72,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 
 def cors_200(response_body: Union[
-    ApiOptions, Bastionkeys, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
+    ApiOptions, Bastionkeys, CheckCookie, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
     Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails, TestbedInfo, StorageMany, Storage
 ] = None) -> cors_response:
     """

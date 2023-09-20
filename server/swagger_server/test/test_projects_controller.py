@@ -14,6 +14,7 @@ from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
+from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -33,6 +34,7 @@ class TestProjectsController(BaseTestCase):
         Search for FABRIC Projects
         """
         query_string = [('search', 'search_example'),
+                        ('exact_match', false),
                         ('offset', 1),
                         ('limit', 200),
                         ('person_uuid', 'person_uuid_example'),
@@ -187,6 +189,22 @@ class TestProjectsController(BaseTestCase):
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_token_holders_patch(self):
+        """Test case for projects_uuid_token_holders_patch
+
+        Update Project Long-Lived Token Holders as facility-operator
+        """
+        body = ProjectsTokenHoldersPatch()
+        query_string = [('operation', 'add')]
+        response = self.client.open(
+            '/projects/{uuid}/token-holders'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

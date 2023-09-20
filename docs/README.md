@@ -7,9 +7,9 @@ Python (Flask) based ReSTful API for FABRIC Core Services based on COmanage regi
 API endpoints
 
 - [/announcements](./announcements.md) - API endpoint (release 1.3)
+- [/check-cookie](./check-cookie.md) - API endpoint (release 1.6)
 - [/people](./people.md) - API endpoint (release 1.0)
 - [/projects](./projects.md) - API endpoint (release 1.0)
-- [/publications](./publications.md) - API endpoint (expected release 1.6)
 - [/sshkeys](./sshkeys.md) - API endpoint (release 1.3)
 - [/storage](./storage.md) - API endpoint (release 1.4)
 - [/testbed-info](./testbed-info.md) - API endpoint (release 1.4)
@@ -32,6 +32,11 @@ FABRIC Facility & Maintenance Announcements
 - GET: `/announcements`
 - PATCH: `/announcements`
 - DELETE: `/announcements`
+
+### check-cookie
+Check OIDC authentication cookie claims
+
+- GET: `/check-cookie`
 
 ### people
 FABRIC People
@@ -57,6 +62,7 @@ FABRIC Projects
 - PATCH: `/projects/{uuid}/profile`
 - PATCH: `/projects/{uuid}/personnel`
 - PATCH: `/projects/{uuid}/tags`
+- PATCH: `/projects/{uuid}/token-holders`
 - GET: `/projects/preferences`
 - GET: `/projects/profile/preferences`
 - GET: `/projects/tags`

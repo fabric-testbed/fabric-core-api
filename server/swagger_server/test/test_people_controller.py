@@ -28,6 +28,7 @@ class TestPeopleController(BaseTestCase):
         Search for FABRIC People
         """
         query_string = [('search', 'search_example'),
+                        ('exact_match', false),
                         ('offset', 1),
                         ('limit', 200)]
         response = self.client.open(

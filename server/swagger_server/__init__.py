@@ -1,26 +1,9 @@
-__API_VERSION__ = '1.5.2'
+__API_VERSION__ = '1.6.0'
 __API_REFERENCE__ = 'https://github.com/fabric-testbed/fabric-core-api'
 
-# from logging.config import dictConfig
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-# dictConfig({
-#     'version': 1,
-#     'formatters': {'default': {
-#         'format': '%(asctime)s [%(levelname)s] in %(module)s: %(message)s',
-#     }},
-#     'handlers': {'wsgi': {
-#         'class': 'logging.StreamHandler',
-#         'stream': 'ext://flask.logging.wsgi_errors_stream',
-#         'formatter': 'default'
-#     }},
-#     'root': {
-#         'level': 'INFO',
-#         'handlers': ['wsgi']
-#     }
-# })
 
 # load environment variables
 env_path = Path('../../') / '.env'

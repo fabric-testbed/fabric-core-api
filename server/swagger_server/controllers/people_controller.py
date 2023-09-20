@@ -16,13 +16,15 @@ from swagger_server import util
 from swagger_server.response_code import people_controller as rc
 
 
-def people_get(search=None, offset=None, limit=None):  # noqa: E501
+def people_get(search=None, exact_match=None, offset=None, limit=None):  # noqa: E501
     """Search for FABRIC People
 
     Search for FABRIC People by name or email # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param exact_match: Exact Match for Search term
+    :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
     :type offset: int
     :param limit: maximum number of results to return per page (1 or more)
@@ -30,7 +32,7 @@ def people_get(search=None, offset=None, limit=None):  # noqa: E501
 
     :rtype: People
     """
-    return rc.people_get(search, offset, limit)
+    return rc.people_get(search, exact_match, offset, limit)
 
 
 def people_preferences_get(search=None):  # noqa: E501

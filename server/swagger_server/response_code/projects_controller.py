@@ -784,7 +784,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             fab_project.is_locked = True
             db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_members,
-                                      personnel_type='members')
+                                      personnel_type='members', operation='batch')
             fab_project.is_locked = False
             db.session.commit()
         except Exception as exc:
@@ -800,7 +800,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             fab_project.is_locked = True
             db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
-                                      personnel_type='owners')
+                                      personnel_type='owners', operation='batch')
             fab_project.is_locked = False
             db.session.commit()
         except Exception as exc:

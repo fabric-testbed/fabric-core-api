@@ -60,7 +60,9 @@ FABRIC Projects
 - DELETE: `/projects/{uuid}`
 - PATCH: `/projects/{uuid}/expires-on`
 - PATCH: `/projects/{uuid}/profile`
-- PATCH: `/projects/{uuid}/personnel`
+- PATCH: `/projects/{uuid}/project-creators`
+- PATCH: `/projects/{uuid}/project-members`
+- PATCH: `/projects/{uuid}/project-owners`
 - PATCH: `/projects/{uuid}/tags`
 - PATCH: `/projects/{uuid}/token-holders`
 - GET: `/projects/preferences`

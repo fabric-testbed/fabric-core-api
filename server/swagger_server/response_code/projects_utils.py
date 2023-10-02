@@ -307,8 +307,6 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
             p_orig = []
         p_add = array_difference(personnel, p_orig)
         p_remove = array_difference(p_orig, personnel)
-        print('add', p_add)
-        print('remove', p_remove)
         if fab_group:
             # add token holders
             add_project_personnel(api_user, fab_project, fab_group, p_add, personnel_type)

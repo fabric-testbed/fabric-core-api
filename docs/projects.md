@@ -9,10 +9,11 @@ When a project is created it also triggers the remote creation of four COUs in C
 
 The notation `uuid` from above is a universal unique identifier (e.g. `990d8a8b-7e50-4d13-a3be-0f133ffa8653`) - all COUs for the same project would have the same `uuid` value which matches the core-api `uuid` for the project object.
 
-Endpoints are generally "WYSIWYG" in nature 
+Personnel endpoints are additive, subtractive, or "WYSIWYG" in nature 
 
- - The API will attempt to modify the data object to match the data provided by the `api_user`
- - There are no "*add*" or "*remove*" endpoints, but rather **_what you see is what you get_** (assuming valid data is passed to the endpoint)
+ - Operation `add`: The API will attempt to add all valid user UUIDs to existing creators/members/owners/token-holders
+ - Operation `remove`: The API will attempt to remove all valid user UUIDs from existing creators/members/owners/token-holders
+ - Operation `batch`: The API will attempt to modify the data object to exactly match the data provided by the `api_user` for creators/members/owners/token-holders in a "WYSIWG" way
 
 For example:
 
@@ -26,7 +27,7 @@ For example:
 ]
 ```
 
-- a subsequent PATCH request including the following for `project_members` will update the project to only have those two users as members (user-1 and user-4)
+- a subsequent PATCH request (`operation=batch`) including the following for `project_members` will update the project to only have those two users as members (user-1 and user-4)
 
 ```json
 "project_members": [
@@ -35,24 +36,11 @@ For example:
 ]
 ```
 
-- a subsequent PATCH request including the following for `project_members` will update the project to have zero members
+- a subsequent PATCH request (`operation=batch`) including the following for `project_members` will update the project to have zero members
 
 ```json
 "project_members": []
 ```
-
-The exception to "WYSIWYG" behaviour is the `token-holders` endpoint which has an "operation" parameter which can be `add`, `remove`, `batch` (default is `add`)
-
-```json
-"token_holders": [
-    "uuid-1",
-    "uuid-4"
-]
-```
-
-- operation `add`: attempt to add one or more users from the `uuid-tk` group identified by UUID
-- operation `remove`: attempt to remove one or more users from the `uuid-tk` group identified by UUID
-- operation `batch`: attempt to re-balance the users in the `uuid-tk` group to exactly match the passed in list of users identified by UUID (sending an empty list `[]` will delete all users from the `uuid-tk` group)
 
 ## API Endpoints
 
@@ -122,10 +110,27 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/personnel`
+### `/projects{uuid}/project-creators`
 
-- PATCH - update an existing project personnel
+- PATCH - update existing project creator personnel
+  - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
+  - data: `project_creators` as array of uuid as string (optional)
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects{uuid}/project-members`
+
+- PATCH - update existing project member personnel
+  - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
   - data: `project_members` as array of uuid as string (optional)
+  - authz: project creator/owner can update their project
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects{uuid}/project-owners`
+
+- PATCH - update existing project owner personnel
+  - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
   - data: `project_owners` as array of uuid as string (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
@@ -179,9 +184,10 @@ FABRIC Projects
     "facility": "<string>",
     "is_public": <boolean>,
     "memberships": {
-        "is_creator": <boolean>, <-- based on identity of the API user
-        "is_member": <boolean>,  <-- based on identity of the API user
-        "is_owner": <boolean>    <-- based on identity of the API user
+        "is_creator": <boolean>,      <-- based on identity of the API user
+        "is_member": <boolean>,       <-- based on identity of the API user
+        "is_owner": <boolean>,        <-- based on identity of the API user
+        "is_token_holder": <boolean>  <-- based on identity of the API user
     },
     "name": "<string>",
     "tags": [ ... ],             <-- shown to facility-operators and project creator/member/owner
@@ -201,9 +207,10 @@ FABRIC Projects
     "is_locked": <boolean>,
     "is_public": <boolean>,
     "memberships": {
-        "is_creator": <boolean>,  <-- based on identity of the API user
-        "is_member": <boolean>,   <-- based on identity of the API user
-        "is_owner": <boolean>     <-- based on identity of the API user
+        "is_creator": <boolean>,      <-- based on identity of the API user
+        "is_member": <boolean>,       <-- based on identity of the API user
+        "is_owner": <boolean>,        <-- based on identity of the API user
+        "is_token_holder": <boolean>  <-- based on identity of the API user
     },
     "modified": "<string>",
     "name": "<string>",
@@ -254,7 +261,8 @@ FABRIC Projects
     "memberships": {
         "is_creator": <boolean>,         <-- based on identity of the API user
         "is_member": <boolean>,          <-- based on identity of the API user
-        "is_owner": <boolean>            <-- based on identity of the API user
+        "is_owner": <boolean>,           <-- based on identity of the API user
+        "is_token_holder": <boolean>     <-- based on identity of the API user
     },
     "modified": "<string>",
     "name": "<string>",
@@ -381,15 +389,6 @@ Valid project profile `preferences` keys:
 ]
 ```
 
-Valid `publications` format - **TODO**:
-
-```json
-"publications": [ 
-    "<string_publication_uuid>",
-    "<string_publication_uuid>"
-]
-```
-
 Valid `references` format:
 
 ```json
@@ -401,13 +400,30 @@ Valid `references` format:
 ]
 ```
 
-### PATCH project personnel request body
+### PATCH project-creators request body
+
+```
+{
+    "project_creators": [      <-- optional - array of uuid as string
+        "<string>"
+    ]
+}
+```
+
+### PATCH project-members request body
 
 ```
 {
     "project_members": [       <-- optional - array of uuid as string
         "<string>"
-    ],
+    ]
+}
+```
+
+### PATCH project-owners request body
+
+```
+{
     "project_owners": [        <-- optional - array of uuid as string
         "<string>"
     ]

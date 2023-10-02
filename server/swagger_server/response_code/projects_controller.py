@@ -1187,11 +1187,11 @@ def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
             fab_project.is_locked = True
             db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
-                                      personnel_type='members', operation=operation)
+                                      personnel_type='owners', operation=operation)
             fab_project.is_locked = False
             db.session.commit()
         except Exception as exc:
-            consoleLogger.info("NOP: projects_uuid_project_members_patch(): 'project_members' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_project_owners_patch(): 'project_owners' - {0}".format(exc))
             fab_project.is_locked = False
             db.session.commit()
 

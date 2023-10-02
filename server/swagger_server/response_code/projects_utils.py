@@ -370,24 +370,24 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
             FabricRoles.name == fab_group.name,
             FabricRoles.people_id == p.id
         ).one_or_none()
-        if co_person_role and personnel_type == 'creators' and p.is_project_creator(project_uuid=fab_project.uuid):
+        if personnel_type == 'creators' and p.is_project_creator(project_uuid=fab_project.uuid):
             fab_project.project_creators.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
-        elif co_person_role and personnel_type == 'members' and p.is_project_member(project_uuid=fab_project.uuid):
+        elif personnel_type == 'members' and p.is_project_member(project_uuid=fab_project.uuid):
             fab_project.project_members.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
-        elif co_person_role and personnel_type == 'owners' and p.is_project_owner(project_uuid=fab_project.uuid):
+        elif personnel_type == 'owners' and p.is_project_owner(project_uuid=fab_project.uuid):
             fab_project.project_owners.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
         else:
             consoleLogger.warning(
-                'RemoveProjectPersonnel: unable to add usr: {0} to project: {1} as creator/member/owner'.format(p.uuid,
+                'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(p.uuid,
                                                                                                                 fab_project.uuid))
             p_removed = False
         if p_removed:

@@ -1,5 +1,5 @@
 """
-v1.5.2 --> v1.6.0 - database tables
+v1.6.0 --> v1.6.1 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -35,10 +35,8 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (28 rows)
 
-Changes from v1.5.2 --> v1.6.0
-- add table task_timeout_tracker
-- fix table index for user_org_affiliations
-- fix table index for user_subject_identifiers
+Changes from v1.6.0 --> v1.6.1
+- no database changes
 """
 
 import json
@@ -53,7 +51,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.5.2'
+api_version = '1.6.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -1460,7 +1458,7 @@ if __name__ == '__main__':
     consoleLogger.info('verify project expiry')
     verify_project_expiry()
 
-    # version specific additions v1.5.1 --> v1.5.2
+    # import missing groups, roles, and project cous from COmanage
     consoleLogger.info('import missing groups from COmanage')
     import_missing_groups_from_comanage()
 
@@ -1470,5 +1468,6 @@ if __name__ == '__main__':
     consoleLogger.info('import missing projects from COUs')
     import_missing_projects_cous()
 
+    # version specific additions v1.6.0 --> v1.6.1
     consoleLogger.info('token COU backfill existing projects')
-    token_cou_backfill_existing_projects()
+    # token_cou_backfill_existing_projects()

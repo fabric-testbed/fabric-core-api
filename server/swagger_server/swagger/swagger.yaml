@@ -1221,6 +1221,231 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-creators:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Creators as facility-operator
+      description: Update Project Creators as facility-operator
+      operationId: projects_uuid_project_creators_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: operation
+        in: query
+        description: operation to be performed
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: add
+          enum:
+          - add
+          - remove
+          - batch
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_creators_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-members:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Members as project creator or owner
+      description: Update Project Members as project creator or owner
+      operationId: projects_uuid_project_members_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: operation
+        in: query
+        description: operation to be performed
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: add
+          enum:
+          - add
+          - remove
+          - batch
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_members_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-owners:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Owners as project creator or owner
+      description: Update Project Owners as project creator or owner
+      operationId: projects_uuid_project_owners_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: operation
+        in: query
+        description: operation to be performed
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: add
+          enum:
+          - add
+          - remove
+          - batch
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_owners_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /projects/{uuid}/tags:
     patch:
       tags:
@@ -2905,6 +3130,27 @@ components:
           type: array
           items:
             type: string
+    projects_creators_patch:
+      type: object
+      properties:
+        project_creators:
+          type: array
+          items:
+            type: string
+    projects_members_patch:
+      type: object
+      properties:
+        project_members:
+          type: array
+          items:
+            type: string
+    projects_owners_patch:
+      type: object
+      properties:
+        project_owners:
+          type: array
+          items:
+            type: string
     projects_token_holders_patch:
       type: object
       properties:
@@ -3573,6 +3819,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_personnel_patch'
+    payload_projects_creators_patch:
+      description: Update Project Creators as facility-operator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_creators_patch'
+    payload_projects_members_patch:
+      description: Update Project Members as project owner or creator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_members_patch'
+    payload_projects_owners_patch:
+      description: Update Project Owners as project owner or creator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_owners_patch'
     payload_projects_token_holders_patch:
       description: Update Project Long-Lived Token Holders as facility-operator
       content:

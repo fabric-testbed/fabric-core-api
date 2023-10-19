@@ -1469,5 +1469,5 @@ if __name__ == '__main__':
     import_missing_projects_cous()
 
     # version specific additions v1.6.0 --> v1.6.1
-    consoleLogger.info('token COU backfill existing projects')
+    #consoleLogger.info('token COU backfill existing projects')
     # token_cou_backfill_existing_projects()

@@ -5,6 +5,8 @@ from swagger_server.database.models.people import FabricPeople, UserSubjectIdent
 from swagger_server.models.check_cookie import CheckCookie, CheckCookieResults  # noqa: E501
 from swagger_server.response_code.cors_response import cors_200, cors_500
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
+from swagger_server.response_code.comanage_utils import api
+from swagger_server.response_code.people_utils import update_fabric_person, create_fabric_person_from_login
 
 
 def check_cookie_get():  # noqa: E501
@@ -29,7 +31,7 @@ def check_cookie_get():  # noqa: E501
                 'sub': claims.get('sub') if claims.get('sub') else 'CLAIM_NOT_FOUND'
             }
             check_cookie.cookie_attributes = cookie_attributes
-            check_cookie.fabric_attributes = get_fabric_attributes(oidc_sub=claims.get('sub'))
+            check_cookie.fabric_attributes = get_fabric_attributes(oidc_sub=claims.get('sub'), claims=claims)
         else:
             check_cookie.cookie_name = 'COOKIE_NOT_FOUND'
             check_cookie.cookie_attributes = {}
@@ -47,29 +49,38 @@ def check_cookie_get():  # noqa: E501
         return cors_500(details=details)
 
 
-def get_fabric_attributes(oidc_sub: str = None) -> dict:
+def get_fabric_attributes(oidc_sub: str = None, claims: dict = None) -> dict:
     sub_identifier = UserSubjectIdentifiers.query.filter(
         UserSubjectIdentifiers.sub == oidc_sub
     ).one_or_none()
     if sub_identifier:
+        # is a FABRIC user
         fab_person = FabricPeople.query.filter_by(
             id=sub_identifier.people_id
         ).one_or_none()
-        if fab_person:
-            # print([{'role': r.name, 'description': r.description} for r in fab_person.roles])
-            # print([{p.sub} for p in fab_person.user_sub_identities])
-            # print([{p.affiliation} for p in fab_person.user_org_affiliations])
-            roles = [r.name for r in fab_person.roles]
-            roles.sort(key=str.casefold)
-            print(roles)
-            fabric_attributes = {
-                'affiliation': [p.affiliation for p in fab_person.user_org_affiliations],
-                'roles': roles,
-                'sub': [p.sub for p in fab_person.user_sub_identities],
-                'uuid': str(fab_person.uuid)
-            }
+        update_fabric_person(fab_person=fab_person)
+    else:
+        # might be a new FABRIC user
+        # check COmanage for user by sub
+        co_person = api.copeople_view_per_identifier(
+            identifier=oidc_sub, distinct_by_id=True
+        ).get('CoPeople', [])
+        if co_person:
+            # is a new FABRIC user
+            fab_person = create_fabric_person_from_login(claims=claims)
         else:
-            fabric_attributes = {}
+            # is not a new or existing FABRIC user
+            fab_person = None
+    if fab_person:
+        roles = [r.name for r in fab_person.roles]
+        roles.sort(key=str.casefold)
+        fabric_attributes = {
+            'affiliation': [p.affiliation for p in fab_person.user_org_affiliations],
+            'roles': roles,
+            'sub': [p.sub for p in fab_person.user_sub_identities],
+            'uuid': str(fab_person.uuid)
+        }
     else:
         fabric_attributes = {}
+
     return fabric_attributes

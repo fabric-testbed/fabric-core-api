@@ -19,13 +19,7 @@ from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 def get_person_by_login_claims() -> FabricPeople:
     """
-    Attempt to get FABRIC person based on claims returned by vouch-proxy
-    if FABRIC person found with matching email and sub
-    - return person
-    if FABRIC person found with matching email only
-    - check for additional subs in COmanage and return person
-    if FABRIC person not found
-    - check COmanage for registration and return findings
+    Attempt to get FABRIC person based on 'sub' claim
 
     Example claims
     {
@@ -40,36 +34,34 @@ def get_person_by_login_claims() -> FabricPeople:
     """
     try:
         claims = vouch_get_custom_claims()
-        if claims.get('email'):
-            fab_person = FabricPeople.query.filter(
-                FabricPeople.oidc_claim_email == str(claims.get('email'))
-            ).one_or_none()
+        # search for existing fab_person by sub
+        fab_person_id = UserSubjectIdentifiers.query.filter(
+            UserSubjectIdentifiers.sub == str(claims.get('sub'))
+        ).one_or_none()
+        if fab_person_id:
+            fab_person = FabricPeople.query.filter_by(
+                id=fab_person_id.people_id
+            ).first()
         else:
-            fab_person_id = UserSubjectIdentifiers.query.filter(
-                UserSubjectIdentifiers.sub == str(claims.get('sub'))
-            ).one_or_none()
-            if fab_person_id:
-                fab_person = FabricPeople.query.filter_by(
-                    id=fab_person_id.people_id
-                ).first()
+            # check COmanage for user by sub
+            co_person = api.copeople_view_per_identifier(
+                identifier=claims.get('sub'), distinct_by_id=True
+            ).get('CoPeople', [])
+            if co_person:
+                # co_person exists - try to get fab_person by co_person_id
+                fab_person = FabricPeople.query.filter(
+                    FabricPeople.co_person_id == co_person[0].get('Id')
+                ).one_or_none()
+                if fab_person:
+                    # fab_person exists, update person to pick up new sub from COmanage
+                    update_fabric_person(fab_person=fab_person)
+                else:
+                    # fab_person does not exist, create a new user account from login
+                    fab_person = create_fabric_person_from_login(claims=claims)
             else:
-                fab_person = None
-        # fab_person exists and sub matches existing sub identity
-        if fab_person and str(claims.get('sub')) in [i.sub for i in fab_person.user_sub_identities]:
-            return fab_person
-        # fab_person exists but sub does not match existing sub identity
-        elif fab_person:
-            # check for updates to user identities in COmanage
-            update_fabric_person(fab_person=fab_person)
-            if str(claims.get('sub')) in [i.sub for i in fab_person.user_sub_identities]:
-                return fab_person
-            else:
+                # co_person does not exist, return empty fab_person object
                 fab_person = FabricPeople()
                 consoleLogger.debug('OIDC - invalid sub: {0}'.format(claims))
-                return fab_person
-        else:
-            fab_person = create_fabric_person_from_login(claims=claims)
-            consoleLogger.debug('OIDC - create user: {0}'.format(claims))
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)

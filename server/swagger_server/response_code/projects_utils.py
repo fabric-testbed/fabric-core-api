@@ -88,8 +88,9 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     # create profile
     create_profile_projects(fab_project=fab_project)
     # add project_creators
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=[str(project_creator.uuid)],
-                              personnel_type='creators')
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project,
+                              personnel=[fab_project.created_by_uuid],
+                              personnel_type='creators', operation="add")
     # check for project_members
     try:
         if len(body.project_members) == 0:
@@ -99,7 +100,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
     # add project_members
     update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members,
-                              personnel_type='members')
+                              personnel_type='members', operation="add")
     # check for project_owners
     try:
         if len(body.project_owners) == 0:
@@ -113,7 +114,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
     # add project_owners
     update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners,
-                              personnel_type='owners')
+                              personnel_type='owners', operation="add")
     db.session.commit()
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
@@ -385,8 +386,9 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
             p_removed = True
         else:
             consoleLogger.warning(
-                'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(p.uuid,
-                                                                                                                fab_project.uuid))
+                'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(
+                    p.uuid,
+                    fab_project.uuid))
             p_removed = False
         if p_removed:
             # metrics log - Project creator/member/owner removed:

@@ -94,12 +94,14 @@ def announcements_get(
         for item in results_page.items:
             announcement = AnnouncementOne()
             announcement.announcement_type = item.announcement_type.name
+            announcement.background_image_url = item.background_image_url if item.background_image_url else None
             announcement.button = item.button if item.button else None
             announcement.content = item.content
             announcement.display_date = str(item.display_date) if item.display_date else None
             announcement.end_date = str(item.end_date) if item.end_date else None
             announcement.is_active = item.is_active
             announcement.link = item.link if item.link else None
+            announcement.sequence = int(item.sequence) if item.sequence else None
             announcement.start_date = str(item.start_date)
             announcement.title = item.title
             announcement.uuid = str(item.uuid)
@@ -167,7 +169,32 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PORTAL_ADMINS')))
         # validate announcement_type
-        if body.announcement_type in [EnumAnnouncementTypes.facility.name]:
+        if body.announcement_type in [EnumAnnouncementTypes.carousel.name]:
+            # required: button, content, is_active, link, sequence, title
+            if any(item is None for item in
+                   [body.button, body.content, body.is_active, body.link, body.sequence, body.title]):
+                details = \
+                    "Announcements POST: missing required value {button, content, is_active, link, sequence, title}"
+                consoleLogger.error(details)
+                return cors_400(details=details)
+            # check sequence: 1 <= sequence <= MAX_ACTIVE_CAROUSEL_ITEMS and unique among active
+            active_seq_vals = [a.sequence for a in FabricAnnouncements.query.filter(
+                FabricAnnouncements.announcement_type == EnumAnnouncementTypes.carousel.name,
+                FabricAnnouncements.is_active == True)]
+            print(active_seq_vals)
+            if len(active_seq_vals) >= int(os.getenv('MAX_ACTIVE_CAROUSEL_ITEMS')):
+                details = \
+                    "Announcements POST: unable to create, exceeded MAX_ACTIVE_CAROUSEL_ITEMS"
+                consoleLogger.error(details)
+                return cors_400(details=details)
+            seq = int(body.sequence)
+            while seq in active_seq_vals or seq < 1 or seq > int(os.getenv('MAX_ACTIVE_CAROUSEL_ITEMS')):
+                if seq in active_seq_vals:
+                    seq = seq + 1
+                if seq < 1 or seq > int(os.getenv('MAX_ACTIVE_CAROUSEL_ITEMS')):
+                    seq = 1
+            body.sequence = seq
+        elif body.announcement_type in [EnumAnnouncementTypes.facility.name]:
             # required: content, display_date, is_active, start_date, title
             if any(item is None for item in
                    [body.content, body.display_date, body.is_active, body.start_date, body.title]):
@@ -281,12 +308,14 @@ def announcements_uuid_get(uuid: str) -> AnnouncementsDetails:  # noqa: E501
         # set ProjectsOne object
         announcement_one = AnnouncementOne()
         announcement_one.announcement_type = fab_announcement.announcement_type.name
+        announcement_one.background_image_url = fab_announcement.background_image_url if fab_announcement.background_image_url else None
         announcement_one.button = fab_announcement.button if fab_announcement.button else None
         announcement_one.content = fab_announcement.content
         announcement_one.display_date = str(fab_announcement.display_date) if fab_announcement.display_date else None
         announcement_one.end_date = str(fab_announcement.end_date) if fab_announcement.end_date else None
         announcement_one.is_active = fab_announcement.is_active
         announcement_one.link = fab_announcement.link if fab_announcement.link else None
+        announcement_one.sequence = fab_announcement.sequence if fab_announcement.sequence else None
         announcement_one.start_date = str(fab_announcement.start_date)
         announcement_one.title = fab_announcement.title
         announcement_one.uuid = str(fab_announcement.uuid)

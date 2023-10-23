@@ -8,6 +8,7 @@ from swagger_server.models.announcements import Announcements
 from swagger_server.models.announcements_details import AnnouncementsDetails
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.bastionkeys import Bastionkeys
+from swagger_server.models.check_cookie import CheckCookie
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.projects import Projects
@@ -27,7 +28,6 @@ from swagger_server.models.storage_many import StorageMany
 from swagger_server.models.testbed_info import TestbedInfo
 from swagger_server.models.version import Version
 from swagger_server.models.whoami import Whoami
-from swagger_server.models.check_cookie import CheckCookie
 
 # Constants
 _INDENT = int(os.getenv('CORE_API_JSON_RESPONSE_INDENT', '0'))

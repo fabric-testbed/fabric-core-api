@@ -51,6 +51,7 @@ paths:
         schema:
           type: string
           enum:
+          - carousel
           - facility
           - maintenance
           - news
@@ -2410,6 +2411,8 @@ components:
       properties:
         announcement_type:
           type: string
+        background_image_url:
+          type: string
         button:
           type: string
         content:
@@ -2424,6 +2427,8 @@ components:
           type: boolean
         link:
           type: string
+        sequence:
+          type: integer
         start_date:
           type: string
           format: date
@@ -3260,11 +3265,14 @@ components:
       properties:
         announcement_type:
           type: string
-          default: facility
+          default: carousel
           enum:
+          - carousel
           - facility
           - maintenance
           - news
+        background_image_url:
+          type: string
         button:
           type: string
         content:
@@ -3278,6 +3286,8 @@ components:
           default: true
         link:
           type: string
+        sequence:
+          type: integer
         start_date:
           type: string
         title:
@@ -3287,11 +3297,14 @@ components:
       properties:
         announcement_type:
           type: string
-          default: facility
+          default: carousel
           enum:
+          - carousel
           - facility
           - maintenance
           - news
+        background_image_url:
+          type: string
         button:
           type: string
         content:
@@ -3305,6 +3318,8 @@ components:
           default: true
         link:
           type: string
+        sequence:
+          type: integer
         start_date:
           type: string
         title:
@@ -3703,6 +3718,7 @@ components:
       schema:
         type: string
         enum:
+        - carousel
         - facility
         - maintenance
         - news

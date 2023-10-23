@@ -14,11 +14,13 @@ class AnnouncementOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, announcement_type: str=None, button: str=None, content: str=None, display_date: date=None, end_date: date=None, is_active: bool=None, link: str=None, start_date: date=None, title: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, announcement_type: str=None, background_image_url: str=None, button: str=None, content: str=None, display_date: date=None, end_date: date=None, is_active: bool=None, link: str=None, sequence: int=None, start_date: date=None, title: str=None, uuid: str=None):  # noqa: E501
         """AnnouncementOne - a model defined in Swagger
 
         :param announcement_type: The announcement_type of this AnnouncementOne.  # noqa: E501
         :type announcement_type: str
+        :param background_image_url: The background_image_url of this AnnouncementOne.  # noqa: E501
+        :type background_image_url: str
         :param button: The button of this AnnouncementOne.  # noqa: E501
         :type button: str
         :param content: The content of this AnnouncementOne.  # noqa: E501
@@ -31,6 +33,8 @@ class AnnouncementOne(Model):
         :type is_active: bool
         :param link: The link of this AnnouncementOne.  # noqa: E501
         :type link: str
+        :param sequence: The sequence of this AnnouncementOne.  # noqa: E501
+        :type sequence: int
         :param start_date: The start_date of this AnnouncementOne.  # noqa: E501
         :type start_date: date
         :param title: The title of this AnnouncementOne.  # noqa: E501
@@ -40,12 +44,14 @@ class AnnouncementOne(Model):
         """
         self.swagger_types = {
             'announcement_type': str,
+            'background_image_url': str,
             'button': str,
             'content': str,
             'display_date': date,
             'end_date': date,
             'is_active': bool,
             'link': str,
+            'sequence': int,
             'start_date': date,
             'title': str,
             'uuid': str
@@ -53,23 +59,27 @@ class AnnouncementOne(Model):
 
         self.attribute_map = {
             'announcement_type': 'announcement_type',
+            'background_image_url': 'background_image_url',
             'button': 'button',
             'content': 'content',
             'display_date': 'display_date',
             'end_date': 'end_date',
             'is_active': 'is_active',
             'link': 'link',
+            'sequence': 'sequence',
             'start_date': 'start_date',
             'title': 'title',
             'uuid': 'uuid'
         }
         self._announcement_type = announcement_type
+        self._background_image_url = background_image_url
         self._button = button
         self._content = content
         self._display_date = display_date
         self._end_date = end_date
         self._is_active = is_active
         self._link = link
+        self._sequence = sequence
         self._start_date = start_date
         self._title = title
         self._uuid = uuid
@@ -107,6 +117,27 @@ class AnnouncementOne(Model):
             raise ValueError("Invalid value for `announcement_type`, must not be `None`")  # noqa: E501
 
         self._announcement_type = announcement_type
+
+    @property
+    def background_image_url(self) -> str:
+        """Gets the background_image_url of this AnnouncementOne.
+
+
+        :return: The background_image_url of this AnnouncementOne.
+        :rtype: str
+        """
+        return self._background_image_url
+
+    @background_image_url.setter
+    def background_image_url(self, background_image_url: str):
+        """Sets the background_image_url of this AnnouncementOne.
+
+
+        :param background_image_url: The background_image_url of this AnnouncementOne.
+        :type background_image_url: str
+        """
+
+        self._background_image_url = background_image_url
 
     @property
     def button(self) -> str:
@@ -237,6 +268,27 @@ class AnnouncementOne(Model):
         """
 
         self._link = link
+
+    @property
+    def sequence(self) -> int:
+        """Gets the sequence of this AnnouncementOne.
+
+
+        :return: The sequence of this AnnouncementOne.
+        :rtype: int
+        """
+        return self._sequence
+
+    @sequence.setter
+    def sequence(self, sequence: int):
+        """Sets the sequence of this AnnouncementOne.
+
+
+        :param sequence: The sequence of this AnnouncementOne.
+        :type sequence: int
+        """
+
+        self._sequence = sequence
 
     @property
     def start_date(self) -> date:

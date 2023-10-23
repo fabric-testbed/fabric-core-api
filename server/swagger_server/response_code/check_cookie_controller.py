@@ -3,10 +3,10 @@ import os
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.people import FabricPeople, UserSubjectIdentifiers
 from swagger_server.models.check_cookie import CheckCookie, CheckCookieResults  # noqa: E501
-from swagger_server.response_code.cors_response import cors_200, cors_500
-from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 from swagger_server.response_code.comanage_utils import api
-from swagger_server.response_code.people_utils import update_fabric_person, create_fabric_person_from_login
+from swagger_server.response_code.cors_response import cors_200, cors_500
+from swagger_server.response_code.people_utils import create_fabric_person_from_login, update_fabric_person
+from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
 def check_cookie_get():  # noqa: E501

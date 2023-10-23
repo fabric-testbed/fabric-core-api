@@ -1,5 +1,5 @@
 """
-v1.6.0 - database tables
+v1.5.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations

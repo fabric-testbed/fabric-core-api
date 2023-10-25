@@ -4,8 +4,11 @@ import six
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
+from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch  # noqa: E501
+from swagger_server.models.projects_members_patch import ProjectsMembersPatch  # noqa: E501
+from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
@@ -193,6 +196,63 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProfileProjects.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_profile_patch(uuid, body)
+
+
+def projects_uuid_project_creators_patch(operation, uuid, body=None):  # noqa: E501
+    """Update Project Creators as facility-operator
+
+    Update Project Creators as facility-operator # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Creators as facility-operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsCreatorsPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_project_creators_patch(operation, uuid, body)
+
+
+def projects_uuid_project_members_patch(operation, uuid, body=None):  # noqa: E501
+    """Update Project Members as project creator or owner
+
+    Update Project Members as project creator or owner # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Members as project owner or creator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsMembersPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_project_members_patch(operation, uuid, body)
+
+
+def projects_uuid_project_owners_patch(operation, uuid, body=None):  # noqa: E501
+    """Update Project Owners as project creator or owner
+
+    Update Project Owners as project creator or owner # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Owners as project owner or creator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsOwnersPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_project_owners_patch(operation, uuid, body)
 
 
 def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501

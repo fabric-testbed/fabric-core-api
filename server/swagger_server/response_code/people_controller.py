@@ -1,5 +1,7 @@
 import os
+
 from sqlalchemy import func
+
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople, Organizations
@@ -17,7 +19,7 @@ from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHE
     PEOPLE_PROFILE_PERSONALPAGE_TYPES, PEOPLE_PROFILE_PREFERENCES
 from swagger_server.response_code.comanage_utils import update_org_affiliation
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
-from swagger_server.response_code.decorators import login_required, login_or_token_required
+from swagger_server.response_code.decorators import login_or_token_required, login_required
 from swagger_server.response_code.people_utils import get_people_roles_as_other, get_people_roles_as_self, \
     get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import get_people_preferences
@@ -31,7 +33,8 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
 @login_or_token_required
-def people_get(search: str = None, exact_match: bool = False, offset: int = None, limit: int = None) -> People:  # noqa: E501
+def people_get(search: str = None, exact_match: bool = False, offset: int = None,
+               limit: int = None) -> People:  # noqa: E501
     """Search for FABRIC People
 
     Search for FABRIC People by name or email # noqa: E501

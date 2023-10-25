@@ -8,8 +8,11 @@ from six import BytesIO
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
+from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch  # noqa: E501
+from swagger_server.models.projects_members_patch import ProjectsMembersPatch  # noqa: E501
+from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
@@ -175,6 +178,54 @@ class TestProjectsController(BaseTestCase):
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_project_creators_patch(self):
+        """Test case for projects_uuid_project_creators_patch
+
+        Update Project Creators as facility-operator
+        """
+        body = ProjectsCreatorsPatch()
+        query_string = [('operation', 'add')]
+        response = self.client.open(
+            '/projects/{uuid}/project-creators'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_project_members_patch(self):
+        """Test case for projects_uuid_project_members_patch
+
+        Update Project Members as project creator or owner
+        """
+        body = ProjectsMembersPatch()
+        query_string = [('operation', 'add')]
+        response = self.client.open(
+            '/projects/{uuid}/project-members'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_project_owners_patch(self):
+        """Test case for projects_uuid_project_owners_patch
+
+        Update Project Owners as project creator or owner
+        """
+        body = ProjectsOwnersPatch()
+        query_string = [('operation', 'add')]
+        response = self.client.open(
+            '/projects/{uuid}/project-owners'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

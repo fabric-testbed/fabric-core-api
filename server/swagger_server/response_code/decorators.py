@@ -7,6 +7,7 @@ from functools import wraps
 import jwt
 import requests
 from flask import request
+
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker

@@ -12,8 +12,11 @@ from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
+from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch
 from swagger_server.models.projects_details import ProjectsDetails, ProjectsOne  # noqa: E501
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
+from swagger_server.models.projects_members_patch import ProjectsMembersPatch
+from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
@@ -397,11 +400,14 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         # delete Profile
         delete_profile_projects(api_user=api_user, fab_project=fab_project)
         # remove project_creators
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators',
+                                  operation='batch')
         # remove project_members
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members',
+                                  operation='batch')
         # remove project_owners
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners')
+        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
+                                  operation='batch')
         # remove project_storage allocations
         for s in fab_project.project_storage:
             s.active = False
@@ -781,7 +787,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             fab_project.is_locked = True
             db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_members,
-                                      personnel_type='members')
+                                      personnel_type='members', operation='batch')
             fab_project.is_locked = False
             db.session.commit()
         except Exception as exc:
@@ -797,7 +803,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
             fab_project.is_locked = True
             db.session.commit()
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
-                                      personnel_type='owners')
+                                      personnel_type='owners', operation='batch')
             fab_project.is_locked = False
             db.session.commit()
         except Exception as exc:
@@ -1005,6 +1011,204 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_profile_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_required
+def projects_uuid_project_creators_patch(operation: str = None, uuid: str = None,
+                                         body: ProjectsCreatorsPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Project Creators as facility-operator
+
+    Update Project Creators as facility-operator # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Creators as facility-operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active project creator or facility operator
+        if not api_user.active or not (
+                api_user.is_facility_operator() or api_user.is_project_creator(project_uuid=str(fab_project.uuid))):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not a project creator".format(
+                    api_user.display_name))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # check for project_creators
+        try:
+            if len(body.project_creators) == 0:
+                body.project_creators = []
+            # add project_creators
+            fab_project.is_locked = True
+            db.session.commit()
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_creators,
+                                      personnel_type='creators', operation=operation)
+            fab_project.is_locked = False
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_creators_patch(): 'project_creators' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
+
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_creators_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_required
+def projects_uuid_project_members_patch(operation: str = None, uuid: str = None,
+                                        body: ProjectsMembersPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Project Members as project creator or owner
+
+    Update Project Members as project creator or owner # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Members as project owner or creator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active project creator/owner or facility operator
+        if not api_user.active or not (api_user.is_facility_operator() or api_user.is_project_creator(
+                project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid))):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not a project creator/owner".format(
+                    api_user.display_name))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # check for project_members
+        try:
+            if len(body.project_members) == 0:
+                body.project_members = []
+            # add project_members
+            fab_project.is_locked = True
+            db.session.commit()
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_members,
+                                      personnel_type='members', operation=operation)
+            fab_project.is_locked = False
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_members_patch(): 'project_members' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
+
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_members_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_required
+def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
+                                       body: ProjectsOwnersPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Project Owners as project creator or owner
+
+    Update Project Owners as project creator or owner # noqa: E501
+
+    :param operation: operation to be performed
+    :type operation: str
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Owners as project owner or creator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active project creator/owner or facility operator
+        if not api_user.active or not (api_user.is_facility_operator() or api_user.is_project_creator(
+                project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid))):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not a project creator/owner".format(
+                    api_user.display_name))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # check for project_owners
+        try:
+            if len(body.project_owners) == 0:
+                body.project_owners = []
+            # add project_owners
+            fab_project.is_locked = True
+            db.session.commit()
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=body.project_owners,
+                                      personnel_type='owners', operation=operation)
+            fab_project.is_locked = False
+            db.session.commit()
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_owners_patch(): 'project_owners' - {0}".format(exc))
+            fab_project.is_locked = False
+            db.session.commit()
+
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_owners_patch(): {0}'.format(exc)
         consoleLogger.error(details)
         return cors_500(details=details)
 

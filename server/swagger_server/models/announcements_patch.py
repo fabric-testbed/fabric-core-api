@@ -14,11 +14,13 @@ class AnnouncementsPatch(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, announcement_type: str='facility', button: str=None, content: str=None, display_date: str=None, end_date: str=None, is_active: bool=True, link: str=None, start_date: str=None, title: str=None):  # noqa: E501
+    def __init__(self, announcement_type: str='carousel', background_image_url: str=None, button: str=None, content: str=None, display_date: str=None, end_date: str=None, is_active: bool=True, link: str=None, sequence: int=None, start_date: str=None, title: str=None):  # noqa: E501
         """AnnouncementsPatch - a model defined in Swagger
 
         :param announcement_type: The announcement_type of this AnnouncementsPatch.  # noqa: E501
         :type announcement_type: str
+        :param background_image_url: The background_image_url of this AnnouncementsPatch.  # noqa: E501
+        :type background_image_url: str
         :param button: The button of this AnnouncementsPatch.  # noqa: E501
         :type button: str
         :param content: The content of this AnnouncementsPatch.  # noqa: E501
@@ -31,6 +33,8 @@ class AnnouncementsPatch(Model):
         :type is_active: bool
         :param link: The link of this AnnouncementsPatch.  # noqa: E501
         :type link: str
+        :param sequence: The sequence of this AnnouncementsPatch.  # noqa: E501
+        :type sequence: int
         :param start_date: The start_date of this AnnouncementsPatch.  # noqa: E501
         :type start_date: str
         :param title: The title of this AnnouncementsPatch.  # noqa: E501
@@ -38,34 +42,40 @@ class AnnouncementsPatch(Model):
         """
         self.swagger_types = {
             'announcement_type': str,
+            'background_image_url': str,
             'button': str,
             'content': str,
             'display_date': str,
             'end_date': str,
             'is_active': bool,
             'link': str,
+            'sequence': int,
             'start_date': str,
             'title': str
         }
 
         self.attribute_map = {
             'announcement_type': 'announcement_type',
+            'background_image_url': 'background_image_url',
             'button': 'button',
             'content': 'content',
             'display_date': 'display_date',
             'end_date': 'end_date',
             'is_active': 'is_active',
             'link': 'link',
+            'sequence': 'sequence',
             'start_date': 'start_date',
             'title': 'title'
         }
         self._announcement_type = announcement_type
+        self._background_image_url = background_image_url
         self._button = button
         self._content = content
         self._display_date = display_date
         self._end_date = end_date
         self._is_active = is_active
         self._link = link
+        self._sequence = sequence
         self._start_date = start_date
         self._title = title
 
@@ -98,7 +108,7 @@ class AnnouncementsPatch(Model):
         :param announcement_type: The announcement_type of this AnnouncementsPatch.
         :type announcement_type: str
         """
-        allowed_values = ["facility", "maintenance", "news"]  # noqa: E501
+        allowed_values = ["carousel", "facility", "maintenance", "news"]  # noqa: E501
         if announcement_type not in allowed_values:
             raise ValueError(
                 "Invalid value for `announcement_type` ({0}), must be one of {1}"
@@ -106,6 +116,27 @@ class AnnouncementsPatch(Model):
             )
 
         self._announcement_type = announcement_type
+
+    @property
+    def background_image_url(self) -> str:
+        """Gets the background_image_url of this AnnouncementsPatch.
+
+
+        :return: The background_image_url of this AnnouncementsPatch.
+        :rtype: str
+        """
+        return self._background_image_url
+
+    @background_image_url.setter
+    def background_image_url(self, background_image_url: str):
+        """Sets the background_image_url of this AnnouncementsPatch.
+
+
+        :param background_image_url: The background_image_url of this AnnouncementsPatch.
+        :type background_image_url: str
+        """
+
+        self._background_image_url = background_image_url
 
     @property
     def button(self) -> str:
@@ -232,6 +263,27 @@ class AnnouncementsPatch(Model):
         """
 
         self._link = link
+
+    @property
+    def sequence(self) -> int:
+        """Gets the sequence of this AnnouncementsPatch.
+
+
+        :return: The sequence of this AnnouncementsPatch.
+        :rtype: int
+        """
+        return self._sequence
+
+    @sequence.setter
+    def sequence(self, sequence: int):
+        """Sets the sequence of this AnnouncementsPatch.
+
+
+        :param sequence: The sequence of this AnnouncementsPatch.
+        :type sequence: int
+        """
+
+        self._sequence = sequence
 
     @property
     def start_date(self) -> str:

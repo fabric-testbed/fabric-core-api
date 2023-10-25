@@ -1,5 +1,5 @@
 """
-v1.6.0 --> v1.6.1 - database tables
+v1.5.2 --> v1.6.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -35,9 +35,8 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (28 rows)
 
-Changes from v1.6.0 --> v1.6.1
-- table: announcements - added: background_image_url
-- table: announcements - added: sequence
+Changes from v1.5.2 --> v1.6.0
+- no database changes
 """
 
 import json
@@ -52,7 +51,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.6.0'
+api_version = '1.5.2'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -83,7 +82,6 @@ def restore_announcements_data():
     """
     FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - announcement_type = db.Column(db.Enum(EnumAnnouncementTypes),default=EnumAnnouncementTypes.facility)
-    - background_image_url = db.Column(db.String(), nullable=True)
     - button = db.Column(db.String())
     - content = db.Column(db.String(), nullable=False)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
@@ -95,7 +93,6 @@ def restore_announcements_data():
     - link = db.Column(db.String())
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - modified_by_uuid = db.Column(db.String(), nullable=True)
-    - sequence = db.Column(db.Integer(), nullable=True)
     - start_date = db.Column(db.DateTime(timezone=True), nullable=False)
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
@@ -111,7 +108,6 @@ def restore_announcements_data():
                 max_id = t_id
             stmt = insert(db.Table('announcements')).values(
                 announcement_type=a.get('announcement_type'),
-                background_image_url=a.get('background_image_url') if a.get('background_image_url') else None,
                 button=a.get('button'),
                 content=a.get('content'),
                 created=normalize_date_to_utc(a.get('created')) if a.get('created') else None,
@@ -123,7 +119,6 @@ def restore_announcements_data():
                 link=a.get('link'),
                 modified=normalize_date_to_utc(a.get('modified')) if a.get('modified') else None,
                 modified_by_uuid=a.get('modified_by_uuid'),
-                sequence=a.get('sequence') if a.get('sequence') else None,
                 start_date=normalize_date_to_utc(a.get('start_date')) if a.get('start_date') else None,
                 title=a.get('title'),
                 uuid=a.get('uuid'),

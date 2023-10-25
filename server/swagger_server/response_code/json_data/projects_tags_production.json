@@ -26,10 +26,10 @@
     "Net.FacilityPort.CloudLab-Clemson": "CloudLab-Clemson Production",
     "Net.FacilityPort.CloudLab-UWisc-Madison": "Cloudlab-Wisconson Production",
     "Net.FacilityPort.ASU-Research-Network-FABRIC": "ASU Production",
-    "Net.AmLight-EXP-Layer2-FIU": "AmLight FIU Layer 2",
-    "Net.AmLight-Layer3-FIU": "AmLight FIU Layer 3",
-    "Net.ESnet-NEWY": "ESnet NEWY Layer 3",
-    "Net.NIST-MAX": "NIST MAX Layer 2",
-    "Net.PacWave-SEAT": "SEAT PacWave Layer 2"
+    "Net.FacilityPort.AmLight-EXP-Layer2-FIU": "AmLight FIU Layer 2",
+    "Net.FacilityPort.AmLight-Layer3-FIU": "AmLight FIU Layer 3",
+    "Net.FacilityPort.ESnet-NEWY": "ESnet NEWY Layer 3",
+    "Net.FacilityPort.NIST-MAX": "NIST MAX Layer 2",
+    "Net.FacilityPort.PacWave-SEAT": "SEAT PacWave Layer 2"
   }
 }

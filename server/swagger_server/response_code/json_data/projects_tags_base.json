@@ -29,6 +29,6 @@
     "Slice.Multisite": "allows to create slices spanning multiple sites",
     "Slice.Measurements": "allows to provision measurement VMs",
     "Slice.NoLimitLifetime": "allows to create slices with a lifetime beyond default limit X time units without the need to renew",
-    "Project.Educational": "tags the project as being educational, rather than research"
+    "Slice.OnlyEDUKY": "allows to create slices only on EDUKY"
   }
 }

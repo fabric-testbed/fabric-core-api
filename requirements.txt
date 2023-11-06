@@ -1,14 +1,14 @@
-connexion
-fabric-comanage-api
-fabric-fss-utils
-flask-migrate
-flask-sqlalchemy
-psycopg2-binary
-pyjwt
-python-dateutil # alembic[tz]
-python-dotenv
-pytz
-sqlalchemy-stubs
-swagger-ui-bundle # connexion[swagger-ui]
-uwsgi
-validators
+connexion==2.14.2
+fabric-comanage-api==0.1.5
+fabric_fss_utils==1.5.1
+Flask-Migrate==4.0.5
+Flask-SQLAlchemy==3.1.1
+psycopg2-binary==2.9.9
+PyJWT==2.7.0
+python-dateutil==2.8.2 # alembic[tz]
+python-dotenv==1.0.0
+pytz==2023.3.post1
+sqlalchemy-stubs==0.4
+swagger-ui-bundle==0.0.9 # connexion[swagger-ui]
+uWSGI==2.0.22
+validators==0.22.0

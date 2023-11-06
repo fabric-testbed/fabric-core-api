@@ -57,6 +57,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
     response = Response()
     response.status_code = status_code
     response.data = body
+    response.headers['Content-type'] = 'application/json'
     response.headers['Access-Control-Allow-Origin'] = req.headers.get('Origin',
                                                                       os.getenv('NGINX_ACCESS_CONTROL_ALLOW_ORIGIN'))
     response.headers['Access-Control-Allow-Credentials'] = 'true'

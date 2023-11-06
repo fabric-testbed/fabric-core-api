@@ -44,6 +44,8 @@
     "BRIST": "Bristol",
     "AMST": "University of Amsterdam",
     "TOKY": "The University of Tokyo",
-    "HAWI": "Hawaii"
+    "HAWI": "Hawaii",
+    "EDC": "Experimenter Data Cluster at NCSA",
+    "EDUKY": "Educational site at UKY"
   }
 }

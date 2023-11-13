@@ -30,6 +30,10 @@
     "Net.FacilityPort.AmLight-Layer3-FIU": "AmLight FIU Layer 3",
     "Net.FacilityPort.ESnet-NEWY": "ESnet NEWY Layer 3",
     "Net.FacilityPort.NIST-MAX": "NIST MAX Layer 2",
-    "Net.FacilityPort.PacWave-SEAT": "SEAT PacWave Layer 2"
+    "Net.FacilityPort.PacWave-SEAT": "SEAT PacWave Layer 2",
+    "Net.FacilityPort.SCM-FP-1": "SC FP 1",
+    "Net.FacilityPort.SCM-FP-2": "SC FP 2",
+    "Net.FacilityPort.SCM-FP-3": "SC FP 3",
+    "Net.FacilityPort.SCM-FP-4": "SC FP 4"
   }
 }

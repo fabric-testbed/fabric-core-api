@@ -34,6 +34,21 @@
     "Net.FacilityPort.SCM-FP-1": "SC FP 1",
     "Net.FacilityPort.SCM-FP-2": "SC FP 2",
     "Net.FacilityPort.SCM-FP-3": "SC FP 3",
-    "Net.FacilityPort.SCM-FP-4": "SC FP 4"
+    "Net.FacilityPort.SCM-FP-4": "SC FP 4",
+    "Net.FacilityPort.FP1-UCSD": "UCSD FP 1",
+    "Net.FacilityPort.NRP-UCSD": "NRP UCSD FP",
+    "Net.FacilityPort.SmartInternetLab-BRIST": "Smart Internet Lab Bristol",
+    "Net.FacilityPort.ResearchNet-400G-LOSA": "Research Network 400G LOSA",
+    "Net.FacilityPort.PWLOSA-2-LOSA": "PW LOSA to LOSA",
+    "Net.FacilityPort.ESnet-LOSA": "ESnet LOSA",
+    "Net.FacilityPort.COSMOS-RUTG": "COSMOS RUTG",
+    "Net.FacilityPort.ESnet-400G-NEWY": "ESnet NEWY 400G",
+    "Net.FacilityPort.COSMOS-NEWY": "COSMOS NEWY",
+    "Net.FacilityPort.Ultrasound-Clemson": "Ultrasound-Clemson Production",
+    "Net.FacilityPort.StarLight-400G-1-STAR": "StarLight 400G STAR 1",
+    "Net.FacilityPort.StarLight-400G-2-STAR": "StarLight 400G STAR 2",
+    "Net.FacilityPort.NetworkResearch-PRIN": "Research Network PRIN",
+    "Net.FacilityPort.Cloud-Facility-NONCLOUD": "Non Cloud",
+    "Net.FacilityPort.Cloud-Facility-OCI": "Oracle Cloud Infrastructure"
   }
 }

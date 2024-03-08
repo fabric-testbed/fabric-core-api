@@ -52,7 +52,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.6.0'
+api_version = '1.6.1'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'

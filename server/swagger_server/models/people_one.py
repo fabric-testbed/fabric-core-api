@@ -17,7 +17,7 @@ class PeopleOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, gecos: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, user_sub_identities: List[str]=None, user_org_affiliations: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, gecos: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, receive_promotional_email: bool=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, user_sub_identities: List[str]=None, user_org_affiliations: List[str]=None, uuid: str=None):  # noqa: E501
         """PeopleOne - a model defined in Swagger
 
         :param affiliation: The affiliation of this PeopleOne.  # noqa: E501
@@ -50,6 +50,8 @@ class PeopleOne(Model):
         :type preferences: Preferences
         :param profile: The profile of this PeopleOne.  # noqa: E501
         :type profile: ProfilePeople
+        :param receive_promotional_email: The receive_promotional_email of this PeopleOne.  # noqa: E501
+        :type receive_promotional_email: bool
         :param registered_on: The registered_on of this PeopleOne.  # noqa: E501
         :type registered_on: str
         :param roles: The roles of this PeopleOne.  # noqa: E501
@@ -79,6 +81,7 @@ class PeopleOne(Model):
             'name': str,
             'preferences': Preferences,
             'profile': ProfilePeople,
+            'receive_promotional_email': bool,
             'registered_on': str,
             'roles': List[PeopleOneRoles],
             'sshkeys': List[object],
@@ -103,6 +106,7 @@ class PeopleOne(Model):
             'name': 'name',
             'preferences': 'preferences',
             'profile': 'profile',
+            'receive_promotional_email': 'receive_promotional_email',
             'registered_on': 'registered_on',
             'roles': 'roles',
             'sshkeys': 'sshkeys',
@@ -125,6 +129,7 @@ class PeopleOne(Model):
         self._name = name
         self._preferences = preferences
         self._profile = profile
+        self._receive_promotional_email = receive_promotional_email
         self._registered_on = registered_on
         self._roles = roles
         self._sshkeys = sshkeys
@@ -461,6 +466,27 @@ class PeopleOne(Model):
         """
 
         self._profile = profile
+
+    @property
+    def receive_promotional_email(self) -> bool:
+        """Gets the receive_promotional_email of this PeopleOne.
+
+
+        :return: The receive_promotional_email of this PeopleOne.
+        :rtype: bool
+        """
+        return self._receive_promotional_email
+
+    @receive_promotional_email.setter
+    def receive_promotional_email(self, receive_promotional_email: bool):
+        """Sets the receive_promotional_email of this PeopleOne.
+
+
+        :param receive_promotional_email: The receive_promotional_email of this PeopleOne.
+        :type receive_promotional_email: bool
+        """
+
+        self._receive_promotional_email = receive_promotional_email
 
     @property
     def registered_on(self) -> str:

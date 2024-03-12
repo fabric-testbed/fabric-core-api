@@ -22,12 +22,27 @@ Copy the `env.template` file as `.env` and populate according to your environmen
 # Configuration
 
 ### Core API
-export CORE_API_SERVER_URL=http://127.0.0.1:5000
+export CORE_API_DEPLOYMENT_TIER=alpha
+export CORE_API_SERVER_URL=https://127.0.0.1:8443  # local deployment
+#export CORE_API_SERVER_URL=http://127.0.0.1:6000  # docker deployment
 export CORE_API_CO_USER_IDENTIFIER=registryid
+export CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS=60
 export CORE_API_DEFAULT_LIMIT=5
 export CORE_API_MAX_LIMIT=20
 export CORE_API_JSON_RESPONSE_INDENT=2
 export CORE_API_DEFAULT_FACILITY=FABRIC
+export CORE_API_401_UNAUTHORIZED_TEXT="Please Log in (or Sign up) on the FABRIC Portal"
+
+### Announcements
+export MAX_ACTIVE_CAROUSEL_ITEMS=10
+
+# Task Timeout Interval
+export PSK_DESCRIPTION='Public Signing Key'
+export PSK_NAME='public_signing_key'
+export PSK_TIMEOUT_IN_SECONDS=86400
+export TRL_DESCRIPTION='Token Revocation List'
+export TRL_NAME='token_revocation_list'
+export TRL_TIMEOUT_IN_SECONDS=300
 
 ### COmanage API User
 export COMANAGE_API_USER=co_123.api-user-name
@@ -44,15 +59,37 @@ export COU_ID_PROJECTS=102
 export COU_ID_ACTIVE_USERS=103
 export COU_ID_APPROVAL_COMMITTEE=104
 export COU_ID_JUPYTERHUB=105
+export COU_ID_PORTAL_ADMINS=106
+export COU_NAME_FACILITY_OPERATORS=facility-operators
+export COU_NAME_PROJECT_LEADS=project-leads
+export COU_NAME_PROJECTS=projects
+export COU_NAME_ACTIVE_USERS=fabric-active-users
+export COU_NAME_APPROVAL_COMMITTEE=approval-committee
+export COU_NAME_JUPYTERHUB=Jupyterhub
+export COU_NAME_PORTAL_ADMINS=portal-admins
+
+### Vouch Proxy
+export VOUCH_COOKIE_NAME=COOKIE_NAME
+export VOUCH_JWT_SECRET="xxxx-xxxx-xxxx-xxxx"
 
 ### Postgres
-export POSTGRES_SERVER=127.0.0.1
+export POSTGRES_SERVER=127.0.0.1  # local development
+#export POSTGRES_SERVER=database  # docker deployment
 export POSTGRES_PORT=5432
-export POSTGRES_PASSWORD=postgres
+export POSTGRES_PASSWORD=xxxx-xxxx-xxxx-xxxx
 export POSTGRES_USER=postgres
 export POSTGRES_DB=postgres
 export PGDATA=/var/lib/postgresql/data/pg_data
 export PGDATA_HOST=./data
+
+### SSH Keys
+export SSH_KEY_ALGORITHM="ecdsa" # "rsa" or "ecdsa"
+export SSH_BASTION_KEY_VALIDITY_DAYS=5
+export SSH_SLIVER_KEY_VALIDITY_DAYS=10
+export SSH_GARBAGE_COLLECT_AFTER_DAYS=10
+# for bastion host to have a shared secret when calling /bastionkeys
+export SSH_KEY_SECRET="xxxx-xxxx-xxxx-xxxx"
+export SSH_KEY_QTY_LIMIT=5
 
 ### Python Path
 export PYTHONPATH=$(pwd)/server:${PYTHONPATH}
@@ -61,6 +98,17 @@ export PYTHONPATH=$(pwd)/server:${PYTHONPATH}
 export FLASK_APP=swagger_server.__main__:app
 
 ### Nginx
+export NGINX_ACCESS_CONTROL_ALLOW_ORIGIN="https://127.0.0.1:8443"
+
+### Projects
+export PROJECTS_RENEWAL_PERIOD_IN_DAYS=365
+
+### Ansible
+export ANSIBLE_AUTHORIZATION_TOKEN='AnsibleAuthorizationToken'
+
+### FABRIC
+export FABRIC_CORE_API=https://COREAPI
+export FABRIC_CREDENTIAL_MANAGER=https://CREDENTIALMANAGER
 ```
 
 ## <a name="usage"></a>Usage
@@ -72,7 +120,7 @@ Flask is run on host while database is run in Docker
 1. Set up Python virtual environment
 
     ```console
-    virtualenv -p /usr/local/bin/python3 venv
+    virtualenv -p <PATH_TO_PYTHON3> venv
     source venv/bin/activate
     pip install -r requirements.txt
     ```

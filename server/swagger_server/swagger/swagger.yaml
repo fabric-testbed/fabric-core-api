@@ -8,11 +8,11 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.6.0
+  version: 1.6.2
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/mjstealey/fabric-core-api/1.6.0
+- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.6.2
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
@@ -700,6 +700,37 @@ paths:
         in: query
         description: search term applied
         required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/services-auth:
+    get:
+      tags:
+      - people
+      summary: List of People Preference options
+      description: List of People Preference options
+      operationId: people_services_auth_get
+      parameters:
+      - name: sub
+        in: query
+        description: subject identifier
+        required: true
         style: form
         explode: true
         schema:
@@ -2676,6 +2707,8 @@ components:
           $ref: '#/components/schemas/preferences'
         profile:
           $ref: '#/components/schemas/profile_people'
+        receive_promotional_email:
+          type: boolean
         registered_on:
           type: string
         roles:
@@ -3085,6 +3118,8 @@ components:
           type: string
         preferences:
           $ref: '#/components/schemas/preferences'
+        receive_promotional_email:
+          type: boolean
     projects_post:
       required:
       - description
@@ -3675,6 +3710,16 @@ components:
       in: query
       description: search term applied
       required: false
+      style: form
+      explode: true
+      schema:
+        minLength: 3
+        type: string
+    sub:
+      name: sub
+      in: query
+      description: subject identifier
+      required: true
       style: form
       explode: true
       schema:

@@ -90,6 +90,19 @@ class TestPeopleController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_people_services_auth_get(self):
+        """Test case for people_services_auth_get
+
+        List of People Preference options
+        """
+        query_string = [('sub', 'sub_example')]
+        response = self.client.open(
+            '/people/services-auth',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_people_uuid_get(self):
         """Test case for people_uuid_get
 

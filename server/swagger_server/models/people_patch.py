@@ -15,7 +15,7 @@ class PeoplePatch(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, email: str=None, name: str=None, preferences: Preferences=None):  # noqa: E501
+    def __init__(self, email: str=None, name: str=None, preferences: Preferences=None, receive_promotional_email: bool=None):  # noqa: E501
         """PeoplePatch - a model defined in Swagger
 
         :param email: The email of this PeoplePatch.  # noqa: E501
@@ -24,21 +24,26 @@ class PeoplePatch(Model):
         :type name: str
         :param preferences: The preferences of this PeoplePatch.  # noqa: E501
         :type preferences: Preferences
+        :param receive_promotional_email: The receive_promotional_email of this PeoplePatch.  # noqa: E501
+        :type receive_promotional_email: bool
         """
         self.swagger_types = {
             'email': str,
             'name': str,
-            'preferences': Preferences
+            'preferences': Preferences,
+            'receive_promotional_email': bool
         }
 
         self.attribute_map = {
             'email': 'email',
             'name': 'name',
-            'preferences': 'preferences'
+            'preferences': 'preferences',
+            'receive_promotional_email': 'receive_promotional_email'
         }
         self._email = email
         self._name = name
         self._preferences = preferences
+        self._receive_promotional_email = receive_promotional_email
 
     @classmethod
     def from_dict(cls, dikt) -> 'PeoplePatch':
@@ -113,3 +118,24 @@ class PeoplePatch(Model):
         """
 
         self._preferences = preferences
+
+    @property
+    def receive_promotional_email(self) -> bool:
+        """Gets the receive_promotional_email of this PeoplePatch.
+
+
+        :return: The receive_promotional_email of this PeoplePatch.
+        :rtype: bool
+        """
+        return self._receive_promotional_email
+
+    @receive_promotional_email.setter
+    def receive_promotional_email(self, receive_promotional_email: bool):
+        """Sets the receive_promotional_email of this PeoplePatch.
+
+
+        :param receive_promotional_email: The receive_promotional_email of this PeoplePatch.
+        :type receive_promotional_email: bool
+        """
+
+        self._receive_promotional_email = receive_promotional_email

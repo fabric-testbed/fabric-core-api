@@ -287,6 +287,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.gecos = fab_person.gecos
             people_one.preferences = {p.key: p.value for p in fab_person.preferences}
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
+            people_one.receive_promotional_email = fab_person.receive_promotional_email
             people_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person, is_self=True)
             people_one.user_sub_identities = [i.sub for i in fab_person.user_sub_identities]
@@ -421,6 +422,25 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                     metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: people_uuid_patch(): 'preferences' - {0}".format(exc))
+        # check for receive_promotional_email
+        try:
+            if str(body.receive_promotional_email).casefold() in ['true', 'false']:
+                if str(body.receive_promotional_email).casefold() == 'true':
+                    fab_person.receive_promotional_email = True
+                else:
+                    fab_person.receive_promotional_email = False
+                db.session.commit()
+                consoleLogger.info(
+                    'UPDATE: FabricPeople: uuid={0}, receive_promotional_email={1}'.format(fab_person.uuid, fab_person.receive_promotional_email))
+                # metrics log - User display_name modified:
+                # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify display_name NAME by usr:dead-beef-dead-beef
+                log_msg = 'User event usr:{0} modify receive_promotional_email \'{1}\' by usr:{2}'.format(
+                    str(fab_person.uuid),
+                    fab_person.receive_promotional_email,
+                    str(api_user.uuid))
+                metricsLogger.info(log_msg)
+        except Exception as exc:
+            consoleLogger.info("NOP: people_uuid_patch(): 'name' - {0}".format(exc))
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "User: '{0}' has been successfully updated".format(fab_person.display_name)

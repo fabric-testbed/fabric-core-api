@@ -87,6 +87,19 @@ def people_profile_preferences_get(search=None):  # noqa: E501
     return rc.people_profile_preferences_get(search)
 
 
+def people_services_auth_get(sub):  # noqa: E501
+    """List of People Preference options
+
+    List of People Preference options # noqa: E501
+
+    :param sub: subject identifier
+    :type sub: str
+
+    :rtype: ApiOptions
+    """
+    return rc.people_services_auth_get(sub)
+
+
 def people_uuid_get(uuid, as_self=None):  # noqa: E501
     """Person details by UUID
 

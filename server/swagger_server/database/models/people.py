@@ -74,6 +74,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     - preferences - array of preference booleans
     - preferred_email - initially OIDC scope: email:email
     - profile - one-to-one relationship with profiles_people table
+    - receive_promotional_email - received promotional email
     - registered_on - timestamp user was registered on
     - roles - array of fabric_roles
     - sshkeys - array of sshkeys
@@ -102,6 +103,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     preferred_email = db.Column(db.String(), nullable=False)
     profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
+    receive_promotional_email = db.Column(db.Boolean, nullable=False, default=True)
     registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     roles = db.relationship('FabricRoles', backref='people', lazy=True)
     sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)

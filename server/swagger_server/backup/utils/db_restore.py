@@ -1,5 +1,5 @@
 """
-v1.6.0 --> v1.6.1 - database tables
+v1.6.1 --> v1.6.2 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -35,9 +35,8 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (28 rows)
 
-Changes from v1.6.0 --> v1.6.1
-- table: announcements - added: background_image_url
-- table: announcements - added: sequence
+Changes from v1.6.1 --> v1.6.2
+- table: people - added: receive_promotional_email
 """
 
 import json
@@ -52,7 +51,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.6.0'
+api_version = '1.6.1'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -199,6 +198,7 @@ def restore_people_data():
     - * preferred_email = db.Column(db.String(), nullable=False)
     - profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
     # - publications = db.relationship('Publications', secondary=publications)
+    - receive_promotional_email = db.Column(db.Boolean, nullable=False, default=True)
     - * registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - roles = db.relationship('FabricRoles', backref='people', lazy=True)
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
@@ -235,6 +235,7 @@ def restore_people_data():
                 # preferences=p.get('preferences'), <-- restore_preferences_data()
                 preferred_email=p.get('preferred_email'),
                 # profile=p.get('profile.id'), <-- restore_profiles_people_data()
+                receive_promotional_email=p.get('receive_promotional_email') if p.get('receive_promotional_email') else True,
                 registered_on=normalize_date_to_utc(p.get('registered_on')) if p.get('registered_on') else None,
                 # roles=p.get('roles'), <-- restore_people_roles_data()
                 # sshkeys=p.get('sshkeys'), <-- restore_sshkeys_data()

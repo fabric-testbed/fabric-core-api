@@ -1,6 +1,7 @@
 ### Custom exclusion
 python-flask-server-generated/
 server_archive/
+logs/
 migrations/
 .idea
 vouch/config*

@@ -20,6 +20,7 @@ from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.sshkeys_utils import bastionkeys_by_since_date, create_sshkey, \
     deactivate_expired_keys, delete_sshkey, garbage_collect_expired_keys, put_sshkey, sshkey_from_fab_sshkey, \
     sshkeys_from_fab_person, sskeys_count_by_fabric_key_type
+from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
 TZPYTHON = r"^.+\+[\d]{4}$"
@@ -103,8 +104,21 @@ def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
         if api_user is fab_person:
             response.results = sshkeys_from_fab_person(fab_person=fab_person, is_self=True)
         else:
+            # get project_uuid if a token is being used
+            claims = vouch_get_custom_claims()
+            # print(claims)
+            try:
+                project_uuid = claims.get('project_uuid', None)
+                if fab_person.is_project_creator(project_uuid) or fab_person.is_project_owner(project_uuid) or fab_person.is_project_member(project_uuid):
+                    same_project = True
+                    # print('same project: TRUE')
+                else:
+                    same_project = False
+                    # print('same project: FALSE')
+            except Exception as exc:
+                same_project = False
             response.results = sshkeys_from_fab_person(
-                fab_person=fab_person, is_self=False) if people_prefs.get('show_sshkeys') else []
+                fab_person=fab_person, is_self=False) if people_prefs.get('show_sshkeys') or same_project else []
         response.size = len(response.results)
         response.status = 200
         response.type = 'sshkeys'

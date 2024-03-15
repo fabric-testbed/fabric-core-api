@@ -109,7 +109,8 @@ def token_get_custom_claims(token: str) -> dict:
             'given_name': token_json.get('given_name'),
             'iss': token_json.get('iss'),
             'name': token_json.get('name'),
-            'sub': token_json.get('sub')
+            'sub': token_json.get('sub'),
+            'project_uuid': token_json.get('projects')[0].get('uuid')
         }
     except Exception as exc:
         print(exc)

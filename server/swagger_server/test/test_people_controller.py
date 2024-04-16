@@ -10,6 +10,7 @@ from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
 from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
+from swagger_server.models.service_auth_details import ServiceAuthDetails  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -93,7 +94,7 @@ class TestPeopleController(BaseTestCase):
     def test_people_services_auth_get(self):
         """Test case for people_services_auth_get
 
-        List of People Preference options
+        Service authorization details by OIDC sub
         """
         query_string = [('sub', 'sub_example')]
         response = self.client.open(

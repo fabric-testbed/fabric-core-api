@@ -6,6 +6,7 @@ from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
 from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
+from swagger_server.models.service_auth_details import ServiceAuthDetails  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -88,14 +89,14 @@ def people_profile_preferences_get(search=None):  # noqa: E501
 
 
 def people_services_auth_get(sub):  # noqa: E501
-    """List of People Preference options
+    """Service authorization details by OIDC sub
 
-    List of People Preference options # noqa: E501
+    Service authorization details by OIDC sub # noqa: E501
 
     :param sub: subject identifier
     :type sub: str
 
-    :rtype: ApiOptions
+    :rtype: ServiceAuthDetails
     """
     return rc.people_services_auth_get(sub)
 

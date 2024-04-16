@@ -723,8 +723,8 @@ paths:
     get:
       tags:
       - people
-      summary: List of People Preference options
-      description: List of People Preference options
+      summary: Service authorization details by OIDC sub
+      description: Service authorization details by OIDC sub
       operationId: people_services_auth_get
       parameters:
       - name: sub
@@ -742,7 +742,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api_options'
+                $ref: '#/components/schemas/service_auth_details'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
         "500":
           description: Internal Server Error
           content:
@@ -2667,6 +2691,16 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/people_one'
+    service_auth_details:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/service_auth_one'
     people_one:
       required:
       - affiliation
@@ -2727,6 +2761,24 @@ components:
           type: array
           items:
             type: string
+        uuid:
+          type: string
+    service_auth_one:
+      required:
+      - email
+      - name
+      - roles
+      - uuid
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/people_one_roles'
         uuid:
           type: string
     project:
@@ -3543,6 +3595,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/people_details'
+    "200_service_auth_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/service_auth_details'
     "200_projects":
       description: OK
       content:

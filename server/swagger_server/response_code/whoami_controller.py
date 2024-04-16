@@ -7,6 +7,7 @@ from swagger_server.response_code.cors_response import cors_200, cors_401, cors_
 from swagger_server.response_code.decorators import login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims, update_fabric_person
 from swagger_server.response_code.whoami_utils import get_vouch_session_expiry
+from swagger_server.response_code.vouch_utils import IdSourceEnum
 
 
 @login_or_token_required
@@ -20,30 +21,33 @@ def whoami_get() -> Whoami:  # noqa: E501
     """
     try:
         # get person from people table
-        person = get_person_by_login_claims()
-        if not person.co_person_id:
+        api_user, id_source = get_person_by_login_claims()
+        print(id_source)
+        if id_source in []:
+            pass
+        if not api_user.co_person_id:
             details = 'Enrollment required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
             consoleLogger.info("unauthorized_access(): {0}".format(details))
             return cors_401(details=details)
         # check last time the user was updated against COmanage
         now = datetime.now(timezone.utc)
         try:
-            if person.updated.timestamp() + int(
+            if api_user.updated.timestamp() + int(
                     os.getenv('CORE_API_USER_UPDATE_FREQUENCY_IN_SECONDS')) <= now.timestamp():
                 consoleLogger.info(
-                    'UPDATE FabricPeople: name={0}, last_updated={1}'.format(person.display_name, person.updated))
-                update_fabric_person(fab_person=person)
+                    'UPDATE FabricPeople: name={0}, last_updated={1}'.format(api_user.display_name, api_user.updated))
+                update_fabric_person(fab_person=api_user)
         except Exception as exc:
             consoleLogger.info(
-                'UPDATE FabricPeople: name={0}, last_updated=None - {1}'.format(person.display_name, exc))
-            update_fabric_person(fab_person=person)
+                'UPDATE FabricPeople: name={0}, last_updated=None - {1}'.format(api_user.display_name, exc))
+            update_fabric_person(fab_person=api_user)
         # set WhoamiResults object
         whoami = WhoamiResults()
-        whoami.active = person.active if person.active else False
-        whoami.email = person.preferred_email if person.preferred_email else ''
-        whoami.enrolled = True if person.co_person_id else False
-        whoami.name = person.display_name if person.display_name else ''
-        whoami.uuid = str(person.uuid) if person.uuid else ''
+        whoami.active = api_user.active if api_user.active else False
+        whoami.email = api_user.preferred_email if api_user.preferred_email else ''
+        whoami.enrolled = True if api_user.co_person_id else False
+        whoami.name = api_user.display_name if api_user.display_name else ''
+        whoami.uuid = str(api_user.uuid) if api_user.uuid else ''
         whoami.vouch_expiry = get_vouch_session_expiry()
         # set Whoami object and return
         response = Whoami()

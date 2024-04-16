@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional, Tuple
 from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
@@ -17,7 +17,7 @@ from swagger_server.response_code.projects_utils import remove_project_token_hol
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
-def get_person_by_login_claims() -> FabricPeople:
+def get_person_by_login_claims() -> tuple[FabricPeople | Any, Any | None]:
     """
     Attempt to get FABRIC person based on 'sub' claim
 
@@ -69,9 +69,10 @@ def get_person_by_login_claims() -> FabricPeople:
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)
+        claims = {'source': 'exception'}
         fab_person = FabricPeople()
 
-    return fab_person
+    return fab_person, claims.get('source')
 
 
 def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:

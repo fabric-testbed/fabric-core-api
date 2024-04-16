@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from enum import Enum
 
 import jwt
 import requests
@@ -24,8 +25,17 @@ api = ComanageApi(
 )
 
 
+class IdSourceEnum(Enum):
+    COOKIE = 'cookie-vouch-proxy'
+    ANSIBLE = 'token-ansible'
+    SERVICES = 'token-services'
+    USER = 'token-user'
+
+
 def vouch_get_custom_claims() -> dict:
     """
+    Claim source - cookie-vouch-proxy
+
     Vouch Proxy requested CustomClaims
     - aud - the audience of the id_token, which is the client_id of the OIDC client
     - email - an email address
@@ -55,7 +65,9 @@ def vouch_get_custom_claims() -> dict:
             algorithms=["HS256"],
             options={"verify_aud": False}
         )
-        return vouch_json.get('CustomClaims')
+        claims = vouch_json.get('CustomClaims')
+        claims.update(source=IdSourceEnum.COOKIE.value)
+        return claims
     except Exception as exc:
         logging.warning("Missing cookie: {0} - {1}".format(os.getenv('VOUCH_COOKIE_NAME'), exc))
         return {}
@@ -64,6 +76,12 @@ def vouch_get_custom_claims() -> dict:
 def token_get_custom_claims(token: str) -> dict:
     """
     Map CM token claim to format of vouch claim and return
+
+    Claims sources
+    - token-user
+    - token-services
+    - token-ansible
+
     CM token claims
     {
         "acr": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
@@ -109,9 +127,24 @@ def token_get_custom_claims(token: str) -> dict:
             db.session.commit()
         # account for Ansible script which uses a static token for now
         if token == format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
+            # print('ANSIBLE AUTHORIZATION TOKEN')
             claims = first_valid_facility_operator()
+        # account for CF Services which uses a static token for now
+        elif token == format(os.getenv('SERVICES_AUTHORIZATION_TOKEN')):
+            # print('SERVICES AUTHORIZATION TOKEN')
+            claims = {
+                'aud': 'FABRIC',
+                'email': None,
+                'family_name': 'Services',
+                'given_name': 'FABRIC',
+                'iss': 'core-api',
+                'name': 'FABRIC Services',
+                'source': IdSourceEnum.SERVICES.value,
+                'sub': None
+            }
         # process normal user tokens
         else:
+            # print('USER AUTHORIZATION TOKEN')
             token_json = jwt.decode(
                 jwt=token,
                 key=public_signing_key,
@@ -125,6 +158,7 @@ def token_get_custom_claims(token: str) -> dict:
                 'given_name': token_json.get('given_name'),
                 'iss': token_json.get('iss'),
                 'name': token_json.get('name'),
+                'source': IdSourceEnum.USER.value,
                 'sub': token_json.get('sub')
             }
     except Exception as exc:
@@ -159,6 +193,7 @@ def first_valid_facility_operator() -> dict:
         'given_name': api_user.oidc_claim_given_name,
         'iss': None,
         'name': api_user.oidc_claim_name,
+        'source': IdSourceEnum.ANSIBLE.value,
         'sub': api_user.oidc_claim_sub
     }
     return claims

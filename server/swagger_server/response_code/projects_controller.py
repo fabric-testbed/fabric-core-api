@@ -83,7 +83,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         as_self = True
         # check api_user active flag
         if not api_user.active:
@@ -270,7 +270,7 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
         if not api_user.active or not api_user.is_project_lead():
             return cors_403(
@@ -382,7 +382,7 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -461,7 +461,7 @@ def projects_uuid_expires_on_patch(uuid: str,
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -525,7 +525,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -614,7 +614,7 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -762,7 +762,7 @@ def projects_uuid_personnel_patch(uuid: str = None,
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -842,7 +842,7 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -1033,7 +1033,7 @@ def projects_uuid_project_creators_patch(operation: str = None, uuid: str = None
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -1099,7 +1099,7 @@ def projects_uuid_project_members_patch(operation: str = None, uuid: str = None,
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -1165,7 +1165,7 @@ def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -1228,7 +1228,7 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
@@ -1294,7 +1294,7 @@ def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # get project by uuid
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:

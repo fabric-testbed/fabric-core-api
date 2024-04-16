@@ -13,6 +13,7 @@ from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.projects import Projects
 from swagger_server.models.projects_details import ProjectsDetails
+from swagger_server.models.service_auth_details import ServiceAuthDetails
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkeys import Sshkeys
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, Status200OkNoContentResults
@@ -73,8 +74,9 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 
 def cors_200(response_body: Union[
-    ApiOptions, Bastionkeys, CheckCookie, People, PeopleDetails, Projects, ProjectsDetails, SshkeyPair, Sshkeys,
-    Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails, TestbedInfo, StorageMany, Storage
+    ApiOptions, Bastionkeys, CheckCookie, People, PeopleDetails, Projects, ProjectsDetails, ServiceAuthDetails,
+    SshkeyPair, Sshkeys, Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails, TestbedInfo,
+    StorageMany, Storage
 ] = None) -> cors_response:
     """
     Return 200 - OK

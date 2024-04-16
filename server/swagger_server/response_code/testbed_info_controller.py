@@ -50,7 +50,7 @@ def testbed_info_post(body: TestbedInfoPost = None) -> TestbedInfo:  # noqa: E50
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify facility-operators role
         if not api_user.active or not api_user.is_facility_operator():
             return cors_403(

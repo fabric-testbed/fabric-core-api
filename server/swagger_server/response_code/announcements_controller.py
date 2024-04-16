@@ -42,7 +42,7 @@ def announcements_get(
     """
     try:
         # # get api_user
-        # api_user = get_person_by_login_claims()
+        # api_user, id_source = get_person_by_login_claims()
         # # check api_user active flag and verify portal-admin role
         # if not api_user.active or not api_user.is_portal_admin():
         #     return cors_403(
@@ -162,7 +162,7 @@ def announcements_post(body: AnnouncementsPost = None) -> AnnouncementsDetails: 
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify portal-admin role
         if not api_user.active or not api_user.is_portal_admin():
             return cors_403(
@@ -258,7 +258,7 @@ def announcements_uuid_delete(uuid: str):  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify portal-admin role
         if not api_user.active or not api_user.is_portal_admin():
             return cors_403(
@@ -347,7 +347,7 @@ def announcements_uuid_patch(uuid: str, body: AnnouncementsPatch = None) -> Stat
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify portal-admin role
         if not api_user.active or not api_user.is_portal_admin():
             return cors_403(

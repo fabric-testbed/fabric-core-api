@@ -89,7 +89,7 @@ def sshkeys_get(person_uuid=None) -> Sshkeys:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
         if not api_user.active:
             return cors_403(
@@ -142,7 +142,7 @@ def sshkeys_post(body: SshkeysPost = None) -> SshkeyPair:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -183,7 +183,7 @@ def sshkeys_put(body: SshkeysPut = None):  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -240,7 +240,7 @@ def sshkeys_uuid_delete(uuid) -> Status200OkNoContent:  # noqa: E501
         if not fab_sshkey:
             return cors_404(details="No match for SSH Key with uuid = '{0}'".format(uuid))
         # get api_user and verify ownership of key
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
         if not api_user.active or api_user.id != fab_sshkey.people_id:
             return cors_403(
@@ -276,7 +276,7 @@ def sshkeys_uuid_get(uuid: str) -> Sshkeys:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
         if not api_user.active:
             return cors_403(

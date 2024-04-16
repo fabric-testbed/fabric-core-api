@@ -2796,6 +2796,8 @@ components:
           type: string
         description:
           type: string
+        expires_on:
+          type: string
         facility:
           type: string
         is_public:

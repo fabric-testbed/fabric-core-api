@@ -70,6 +70,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
     {
         "created": "string",
         "description": "string",
+        "expires_on": "string",
         "facility": "string",
         "is_public": true,
         "memberships": {
@@ -205,6 +206,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
             # set project attributes
             project.created = str(item.created)
             project.description = item.description
+            project.expires_on = str(item.expires_on)
             project.facility = item.facility
             project.is_public = item.is_public
             if as_self:

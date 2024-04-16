@@ -15,13 +15,15 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, created: str=None, description: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
         """Project - a model defined in Swagger
 
         :param created: The created of this Project.  # noqa: E501
         :type created: str
         :param description: The description of this Project.  # noqa: E501
         :type description: str
+        :param expires_on: The expires_on of this Project.  # noqa: E501
+        :type expires_on: str
         :param facility: The facility of this Project.  # noqa: E501
         :type facility: str
         :param is_public: The is_public of this Project.  # noqa: E501
@@ -38,6 +40,7 @@ class Project(Model):
         self.swagger_types = {
             'created': str,
             'description': str,
+            'expires_on': str,
             'facility': str,
             'is_public': bool,
             'memberships': ProjectMembership,
@@ -49,6 +52,7 @@ class Project(Model):
         self.attribute_map = {
             'created': 'created',
             'description': 'description',
+            'expires_on': 'expires_on',
             'facility': 'facility',
             'is_public': 'is_public',
             'memberships': 'memberships',
@@ -58,6 +62,7 @@ class Project(Model):
         }
         self._created = created
         self._description = description
+        self._expires_on = expires_on
         self._facility = facility
         self._is_public = is_public
         self._memberships = memberships
@@ -121,6 +126,27 @@ class Project(Model):
             raise ValueError("Invalid value for `description`, must not be `None`")  # noqa: E501
 
         self._description = description
+
+    @property
+    def expires_on(self) -> str:
+        """Gets the expires_on of this Project.
+
+
+        :return: The expires_on of this Project.
+        :rtype: str
+        """
+        return self._expires_on
+
+    @expires_on.setter
+    def expires_on(self, expires_on: str):
+        """Sets the expires_on of this Project.
+
+
+        :param expires_on: The expires_on of this Project.
+        :type expires_on: str
+        """
+
+        self._expires_on = expires_on
 
     @property
     def facility(self) -> str:

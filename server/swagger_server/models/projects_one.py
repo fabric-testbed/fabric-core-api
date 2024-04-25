@@ -9,6 +9,7 @@ from swagger_server.models.base_model_ import Model
 from swagger_server.models.person import Person  # noqa: F401,E501
 from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: F401,E501
+from swagger_server.models.project_funding import ProjectFunding  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
 from swagger_server.models.storage_one import StorageOne  # noqa: F401,E501
 from swagger_server import util
@@ -19,11 +20,13 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
         :type active: bool
+        :param communities: The communities of this ProjectsOne.  # noqa: E501
+        :type communities: List[str]
         :param created: The created of this ProjectsOne.  # noqa: E501
         :type created: datetime
         :param description: The description of this ProjectsOne.  # noqa: E501
@@ -48,6 +51,8 @@ class ProjectsOne(Model):
         :type profile: ProfileProjects
         :param project_creators: The project_creators of this ProjectsOne.  # noqa: E501
         :type project_creators: List[Person]
+        :param project_funding: The project_funding of this ProjectsOne.  # noqa: E501
+        :type project_funding: List[ProjectFunding]
         :param project_members: The project_members of this ProjectsOne.  # noqa: E501
         :type project_members: List[Person]
         :param project_owners: The project_owners of this ProjectsOne.  # noqa: E501
@@ -63,6 +68,7 @@ class ProjectsOne(Model):
         """
         self.swagger_types = {
             'active': bool,
+            'communities': List[str],
             'created': datetime,
             'description': str,
             'expires_on': str,
@@ -75,6 +81,7 @@ class ProjectsOne(Model):
             'preferences': Preferences,
             'profile': ProfileProjects,
             'project_creators': List[Person],
+            'project_funding': List[ProjectFunding],
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
@@ -85,6 +92,7 @@ class ProjectsOne(Model):
 
         self.attribute_map = {
             'active': 'active',
+            'communities': 'communities',
             'created': 'created',
             'description': 'description',
             'expires_on': 'expires_on',
@@ -97,6 +105,7 @@ class ProjectsOne(Model):
             'preferences': 'preferences',
             'profile': 'profile',
             'project_creators': 'project_creators',
+            'project_funding': 'project_funding',
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
@@ -105,6 +114,7 @@ class ProjectsOne(Model):
             'uuid': 'uuid'
         }
         self._active = active
+        self._communities = communities
         self._created = created
         self._description = description
         self._expires_on = expires_on
@@ -117,6 +127,7 @@ class ProjectsOne(Model):
         self._preferences = preferences
         self._profile = profile
         self._project_creators = project_creators
+        self._project_funding = project_funding
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
@@ -155,6 +166,27 @@ class ProjectsOne(Model):
         """
 
         self._active = active
+
+    @property
+    def communities(self) -> List[str]:
+        """Gets the communities of this ProjectsOne.
+
+
+        :return: The communities of this ProjectsOne.
+        :rtype: List[str]
+        """
+        return self._communities
+
+    @communities.setter
+    def communities(self, communities: List[str]):
+        """Sets the communities of this ProjectsOne.
+
+
+        :param communities: The communities of this ProjectsOne.
+        :type communities: List[str]
+        """
+
+        self._communities = communities
 
     @property
     def created(self) -> datetime:
@@ -419,6 +451,27 @@ class ProjectsOne(Model):
         """
 
         self._project_creators = project_creators
+
+    @property
+    def project_funding(self) -> List[ProjectFunding]:
+        """Gets the project_funding of this ProjectsOne.
+
+
+        :return: The project_funding of this ProjectsOne.
+        :rtype: List[ProjectFunding]
+        """
+        return self._project_funding
+
+    @project_funding.setter
+    def project_funding(self, project_funding: List[ProjectFunding]):
+        """Sets the project_funding of this ProjectsOne.
+
+
+        :param project_funding: The project_funding of this ProjectsOne.
+        :type project_funding: List[ProjectFunding]
+        """
+
+        self._project_funding = project_funding
 
     @property
     def project_members(self) -> List[Person]:

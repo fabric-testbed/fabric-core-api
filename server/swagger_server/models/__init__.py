@@ -30,11 +30,15 @@ from swagger_server.models.profile_people_personal_pages import ProfilePeoplePer
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.profile_projects_references import ProfileProjectsReferences
 from swagger_server.models.project import Project
+from swagger_server.models.project_funding import ProjectFunding
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects import Projects
+from swagger_server.models.projects_communities_patch import ProjectsCommunitiesPatch
 from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch
 from swagger_server.models.projects_details import ProjectsDetails
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
+from swagger_server.models.projects_funding_patch import ProjectsFundingPatch
+from swagger_server.models.projects_funding_patch_project_funding import ProjectsFundingPatchProjectFunding
 from swagger_server.models.projects_members_patch import ProjectsMembersPatch
 from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch

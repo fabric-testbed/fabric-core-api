@@ -5,7 +5,8 @@ from uuid import uuid4
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags
+from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, \
+    ProjectsTags
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
@@ -15,6 +16,11 @@ from swagger_server.response_code.comanage_utils import create_comanage_group, c
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
+
+
+def project_funding_to_array(n):
+    return [{'agency': x.agency, 'award_amount': x.award_amount,
+             'award_number': x.award_number, 'directorate': x.directorate} for x in n]
 
 
 def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPeople) -> FabricProjects:
@@ -398,6 +404,100 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
                 personnel_type[:-1],
                 str(p.uuid),
                 str(api_user.uuid))
+            metricsLogger.info(log_msg)
+
+
+def update_projects_communities(api_user: FabricPeople = None, fab_project: FabricProjects = None,
+                                communities: [str] = None) -> None:
+    comms_orig = [p.community for p in fab_project.communities]
+    comms_new = communities
+    comms_add = array_difference(comms_new, comms_orig)
+    comms_remove = array_difference(comms_orig, comms_new)
+    # add projects communities
+    for comm in comms_add:
+        fab_comm = ProjectsCommunities.query.filter(
+            ProjectsCommunities.projects_id == fab_project.id, ProjectsCommunities.community == comm).one_or_none()
+        if not fab_comm:
+            fab_comm = ProjectsCommunities()
+            fab_comm.projects_id = fab_project.id
+            fab_comm.community = comm
+            fab_project.communities.append(fab_comm)
+            db.session.commit()
+            # metrics log - Project community added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add community Networks by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-add community \'{1}\' by usr:{2}'.format(str(fab_project.uuid),
+                                                                                             comm,
+                                                                                             str(api_user.uuid))
+            metricsLogger.info(log_msg)
+    # remove projects communities
+    for comm in comms_remove:
+        fab_comm = ProjectsCommunities.query.filter(
+            ProjectsCommunities.projects_id == fab_project.id, ProjectsCommunities.community == comm).one_or_none()
+        if fab_comm:
+            fab_project.communities.remove(fab_comm)
+            db.session.delete(fab_comm)
+            db.session.commit()
+            # metrics log - Project community removed:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add community Network by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-remove community \'{1}\' by usr:{2}'.format(str(fab_project.uuid),
+                                                                                                comm,
+                                                                                                str(api_user.uuid))
+            metricsLogger.info(log_msg)
+
+
+def update_projects_project_funding(api_user: FabricPeople = None, fab_project: FabricProjects = None,
+                                    project_funding: [object] = None) -> None:
+    fs_orig = project_funding_to_array(fab_project.project_funding)
+    fs_new = project_funding_to_array(project_funding)
+    fs_add = array_difference(fs_new, fs_orig)
+    fs_remove = array_difference(fs_orig, fs_new)
+    # add projects funding
+    for fs in fs_add:
+        agency = fs.get('agency', None)
+        award_amount = fs.get('award_amount', None)
+        award_number = fs.get('award_number', None)
+        directorate = fs.get('directorate', None)
+        fab_fs = ProjectsFunding.query.filter(
+            ProjectsFunding.projects_id == fab_project.id,
+            ProjectsFunding.agency == agency,
+            ProjectsFunding.award_amount == award_amount,
+            ProjectsFunding.award_number == award_number
+        ).one_or_none()
+        print(fab_fs)
+        if not fab_fs:
+            fab_fs = ProjectsFunding()
+            fab_fs.projects_id = fab_project.id
+            fab_fs.agency = agency
+            fab_fs.award_amount = award_amount
+            fab_fs.award_number = award_number
+            fab_fs.directorate = directorate
+            fab_project.project_funding.append(fab_fs)
+            db.session.commit()
+            # metrics log - project-funding added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add project-funding NSF by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-add project-funding \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid), agency, str(api_user.uuid))
+            metricsLogger.info(log_msg)
+
+    # remove projects funding
+    for fs in fs_remove:
+        agency = fs.get('agency', None)
+        award_amount = fs.get('award_amount', None)
+        award_number = fs.get('award_number', None)
+        fab_fs = ProjectsFunding.query.filter(
+            ProjectsFunding.projects_id == fab_project.id,
+            ProjectsFunding.agency == agency,
+            ProjectsFunding.award_amount == award_amount,
+            ProjectsFunding.award_number == award_number
+        ).one_or_none()
+        if fab_fs:
+            fab_project.project_funding.remove(fab_fs)
+            db.session.delete(fab_fs)
+            db.session.commit()
+            # metrics log - project-funding removed:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add project-funding NSF by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-remove project-funding \'{1}\' by usr:{2}'.format(
+                str(fab_project.uuid), agency, str(api_user.uuid))
             metricsLogger.info(log_msg)
 
 

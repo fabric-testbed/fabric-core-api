@@ -9,6 +9,9 @@ PEOPLE_PROFILE_PREFERENCES = CoreApiOptions('people_profile_preferences.json')
 PEOPLE_PROFILE_PERSONALPAGE_TYPES = CoreApiOptions('people_profile_personal_page_types.json')
 
 # Projects Options
+PROJECTS_COMMUNITIES = CoreApiOptions('projects_communities.json')
+PROJECTS_FUNDING_AGENCIES = CoreApiOptions('projects_funding_agencies.json')
+PROJECTS_FUNDING_DIRECTORATES = CoreApiOptions('projects_funding_directorates.json')
 PROJECTS_PREFERENCES = CoreApiOptions('projects_preferences.json')
 PROJECTS_PROFILE_PREFERENCES = CoreApiOptions('projects_profile_preferences.json')
 PROJECTS_TAGS = CoreApiOptions('projects_tags_base.json')

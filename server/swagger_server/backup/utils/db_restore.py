@@ -1,5 +1,5 @@
 """
-v1.6.1 --> v1.6.2 - database tables
+v1.6.2 --> v1.7.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -20,7 +20,9 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | profiles_projects         | table | postgres  <-- profiles_projects-v<VERSION>.json
  public | profiles_references       | table | postgres  <-- profiles_references-v<VERSION>.json
  public | projects                  | table | postgres  <-- projects-v<VERSION>.json
+ public | projects_communities      | table | postgres  <-- projects_communities-v<VERSION>.json
  public | projects_creators         | table | postgres  <-- projects_creators-v<VERSION>.json
+ public | projects_funding          | table | postgres  <-- projects_funding-v<VERSION>.json
  public | projects_members          | table | postgres  <-- projects_members-v<VERSION>.json
  public | projects_owners           | table | postgres  <-- projects_owners-v<VERSION>.json
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
@@ -33,10 +35,16 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(28 rows)
+(30 rows)
 
 Changes from v1.6.1 --> v1.6.2
 - table: people - added: receive_promotional_email
+
+Changes from v1.6.2 --> v1.7
+- TODO: table: projects - added: communities, funding_source
+- TODO: table: projects_communities
+- TODO: table: projects_funding_directorates
+- TODO: table: projects_funding_source
 """
 
 import json
@@ -684,6 +692,70 @@ def restore_projects_data():
             db.session.execute(stmt)
         db.session.commit()
         reset_serial_sequence(db_table='projects', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+# export projects_tags as JSON output file
+def restore_projects_communities_data():
+    """
+    ProjectsCommunities(BaseMixin, db.Model)
+    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    - community = db.Column(db.Text, nullable=False)
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/projects_communities-v{0}.json'.format(api_version), 'r') as infile:
+            projects_communities_dict = json.load(infile)
+        projects_communities = projects_communities_dict.get('projects_communities')
+        max_id = 0
+        for c in projects_communities:
+            c_id = int(c.get('id'))
+            if c_id > max_id:
+                max_id = c_id
+            stmt = insert(db.Table('projects_communities')).values(
+                id=c_id,
+                projects_id=int(c.get('projects_id')),
+                community=c.get('community')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='projects_communities', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+# restore projects_funding from JSON input file
+def restore_projects_funding_data():
+    """
+    ProjectsFunding(BaseMixin, db.Model)
+    - id - primary key (BaseMixin)
+    - projects_id - foreignkey link to projects table
+    - agency - agency as string
+    - award_amount - award amount as string
+    - award_number - award number as string
+    - directorate - directorate as string
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/projects_funding-v{0}.json'.format(api_version), 'r') as infile:
+            projects_funding_dict = json.load(infile)
+        projects_funding = projects_funding_dict.get('projects_funding')
+        max_id = 0
+        for c in projects_funding:
+            c_id = int(c.get('id'))
+            if c_id > max_id:
+                max_id = c_id
+            stmt = insert(db.Table('projects_funding')).values(
+                id=c_id,
+                projects_id=int(c.get('projects_id')),
+                agency=c.get('agency'),
+                award_amount=c.get('award_amount'),
+                award_number=c.get('award_number'),
+                directorate=c.get('directorate')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='projects_funding', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 

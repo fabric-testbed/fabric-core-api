@@ -8,11 +8,11 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.6.2
+  version: 1.7.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.6.2
+- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.7.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
@@ -1103,6 +1103,130 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/communities:
+    patch:
+      tags:
+      - projects
+      summary: Update Projects Communities as Project creator/owner
+      description: Update Projects Communities as Project creator/owner
+      operationId: projects_uuid_communities_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_communities_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-funding:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Funding as Project creator/owner
+      description: Update Project Funding as Project creator/owner
+      operationId: projects_uuid_project_funding_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_funding_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /projects/{uuid}/expires-on:
     patch:
       tags:
@@ -1677,6 +1801,99 @@ paths:
       summary: List of Projects Profile Preference options
       description: List of Projects Profile Preference options
       operationId: projects_profile_preferences_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/communities:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Communities options
+      description: List of Projects Communities options
+      operationId: projects_communities_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/funding-agencies:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Funding Agency options
+      description: List of Projects Funding Agency options
+      operationId: projects_funding_agencies_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/funding-directorates:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Funding Directorate options
+      description: List of Projects Funding Directorate options
+      operationId: projects_funding_directorates_get
       parameters:
       - name: search
         in: query
@@ -2847,6 +3064,10 @@ components:
         active:
           type: boolean
           default: true
+        communities:
+          type: array
+          items:
+            type: string
         created:
           type: string
           format: date-time
@@ -2877,6 +3098,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/person'
+        project_funding:
+          type: array
+          items:
+            $ref: '#/components/schemas/project_funding'
         project_members:
           type: array
           items:
@@ -2914,6 +3139,17 @@ components:
         is_token_holder:
           type: boolean
           default: false
+    project_funding:
+      type: object
+      properties:
+        agency:
+          type: string
+        award_amount:
+          type: string
+        award_number:
+          type: string
+        directorate:
+          type: string
     profile_people:
       type: object
       properties:
@@ -3259,6 +3495,20 @@ components:
           type: array
           items:
             type: string
+    projects_communities_patch:
+      type: object
+      properties:
+        communities:
+          type: array
+          items:
+            type: string
+    projects_funding_patch:
+      type: object
+      properties:
+        project_funding:
+          type: array
+          items:
+            $ref: '#/components/schemas/projects_funding_patch_project_funding'
     sshkeys_post:
       required:
       - comment
@@ -3577,6 +3827,17 @@ components:
         description:
           type: string
         endpoint:
+          type: string
+    projects_funding_patch_project_funding:
+      type: object
+      properties:
+        agency:
+          type: string
+        award_amount:
+          type: string
+        award_number:
+          type: string
+        directorate:
           type: string
   responses:
     "200_check_cookie":
@@ -3970,6 +4231,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_tags_patch'
+    payload_projects_communities_patch:
+      description: Update Project Communities as Project creator/owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_communities_patch'
+    payload_projects_funding_patch:
+      description: Update Project Funding Source as Project creator/owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_funding_patch'
     payload_sshkeys_post:
       description: Create a public/private SSH Key Pair
       content:

@@ -12,9 +12,11 @@ from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
+from swagger_server.models.projects_communities_patch import ProjectsCommunitiesPatch
 from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch
 from swagger_server.models.projects_details import ProjectsDetails, ProjectsOne  # noqa: E501
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
+from swagger_server.models.projects_funding_patch_project_funding import ProjectsFundingPatchProjectFunding
 from swagger_server.models.projects_members_patch import ProjectsMembersPatch
 from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch
 from swagger_server.models.projects_patch import ProjectsPatch
@@ -25,7 +27,9 @@ from swagger_server.models.projects_token_holders_patch import ProjectsTokenHold
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
-from swagger_server.response_code import PROJECTS_PREFERENCES, PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS
+from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING_AGENCIES,
+                                          PROJECTS_FUNDING_DIRECTORATES, PROJECTS_PREFERENCES,
+                                          PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS)
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
@@ -35,12 +39,90 @@ from swagger_server.response_code.preferences_utils import delete_projects_prefe
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
     update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_personnel, update_projects_tags, \
-    update_projects_token_holders
+    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_communities, \
+    update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
+
+
+def projects_communities_get(search=None):  # noqa: E501
+    """List of Projects Communities options
+
+    List of Projects Communities options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    try:
+        if search:
+            results = [pc for pc in PROJECTS_COMMUNITIES.search(search) if search.casefold() in pc.casefold()]
+        else:
+            results = PROJECTS_COMMUNITIES.options
+        response = ApiOptions()
+        response.results = results
+        response.size = len(results)
+        response.status = 200
+        response.type = PROJECTS_COMMUNITIES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        consoleLogger.error("projects_communities_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with Projects.Communities.Get()')
+
+
+def projects_funding_agencies_get(search=None):  # noqa: E501
+    """List of Projects Funding Agency options
+
+    List of Projects Funding Agency options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    try:
+        if search:
+            results = [fa for fa in PROJECTS_FUNDING_AGENCIES.search(search) if search.casefold() in fa.casefold()]
+        else:
+            results = PROJECTS_FUNDING_AGENCIES.options
+        response = ApiOptions()
+        response.results = results
+        response.size = len(results)
+        response.status = 200
+        response.type = PROJECTS_FUNDING_AGENCIES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        consoleLogger.error("projects_funding_agencies_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with projects_funding_agencies_get()')
+
+
+def projects_funding_directorates_get(search=None):  # noqa: E501
+    """List of Projects Funding Directorate options
+
+    List of Projects Funding Directorate options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    try:
+        if search:
+            results = [fd for fd in PROJECTS_FUNDING_DIRECTORATES.search(search) if search.casefold() in fd.casefold()]
+        else:
+            results = PROJECTS_FUNDING_DIRECTORATES.options
+        response = ApiOptions()
+        response.results = results
+        response.size = len(results)
+        response.status = 200
+        response.type = PROJECTS_FUNDING_DIRECTORATES.name
+        return cors_200(response_body=response)
+    except Exception as exc:
+        consoleLogger.error("projects_funding_directorates_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with Projects.Funding_Directorate.Get()')
 
 
 @login_or_token_required
@@ -371,6 +453,71 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Tags.Get()')
 
 
+def projects_uuid_communities_patch(uuid: str,
+                                    body: ProjectsCommunitiesPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """Update Projects Communities as Project creator/owner
+
+    Update Projects Communities as Project creator/owner # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Communities as Project creator/owner
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # check for communities
+        try:
+            if len(body.communities) == 0:
+                update_projects_communities(api_user=api_user, fab_project=fab_project, communities=body.communities)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, communities=[]')
+            else:
+                communities = body.communities
+                for community in communities:
+                    if community not in PROJECTS_COMMUNITIES.options:
+                        details = "Attempting to add invalid community '{0}'".format(community)
+                        consoleLogger.error(details)
+                        return cors_400(details=details)
+                update_projects_communities(api_user=api_user, fab_project=fab_project, communities=body.communities)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, communities={1}'.format(
+                    fab_project.uuid, [c.community for c in fab_project.communties]))
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_communities_patch(): 'communities' - {0}".format(exc))
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_communities_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
 @login_required
 def projects_uuid_delete(uuid: str):  # noqa: E501
     """Delete Project as owner
@@ -415,6 +562,10 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             s.active = False
             fab_project.project_storage.remove(s)
             db.session.commit()
+        # remove communities
+        update_projects_communities(fab_project=fab_project, communities=[])
+        # remove project funding
+        update_projects_project_funding(fab_project=fab_project, project_funding=[])
         # delete COUs -pc, -pm, -po, -tk
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
         delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
@@ -514,6 +665,72 @@ def projects_uuid_expires_on_patch(uuid: str,
         return cors_500(details=details)
 
 
+def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchProjectFunding = None):  # noqa: E501
+    """Update Project Funding as Project creator/owner
+
+    Update Project Funding as Project creator/owner # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Funding Source as Project creator/owner
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # check for project funding
+        try:
+            if len(body.project_funding) == 0:
+                update_projects_project_funding(api_user=api_user, fab_project=fab_project,
+                                                project_funding=body.project_funding)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, project_funding=[]'.format(fab_project.uuid))
+            else:
+                project_funding = body.project_funding
+                for fs in project_funding:
+                    if fs.agency not in PROJECTS_FUNDING_AGENCIES.options:
+                        details = "Attempting to add invalid funding agency '{0}'".format(fs.agency)
+                        consoleLogger.error(details)
+                        return cors_400(details=details)
+                update_projects_project_funding(api_user=api_user, fab_project=fab_project,
+                                                project_funding=body.project_funding)
+                consoleLogger.info('UPDATE: FabricProjects: uuid={0}, project_funding={1}'.format(
+                    fab_project.uuid, [fs.agency for fs in fab_project.project_funding]))
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_funding_patch(): 'project_funding' - {0}".format(exc))
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_funding_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
 @login_or_token_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
@@ -543,6 +760,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         # set ProjectsOne object
         project_one = ProjectsOne()
         # set required attributes for any uuid
+        project_one.communities = [c.community for c in fab_project.communities]
         project_one.created = str(fab_project.created)
         project_one.description = fab_project.description
         project_one.expires_on = str(fab_project.expires_on)
@@ -551,6 +769,10 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         project_one.is_public = fab_project.is_public
         project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
         project_one.name = fab_project.name
+        project_one.project_funding = [
+            {"agency": pf.agency, "award_amount": pf.award_amount,
+             "award_number": pf.award_number, "directorate": pf.directorate}
+            for pf in fab_project.project_funding]
         project_one.uuid = fab_project.uuid
         # set remaining attributes for project_creators, project_owners and project_members
         if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \

@@ -37,6 +37,7 @@ token_holders = db.Table('token_holders',
 class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     """
     - active - project status
+    - communities - array of community strings
     - created - timestamp created (TimestampMixin)
     - created_by_uuid - uuid of person created_by (TrackingMixin)
     - description - project description
@@ -67,6 +68,7 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     co_cou_id_pm = db.Column(db.Integer, nullable=True)
     co_cou_id_po = db.Column(db.Integer, nullable=True)
     co_cou_id_tk = db.Column(db.Integer, nullable=True)
+    communities = db.relationship('ProjectsCommunities', backref='projects', lazy=True)
     description = db.Column(db.Text, nullable=False)
     expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
     facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
@@ -77,6 +79,7 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     profile = db.relationship('FabricProfilesProjects', backref='projects', uselist=False, lazy=True)
     project_creators = db.relationship('FabricPeople', secondary=projects_creators, lazy='subquery',
                                        backref=db.backref('project_creators', lazy=True))
+    project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
     project_members = db.relationship('FabricPeople', secondary=projects_members, lazy='subquery',
                                       backref=db.backref('project_members', lazy=True))
     project_owners = db.relationship('FabricPeople', secondary=projects_owners, lazy='subquery',
@@ -102,3 +105,40 @@ class ProjectsTags(BaseMixin, db.Model):
 
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     tag = db.Column(db.Text, nullable=False)
+
+
+class ProjectsCommunities(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - projects_id - foreignkey link to projects table
+    - community - community as string
+    """
+    query: db.Query
+    __tablename__ = 'projects_communities'
+    __table_args__ = (db.UniqueConstraint('projects_id', 'community', name='constraint_projects_communities'),)
+    __allow_unmapped__ = True
+
+    projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    community = db.Column(db.Text, nullable=False)
+
+
+class ProjectsFunding(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - projects_id - foreignkey link to projects table
+    - agency - agency as string
+    - award_amount - award amount as string
+    - award_number - award number as string
+    - directorate - directorate as string
+    """
+    query: db.Query
+    __tablename__ = 'projects_funding'
+    __table_args__ = (db.UniqueConstraint('projects_id', 'agency', 'award_amount', 'award_number',
+                                          name='constraint_projects_funding_source'),)
+    __allow_unmapped__ = True
+
+    projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    agency = db.Column(db.Text, nullable=False)
+    award_amount = db.Column(db.Text, nullable=True)
+    award_number = db.Column(db.Text, nullable=True)
+    directorate = db.Column(db.Text, nullable=True)

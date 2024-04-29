@@ -47,6 +47,7 @@ from swagger_server.response_code.response_utils import is_valid_url
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 
 
+@login_required
 def projects_communities_get(search=None):  # noqa: E501
     """List of Projects Communities options
 
@@ -73,6 +74,7 @@ def projects_communities_get(search=None):  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Communities.Get()')
 
 
+@login_required
 def projects_funding_agencies_get(search=None):  # noqa: E501
     """List of Projects Funding Agency options
 
@@ -99,6 +101,7 @@ def projects_funding_agencies_get(search=None):  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with projects_funding_agencies_get()')
 
 
+@login_required
 def projects_funding_directorates_get(search=None):  # noqa: E501
     """List of Projects Funding Directorate options
 
@@ -453,6 +456,7 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Tags.Get()')
 
 
+@login_required
 def projects_uuid_communities_patch(uuid: str,
                                     body: ProjectsCommunitiesPatch = None) -> Status200OkNoContent:  # noqa: E501
     """Update Projects Communities as Project creator/owner
@@ -665,6 +669,7 @@ def projects_uuid_expires_on_patch(uuid: str,
         return cors_500(details=details)
 
 
+@login_required
 def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchProjectFunding = None):  # noqa: E501
     """Update Project Funding as Project creator/owner
 

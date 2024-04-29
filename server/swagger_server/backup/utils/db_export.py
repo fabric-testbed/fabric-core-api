@@ -87,6 +87,7 @@ def dump_announcements_data():
     """
     FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - announcement_type = db.Column(db.Enum(EnumAnnouncementTypes),default=EnumAnnouncementTypes.facility)
+    - background_image_url = db.Column(db.String(), nullable=True)
     - button = db.Column(db.String())
     - content = db.Column(db.String(), nullable=False)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
@@ -107,6 +108,7 @@ def dump_announcements_data():
     for a in fab_announcements:
         data = {
             'announcement_type': a.announcement_type.name,
+            'background_image_url': a.background_image_url,
             'button': a.button,
             'content': a.content,
             'created': normalize_date_to_utc(date_str=str(a.created), return_type='str'),

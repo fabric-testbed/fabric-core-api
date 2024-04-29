@@ -37,14 +37,13 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (30 rows)
 
-Changes from v1.6.1 --> v1.6.2
+Changes from v1.6.2 --> v1.7.0
 - table: people - added: receive_promotional_email
 
 Changes from v1.6.2 --> v1.7
-- TODO: table: projects - added: communities, funding_source
+- TODO: table: projects - added: communities, projects_funding
 - TODO: table: projects_communities
-- TODO: table: projects_funding_directorates
-- TODO: table: projects_funding_source
+- TODO: table: projects_funding
 """
 
 import json

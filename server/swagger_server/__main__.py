@@ -24,6 +24,7 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
+from swagger_server.database.models.core_api_metrics import CoreApiMetrics
 """
 -------------------------------------------------------------------------------
 END: Imports needed for alembic and flask using multiple model definition files

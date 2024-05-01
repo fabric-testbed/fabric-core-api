@@ -9,6 +9,7 @@ from swagger_server.models.announcements_details import AnnouncementsDetails
 from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.check_cookie import CheckCookie
+from swagger_server.models.core_api_metrics import CoreApiMetrics
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.projects import Projects
@@ -74,9 +75,9 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 
 def cors_200(response_body: Union[
-    ApiOptions, Bastionkeys, CheckCookie, People, PeopleDetails, Projects, ProjectsDetails, ServiceAuthDetails,
-    SshkeyPair, Sshkeys, Status200OkNoContent, Announcements, Version, Whoami, AnnouncementsDetails, TestbedInfo,
-    StorageMany, Storage
+    ApiOptions, Bastionkeys, CheckCookie, CoreApiMetrics, People, PeopleDetails, Projects, ProjectsDetails,
+    ServiceAuthDetails, SshkeyPair, Sshkeys, Status200OkNoContent, Announcements, Version, Whoami,
+    AnnouncementsDetails, TestbedInfo, StorageMany, Storage
 ] = None) -> cors_response:
     """
     Return 200 - OK

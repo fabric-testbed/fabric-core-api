@@ -19,6 +19,8 @@ tags:
   description: FABRIC Facility & Maintenance Announcements
 - name: check-cookie
   description: FABRIC Check Cookie
+- name: core-api-metrics
+  description: Core-API Metrics
 - name: people
   description: FABRIC People
 - name: projects
@@ -333,6 +335,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.check_cookie_controller
+  /core-api-metrics/overview:
+    get:
+      tags:
+      - core-api-metrics
+      summary: Core API metrics overview
+      description: Core API metrics overview
+      operationId: core_api_metrics_overview_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core_api_metrics'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
   /people:
     get:
       tags:
@@ -2876,6 +2899,16 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/check_cookie_results'
+    core_api_metrics:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              type: object
     person:
       required:
       - name
@@ -3846,6 +3879,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/check_cookie'
+    "200_core_api_metrics":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/core_api_metrics'
     "200_people":
       description: OK
       content:

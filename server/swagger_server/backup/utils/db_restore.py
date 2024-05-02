@@ -5,8 +5,9 @@ $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
  Schema |           Name            | Type  |  Owner
 --------+---------------------------+-------+----------
- public | alembic_version           | table | postgres
+ public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
+ public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
  public | people_email_addresses    | table | postgres  <-- people_email_addresses-v<VERSION>.json
@@ -35,13 +36,12 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(30 rows)
+(31 rows)
 
 Changes from v1.6.2 --> v1.7.0
 - table: people - added: receive_promotional_email
-
-Changes from v1.6.2 --> v1.7
 - TODO: table: projects - added: communities, projects_funding
+- TODO: table: core_api_metrics
 - TODO: table: projects_communities
 - TODO: table: projects_funding
 """
@@ -137,6 +137,37 @@ def restore_announcements_data():
             db.session.execute(stmt)
         db.session.commit()
         reset_serial_sequence(db_table='announcements', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+# export testbed_info as JSON output file
+def restore_core_api_metrics_data():
+    """
+    CoreApiMetrics(BaseMixin, db.Model):
+    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - json_data = db.Column(JSONB, nullable=False)
+    - last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
+    - metrics_type = db.Column(db.Enum(EnumCoreApiMetricsTypes), ...)
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/core_api_metrics-v{0}.json'.format(api_version), 'r') as infile:
+            core_api_metrics_dict = json.load(infile)
+        core_api_metrics = core_api_metrics_dict.get('core_api_metrics')
+        max_id = 0
+        for i in core_api_metrics:
+            t_id = int(i.get('id'))
+            if t_id > max_id:
+                max_id = t_id
+            stmt = insert(db.Table('core_api_metrics')).values(
+                id=t_id,
+                json_data=i.get('json_data'),
+                last_updated=i.get('last_updated') if i.get('last_updated') else None,
+                metrics_type=i.get('metrics_type')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='core_api_metrics', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -724,6 +755,28 @@ def restore_projects_communities_data():
         consoleLogger.error(exc)
 
 
+# export projects_creators as JSON output file
+def restore_projects_creators_data():
+    """
+    projects_creators
+    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
+    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(api_version), 'r') as infile:
+            projects_creators_dict = json.load(infile)
+        projects_creators = projects_creators_dict.get('projects_creators')
+        for pc in projects_creators:
+            stmt = insert(db.Table('projects_creators', metadata=db.Model.metadata)).values(
+                people_id=pc.get('people_id'),
+                projects_id=pc.get('projects_id')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
 # restore projects_funding from JSON input file
 def restore_projects_funding_data():
     """
@@ -755,28 +808,6 @@ def restore_projects_funding_data():
             db.session.execute(stmt)
         db.session.commit()
         reset_serial_sequence(db_table='projects_funding', seq_value=max_id + 1)
-    except Exception as exc:
-        consoleLogger.error(exc)
-
-
-# export projects_creators as JSON output file
-def restore_projects_creators_data():
-    """
-    projects_creators
-    - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
-    - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
-    """
-    try:
-        with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(api_version), 'r') as infile:
-            projects_creators_dict = json.load(infile)
-        projects_creators = projects_creators_dict.get('projects_creators')
-        for pc in projects_creators:
-            stmt = insert(db.Table('projects_creators', metadata=db.Model.metadata)).values(
-                people_id=pc.get('people_id'),
-                projects_id=pc.get('projects_id')
-            ).on_conflict_do_nothing()
-            db.session.execute(stmt)
-        db.session.commit()
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1384,6 +1415,10 @@ if __name__ == '__main__':
     consoleLogger.info('restore announcements table')
     restore_announcements_data()
 
+    # public | core_api_metrics           | table | postgres
+    consoleLogger.info('restore core_api_metrics table')
+    restore_core_api_metrics_data()
+
     #  public | groups                    | table | postgres
     consoleLogger.info('restore groups table')
     restore_groups_data()
@@ -1432,9 +1467,17 @@ if __name__ == '__main__':
     consoleLogger.info('restore profiles_references table')
     restore_profiles_references_data()
 
+    # public | projects_communities       | table | postgres
+    consoleLogger.info('restore projects_communities table')
+    restore_projects_communities_data()
+
     #  public | projects_creators         | table | postgres
     consoleLogger.info('restore projects_creators table')
     restore_projects_creators_data()
+
+    # public | projects_funding           | table | postgres
+    consoleLogger.info('restore projects_funding table')
+    restore_projects_funding_data()
 
     #  public | projects_members          | table | postgres
     consoleLogger.info('restore projects_members table')

@@ -7,6 +7,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
 --------+---------------------------+-------+----------
  public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
+ public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
  public | people_email_addresses    | table | postgres  <-- people_email_addresses-v<VERSION>.json
@@ -20,7 +21,9 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | profiles_projects         | table | postgres  <-- profiles_projects-v<VERSION>.json
  public | profiles_references       | table | postgres  <-- profiles_references-v<VERSION>.json
  public | projects                  | table | postgres  <-- projects-v<VERSION>.json
+ public | projects_communities      | table | postgres  <-- projects_communities-v<VERSION>.json
  public | projects_creators         | table | postgres  <-- projects_creators-v<VERSION>.json
+ public | projects_funding          | table | postgres  <-- projects_funding-v<VERSION>.json
  public | projects_members          | table | postgres  <-- projects_members-v<VERSION>.json
  public | projects_owners           | table | postgres  <-- projects_owners-v<VERSION>.json
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
@@ -33,7 +36,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(28 rows)
+(31 rows)
 """
 
 import json
@@ -50,12 +53,13 @@ from swagger_server.database.models.people import EmailAddresses, FabricGroups, 
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags
+from swagger_server.database.models.projects import FabricProjects, ProjectsTags, ProjectsCommunities, ProjectsFunding
 from swagger_server.database.models.sshkeys import FabricSshKeys
 from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
+from swagger_server.database.models.core_api_metrics import CoreApiMetrics
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -129,6 +133,31 @@ def dump_announcements_data():
     output_json = json.dumps(output_dict, indent=2)
     # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
+
+
+# export groups as JSON output file
+def dump_core_api_metrics_data():
+    """
+    CoreApiMetrics(BaseMixin, db.Model)
+    - json_data = db.Column(JSONB, nullable=False)
+    - last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
+    - metrics_type = db.Column(db.Enum(EnumCoreApiMetricsTypes), default=EnumCoreApiMetricsTypes.overview, nullable=False)
+    """
+    core_api_metrics = []
+    fab_core_api_metrics = CoreApiMetrics.query.order_by('id').all()
+    for m in fab_core_api_metrics:
+        data = {
+            'id': m.id,
+            'json_data': m.json_data,
+            'last_updated': normalize_date_to_utc(date_str=str(m.last_updated), return_type='str') if m.last_updated else None,
+            'metrics_type': m.metrics_type.name,
+        }
+        core_api_metrics.append(data)
+    output_dict = {'core_api_metrics': core_api_metrics}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/core_api_metrics-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
 
@@ -626,6 +655,29 @@ def dump_projects_data():
 
 
 # export projects_creators as JSON output file
+def dump_projects_communities_data():
+    """
+    projects_communities
+    - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    - community = db.Column(db.Text, nullable=False)
+    """
+    projects_communities = []
+    fab_projects_communities = ProjectsCommunities.query.order_by('id').all()
+    for c in fab_projects_communities:
+        data = {
+            'id': c.id,
+            'projects_id': c.projects_id,
+            'community': c.community
+        }
+        projects_communities.append(data)
+    output_dict = {'projects_communities': projects_communities}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/projects_communities-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
+
+
+# export projects_creators as JSON output file
 def dump_projects_creators_data():
     """
     projects_creators
@@ -645,6 +697,35 @@ def dump_projects_creators_data():
     output_json = json.dumps(output_dict, indent=2)
     # print(json.dumps(output_dict, indent=2))
     with open(BACKUP_DATA_DIR + '/projects_creators-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+        outfile.write(output_json)
+
+
+# export projects_creators as JSON output file
+def dump_projects_funding_data():
+    """
+    projects_funding
+    - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    - agency = db.Column(db.Text, nullable=False)
+    - award_amount = db.Column(db.Text, nullable=True)
+    - award_number = db.Column(db.Text, nullable=True)
+    - directorate = db.Column(db.Text, nullable=True)
+    """
+    projects_funding = []
+    fab_projects_funding = ProjectsFunding.query.order_by('id').all()
+    for pf in fab_projects_funding:
+        data = {
+            'agency': pf.agency,
+            'award_amount': pf.award_amount,
+            'award_number': pf.award_number,
+            'directorate': pf.directorate,
+            'id': pf.id,
+            'projects_id': pf.projects_id
+        }
+        projects_funding.append(data)
+    output_dict = {'projects_funding': projects_funding}
+    output_json = json.dumps(output_dict, indent=2)
+    # print(json.dumps(output_dict, indent=2))
+    with open(BACKUP_DATA_DIR + '/projects_funding-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
         outfile.write(output_json)
 
 
@@ -1006,6 +1087,10 @@ if __name__ == '__main__':
     consoleLogger.info('dump announcements table')
     dump_announcements_data()
 
+    #  public | core_api_metrics          | table | postgres
+    consoleLogger.info('dump core_api_metrics table')
+    dump_core_api_metrics_data()
+
     #  public | groups                    | table | postgres
     consoleLogger.info('dump groups table')
     dump_groups_data()
@@ -1058,9 +1143,17 @@ if __name__ == '__main__':
     consoleLogger.info('dump projects table')
     dump_projects_data()
 
+    # public | projects_communities       | table | postgres
+    consoleLogger.info('dump projects_communities table')
+    dump_projects_communities_data()
+
     #  public | projects_creators         | table | postgres
     consoleLogger.info('dump projects_creators table')
     dump_projects_creators_data()
+
+    # public | projects_funding           | table | postgres
+    consoleLogger.info('dump projects_funding table')
+    dump_projects_funding_data()
 
     #  public | projects_members          | table | postgres
     consoleLogger.info('dump projects_members table')

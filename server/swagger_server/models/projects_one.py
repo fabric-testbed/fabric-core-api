@@ -11,6 +11,7 @@ from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: F401,E501
 from swagger_server.models.project_funding import ProjectFunding  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
+from swagger_server.models.reference import Reference  # noqa: F401,E501
 from swagger_server.models.storage_one import StorageOne  # noqa: F401,E501
 from swagger_server import util
 
@@ -20,7 +21,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -33,6 +34,8 @@ class ProjectsOne(Model):
         :type description: str
         :param expires_on: The expires_on of this ProjectsOne.  # noqa: E501
         :type expires_on: str
+        :param fabric_matrix: The fabric_matrix of this ProjectsOne.  # noqa: E501
+        :type fabric_matrix: Reference
         :param facility: The facility of this ProjectsOne.  # noqa: E501
         :type facility: str
         :param is_locked: The is_locked of this ProjectsOne.  # noqa: E501
@@ -72,6 +75,7 @@ class ProjectsOne(Model):
             'created': datetime,
             'description': str,
             'expires_on': str,
+            'fabric_matrix': Reference,
             'facility': str,
             'is_locked': bool,
             'is_public': bool,
@@ -96,6 +100,7 @@ class ProjectsOne(Model):
             'created': 'created',
             'description': 'description',
             'expires_on': 'expires_on',
+            'fabric_matrix': 'fabric_matrix',
             'facility': 'facility',
             'is_locked': 'is_locked',
             'is_public': 'is_public',
@@ -118,6 +123,7 @@ class ProjectsOne(Model):
         self._created = created
         self._description = description
         self._expires_on = expires_on
+        self._fabric_matrix = fabric_matrix
         self._facility = facility
         self._is_locked = is_locked
         self._is_public = is_public
@@ -254,6 +260,27 @@ class ProjectsOne(Model):
         """
 
         self._expires_on = expires_on
+
+    @property
+    def fabric_matrix(self) -> Reference:
+        """Gets the fabric_matrix of this ProjectsOne.
+
+
+        :return: The fabric_matrix of this ProjectsOne.
+        :rtype: Reference
+        """
+        return self._fabric_matrix
+
+    @fabric_matrix.setter
+    def fabric_matrix(self, fabric_matrix: Reference):
+        """Sets the fabric_matrix of this ProjectsOne.
+
+
+        :param fabric_matrix: The fabric_matrix of this ProjectsOne.
+        :type fabric_matrix: Reference
+        """
+
+        self._fabric_matrix = fabric_matrix
 
     @property
     def facility(self) -> str:

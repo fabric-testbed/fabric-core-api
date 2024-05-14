@@ -29,7 +29,6 @@ from swagger_server.models.profile_people import ProfilePeople
 from swagger_server.models.profile_people_other_identities import ProfilePeopleOtherIdentities
 from swagger_server.models.profile_people_personal_pages import ProfilePeoplePersonalPages
 from swagger_server.models.profile_projects import ProfileProjects
-from swagger_server.models.profile_projects_references import ProfileProjectsReferences
 from swagger_server.models.project import Project
 from swagger_server.models.project_funding import ProjectFunding
 from swagger_server.models.project_membership import ProjectMembership
@@ -48,6 +47,7 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
+from swagger_server.models.reference import Reference
 from swagger_server.models.service_auth_details import ServiceAuthDetails
 from swagger_server.models.service_auth_one import ServiceAuthOne
 from swagger_server.models.sshkey_pair import SshkeyPair

@@ -3042,6 +3042,10 @@ components:
       - uuid
       type: object
       properties:
+        communities:
+          type: array
+          items:
+            type: string
         created:
           type: string
         description:
@@ -3108,6 +3112,8 @@ components:
           type: string
         expires_on:
           type: string
+        fabric_matrix:
+          $ref: '#/components/schemas/reference'
         facility:
           type: string
         is_locked:
@@ -3230,13 +3236,20 @@ components:
         references:
           type: array
           items:
-            $ref: '#/components/schemas/profile_projects_references'
+            $ref: '#/components/schemas/reference'
     preferences:
       type: object
       additionalProperties:
         type: boolean
       example:
         show_XYZ: true
+    reference:
+      type: object
+      properties:
+        description:
+          type: string
+        url:
+          type: string
     sshkey_pair:
       type: object
       allOf:
@@ -3801,13 +3814,6 @@ components:
         url:
           type: string
         type:
-          type: string
-    profile_projects_references:
-      type: object
-      properties:
-        description:
-          type: string
-        url:
           type: string
     sshkey_pair_results:
       type: object

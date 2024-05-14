@@ -48,18 +48,18 @@ from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
+from swagger_server.database.models.core_api_metrics import CoreApiMetrics
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, \
     Organizations, UserOrgAffiliations, UserSubjectIdentifiers
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags, ProjectsCommunities, ProjectsFunding
+from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, ProjectsTags
 from swagger_server.database.models.sshkeys import FabricSshKeys
 from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
-from swagger_server.database.models.core_api_metrics import CoreApiMetrics
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -157,7 +157,8 @@ def dump_core_api_metrics_data():
             data = {
                 'id': m.id,
                 'json_data': m.json_data,
-                'last_updated': normalize_date_to_utc(date_str=str(m.last_updated), return_type='str') if m.last_updated else None,
+                'last_updated': normalize_date_to_utc(date_str=str(m.last_updated),
+                                                      return_type='str') if m.last_updated else None,
                 'metrics_type': m.metrics_type.name,
             }
             core_api_metrics.append(data)
@@ -673,7 +674,8 @@ def dump_projects_data():
                 'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
                 'created_by_uuid': p.created_by_uuid,
                 'description': p.description,
-                'expires_on': normalize_date_to_utc(date_str=str(p.expires_on), return_type='str') if p.created else None,
+                'expires_on': normalize_date_to_utc(date_str=str(p.expires_on),
+                                                    return_type='str') if p.created else None,
                 'facility': p.facility,
                 'id': p.id,
                 'is_locked': p.is_locked,

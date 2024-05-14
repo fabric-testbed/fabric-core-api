@@ -7,7 +7,7 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.preferences import Preferences  # noqa: F401,E501
-from swagger_server.models.profile_projects_references import ProfileProjectsReferences  # noqa: F401,E501
+from swagger_server.models.reference import Reference  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -16,7 +16,7 @@ class ProfileProjects(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, award_information: str=None, goals: str=None, keywords: List[str]=None, notebooks: List[object]=None, preferences: Preferences=None, project_status: str=None, purpose: str=None, references: List[ProfileProjectsReferences]=None):  # noqa: E501
+    def __init__(self, award_information: str=None, goals: str=None, keywords: List[str]=None, notebooks: List[object]=None, preferences: Preferences=None, project_status: str=None, purpose: str=None, references: List[Reference]=None):  # noqa: E501
         """ProfileProjects - a model defined in Swagger
 
         :param award_information: The award_information of this ProfileProjects.  # noqa: E501
@@ -34,7 +34,7 @@ class ProfileProjects(Model):
         :param purpose: The purpose of this ProfileProjects.  # noqa: E501
         :type purpose: str
         :param references: The references of this ProfileProjects.  # noqa: E501
-        :type references: List[ProfileProjectsReferences]
+        :type references: List[Reference]
         """
         self.swagger_types = {
             'award_information': str,
@@ -44,7 +44,7 @@ class ProfileProjects(Model):
             'preferences': Preferences,
             'project_status': str,
             'purpose': str,
-            'references': List[ProfileProjectsReferences]
+            'references': List[Reference]
         }
 
         self.attribute_map = {
@@ -225,22 +225,22 @@ class ProfileProjects(Model):
         self._purpose = purpose
 
     @property
-    def references(self) -> List[ProfileProjectsReferences]:
+    def references(self) -> List[Reference]:
         """Gets the references of this ProfileProjects.
 
 
         :return: The references of this ProfileProjects.
-        :rtype: List[ProfileProjectsReferences]
+        :rtype: List[Reference]
         """
         return self._references
 
     @references.setter
-    def references(self, references: List[ProfileProjectsReferences]):
+    def references(self, references: List[Reference]):
         """Sets the references of this ProfileProjects.
 
 
         :param references: The references of this ProfileProjects.
-        :type references: List[ProfileProjectsReferences]
+        :type references: List[Reference]
         """
 
         self._references = references

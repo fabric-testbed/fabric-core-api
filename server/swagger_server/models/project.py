@@ -15,9 +15,11 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, communities: List[str]=None, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, uuid: str=None):  # noqa: E501
         """Project - a model defined in Swagger
 
+        :param communities: The communities of this Project.  # noqa: E501
+        :type communities: List[str]
         :param created: The created of this Project.  # noqa: E501
         :type created: str
         :param description: The description of this Project.  # noqa: E501
@@ -38,6 +40,7 @@ class Project(Model):
         :type uuid: str
         """
         self.swagger_types = {
+            'communities': List[str],
             'created': str,
             'description': str,
             'expires_on': str,
@@ -50,6 +53,7 @@ class Project(Model):
         }
 
         self.attribute_map = {
+            'communities': 'communities',
             'created': 'created',
             'description': 'description',
             'expires_on': 'expires_on',
@@ -60,6 +64,7 @@ class Project(Model):
             'tags': 'tags',
             'uuid': 'uuid'
         }
+        self._communities = communities
         self._created = created
         self._description = description
         self._expires_on = expires_on
@@ -80,6 +85,27 @@ class Project(Model):
         :rtype: Project
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def communities(self) -> List[str]:
+        """Gets the communities of this Project.
+
+
+        :return: The communities of this Project.
+        :rtype: List[str]
+        """
+        return self._communities
+
+    @communities.setter
+    def communities(self, communities: List[str]):
+        """Sets the communities of this Project.
+
+
+        :param communities: The communities of this Project.
+        :type communities: List[str]
+        """
+
+        self._communities = communities
 
     @property
     def created(self) -> str:

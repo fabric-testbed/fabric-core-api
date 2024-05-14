@@ -66,6 +66,7 @@ def get_person_by_login_claims() -> tuple[FabricPeople | Any, Any | None]:
         else:
             # sub value not part of claim information
             fab_person = FabricPeople()
+            claims = {'source': None}
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)

@@ -37,7 +37,7 @@ from swagger_server.response_code.decorators import login_or_token_required, log
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
-    update_profiles_projects_keywords, update_profiles_projects_references
+    update_profiles_projects_keywords, update_profiles_projects_references, get_fabric_matrix
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
     get_project_tags, get_projects_personnel, get_projects_storage, update_projects_communities, \
     update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders
@@ -128,7 +128,7 @@ def projects_funding_directorates_get(search=None):  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Funding_Directorate.Get()')
 
 
-@login_or_token_required
+# @login_or_token_required
 def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None,
                  order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
@@ -171,17 +171,23 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
         # get api_user
         api_user, id_source = get_person_by_login_claims()
         as_self = True
+        # establish if call is anonymous
+        if not id_source:
+            is_anonymous = True
+        else:
+            is_anonymous = False
         # check api_user active flag
-        if not api_user.active:
+        if not is_anonymous and not api_user.active:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user".format(api_user.display_name))
         # check for person_uuid
-        if person_uuid:
+        if not is_anonymous and person_uuid:
             fab_person = FabricPeople.query.filter_by(uuid=person_uuid).one_or_none()
             if not fab_person:
                 return cors_404(details="No match for Person with uuid = '{0}'".format(person_uuid))
         else:
             fab_person = None
+            person_uuid = None
         # set page to retrieve
         _page = int((offset + limit) / limit)
         # set sort_by and order_by
@@ -210,13 +216,18 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
             _sort_order_query = FabricProjects.name.asc()
             _sort_order_path = 'sort_by=name&order_by=asc&'
         # get paginated results
-        is_public_check = (
-                FabricProjects.is_public.is_(True) |
-                FabricProjects.project_creators.any(FabricPeople.id == api_user.id) |
-                FabricProjects.project_owners.any(FabricPeople.id == api_user.id) |
-                FabricProjects.project_members.any(FabricPeople.id == api_user.id) |
-                api_user.is_facility_operator()
-        )
+        if not is_anonymous:
+            is_public_check = (
+                    FabricProjects.is_public.is_(True) |
+                    FabricProjects.project_creators.any(FabricPeople.id == api_user.id) |
+                    FabricProjects.project_owners.any(FabricPeople.id == api_user.id) |
+                    FabricProjects.project_members.any(FabricPeople.id == api_user.id) |
+                    api_user.is_facility_operator()
+            )
+        else:
+            is_public_check = (
+                FabricProjects.is_public.is_(True)
+            )
         if not search and not person_uuid:
             base = '{0}/projects?{1}'.format(_SERVER_URL, _sort_order_path)
             results_page = FabricProjects.query.filter(
@@ -289,24 +300,31 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
         for item in results_page.items:
             project = Project()
             # set project attributes
-            project.created = str(item.created)
-            project.description = item.description
-            project.expires_on = str(item.expires_on)
-            project.facility = item.facility
-            project.is_public = item.is_public
-            if as_self:
-                project.memberships = get_project_membership(fab_project=item, fab_person=api_user)
+            if not is_anonymous:
+                project.created = str(item.created)
+                project.communities = [c.community for c in item.communities]
+                project.description = item.description
+                project.expires_on = str(item.expires_on)
+                project.facility = item.facility
+                project.is_public = item.is_public
+                if as_self:
+                    project.memberships = get_project_membership(fab_project=item, fab_person=api_user)
+                else:
+                    project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
+                project.name = item.name
+                if api_user.is_facility_operator():
+                    project.tags = get_project_tags(fab_project=item, fab_person=api_user)
+                elif as_self and (
+                        project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
+                    project.tags = get_project_tags(fab_project=item, fab_person=api_user)
+                else:
+                    project.tags = []
+                project.uuid = item.uuid
             else:
-                project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
-            project.name = item.name
-            if api_user.is_facility_operator():
-                project.tags = get_project_tags(fab_project=item, fab_person=api_user)
-            elif as_self and (
-                    project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
-                project.tags = get_project_tags(fab_project=item, fab_person=api_user)
-            else:
-                project.tags = []
-            project.uuid = item.uuid
+                project.communities = [c.community for c in item.communities]
+                project.description = item.description
+                project.name = item.name
+                project.uuid = item.uuid
             # add project to results
             response.results.append(project)
         # set links
@@ -736,7 +754,7 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
         return cors_500(details=details)
 
 
-@login_or_token_required
+# @login_or_token_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
 
@@ -750,8 +768,13 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
+        # establish if call is anonymous
+        if not id_source:
+            is_anonymous = True
+        else:
+            is_anonymous = False
         # check api_user active flag
-        if not api_user.active:
+        if not is_anonymous and not api_user.active:
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user".format(api_user.display_name))
         # get project by uuid
@@ -764,57 +787,70 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             db.session.commit()
         # set ProjectsOne object
         project_one = ProjectsOne()
-        # set required attributes for any uuid
-        project_one.communities = [c.community for c in fab_project.communities]
-        project_one.created = str(fab_project.created)
-        project_one.description = fab_project.description
-        project_one.expires_on = str(fab_project.expires_on)
-        project_one.facility = fab_project.facility
-        project_one.is_locked = fab_project.is_locked
-        project_one.is_public = fab_project.is_public
-        project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
-        project_one.name = fab_project.name
-        project_one.project_funding = [
-            {"agency": pf.agency, "award_amount": pf.award_amount,
-             "award_number": pf.award_number, "directorate": pf.directorate}
-            for pf in fab_project.project_funding]
-        project_one.uuid = fab_project.uuid
-        # set remaining attributes for project_creators, project_owners and project_members
-        if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
-                or api_user.is_facility_operator():
-            project_one.active = fab_project.active
-            project_one.modified = str(fab_project.modified)
-            project_one.preferences = {p.key: p.value for p in fab_project.preferences}
-            project_one.profile = get_profile_projects(
-                profile_projects_id=fab_project.profile.id,
-                as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner))
-            project_one.project_creators = get_projects_personnel(fab_project=fab_project, personnel_type='creators')
-            project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
-            project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
-            project_one.project_storage = get_projects_storage(fab_project=fab_project)
-            project_one.tags = [t.tag for t in fab_project.tags]
-            project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
-        # set remaining attributes for everyone else
+        if not is_anonymous:
+            # set required attributes for any uuid
+            project_one.communities = [c.community for c in fab_project.communities]
+            project_one.created = str(fab_project.created)
+            project_one.description = fab_project.description
+            project_one.expires_on = str(fab_project.expires_on)
+            project_one.fabric_matrix = get_fabric_matrix(project_id=fab_project.id)
+            project_one.facility = fab_project.facility
+            project_one.is_locked = fab_project.is_locked
+            project_one.is_public = fab_project.is_public
+            project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
+            project_one.name = fab_project.name
+            project_one.project_funding = [
+                {"agency": pf.agency, "award_amount": pf.award_amount,
+                 "award_number": pf.award_number, "directorate": pf.directorate}
+                for pf in fab_project.project_funding]
+            project_one.uuid = fab_project.uuid
+            # set remaining attributes for project_creators, project_owners and project_members
+            if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
+                    or api_user.is_facility_operator():
+                project_one.active = fab_project.active
+                project_one.modified = str(fab_project.modified)
+                project_one.preferences = {p.key: p.value for p in fab_project.preferences}
+                project_one.profile = get_profile_projects(
+                    profile_projects_id=fab_project.profile.id,
+                    as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner))
+                project_one.project_creators = get_projects_personnel(fab_project=fab_project, personnel_type='creators')
+                project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
+                project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
+                project_one.project_storage = get_projects_storage(fab_project=fab_project)
+                project_one.tags = [t.tag for t in fab_project.tags]
+                project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
+            # set remaining attributes for everyone else
+            else:
+                if not fab_project.is_public:
+                    return cors_403(
+                        details="User: '{0}' does not have access to this private project".format(api_user.display_name))
+                project_prefs = {p.key: p.value for p in fab_project.preferences}
+                project_one.active = fab_project.active
+                project_one.modified = str(fab_project.modified)
+                project_one.profile = get_profile_projects(
+                    profile_projects_id=fab_project.profile.id,
+                    as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
+                    'show_profile') else None
+                project_one.project_creators = get_projects_personnel(fab_project=fab_project,
+                                                                      personnel_type='creators')
+                project_one.project_members = get_projects_personnel(fab_project=fab_project,
+                                                                     personnel_type='members') if project_prefs.get(
+                    'show_project_members') else None
+                project_one.project_owners = get_projects_personnel(fab_project=fab_project,
+                                                                    personnel_type='owners') if project_prefs.get(
+                    'show_project_owners') else None
+                project_one.tags = []
         else:
-            if not fab_project.is_public:
-                return cors_403(
-                    details="User: '{0}' does not have access to this private project".format(api_user.display_name))
-            project_prefs = {p.key: p.value for p in fab_project.preferences}
-            project_one.active = fab_project.active
-            project_one.modified = str(fab_project.modified)
-            project_one.profile = get_profile_projects(
-                profile_projects_id=fab_project.profile.id,
-                as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
-                'show_profile') else None
-            project_one.project_creators = get_projects_personnel(fab_project=fab_project,
-                                                                  personnel_type='creators')
-            project_one.project_members = get_projects_personnel(fab_project=fab_project,
-                                                                 personnel_type='members') if project_prefs.get(
-                'show_project_members') else None
-            project_one.project_owners = get_projects_personnel(fab_project=fab_project,
-                                                                personnel_type='owners') if project_prefs.get(
-                'show_project_owners') else None
-            project_one.tags = []
+            project_one.communities = [c.community for c in fab_project.communities]
+            project_one.description = fab_project.description
+            project_one.fabric_matrix = get_fabric_matrix(project_id=fab_project.id)
+            project_one.is_public = fab_project.is_public
+            project_one.name = fab_project.name
+            project_one.project_funding = [
+                {"agency": pf.agency, "award_amount": pf.award_amount,
+                 "award_number": pf.award_number, "directorate": pf.directorate}
+                for pf in fab_project.project_funding]
+            project_one.uuid = fab_project.uuid
         # set project_details response
         response = ProjectsDetails()
         response.results = [project_one]

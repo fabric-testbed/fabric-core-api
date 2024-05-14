@@ -8,7 +8,8 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
     ProfilesKeywords, ProfilesReferences
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.models.profile_people import ProfilePeople, ProfilePeopleOtherIdentities, ProfilePeoplePersonalPages
-from swagger_server.models.profile_projects import ProfileProjects, ProfileProjectsReferences
+from swagger_server.models.profile_projects import ProfileProjects
+from swagger_server.models.reference import Reference
 from swagger_server.response_code.preferences_utils import create_profile_people_preferences, \
     create_profile_projects_preferences, delete_profile_projects_preferences
 from swagger_server.response_code.response_utils import array_difference
@@ -211,7 +212,7 @@ def update_profiles_projects_keywords(api_user: FabricPeople, fab_project: Fabri
 
 def update_profiles_projects_references(api_user: FabricPeople, fab_project: FabricProjects,
                                         fab_profile: FabricProfilesProjects,
-                                        references: [ProfileProjectsReferences] = None) -> None:
+                                        references: [Reference] = None) -> None:
     ref_orig = references_to_array(fab_profile.references)
     ref_new = references_to_array(references)
     ref_add = array_difference(ref_new, ref_orig)
@@ -260,3 +261,15 @@ def update_profiles_projects_references(api_user: FabricPeople, fab_project: Fab
             metricsLogger.info(log_msg)
             db.session.delete(fab_ref)
             db.session.commit()
+
+
+def get_fabric_matrix(project_id: int):
+    fab_references = ProfilesReferences.query.filter(
+        ProfilesReferences.profiles_projects_id == project_id
+    ).all()
+    fab_matrix = None
+    for ref in fab_references:
+        if str(ref.description).casefold() == 'fabric-matrix':
+            fab_matrix = {'description': ref.description, 'url': ref.url}
+            break
+    return fab_matrix

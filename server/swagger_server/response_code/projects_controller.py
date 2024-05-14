@@ -2,13 +2,14 @@ import os
 from datetime import datetime, timezone
 
 from sqlalchemy import func
+from sqlalchemy.sql import select
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesProjects
-from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
@@ -33,11 +34,11 @@ from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
-from swagger_server.response_code.decorators import login_or_token_required, login_required
+from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.preferences_utils import delete_projects_preferences
-from swagger_server.response_code.profiles_utils import delete_profile_projects, get_profile_projects, \
-    update_profiles_projects_keywords, update_profiles_projects_references, get_fabric_matrix
+from swagger_server.response_code.profiles_utils import delete_profile_projects, get_fabric_matrix, \
+    get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
     get_project_tags, get_projects_personnel, get_projects_storage, update_projects_communities, \
     update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders
@@ -239,20 +240,26 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
             base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
             if exact_match:
                 search_term = func.lower(search)
+                communities_projects_id = select(ProjectsCommunities.projects_id).where(
+                    func.lower(ProjectsCommunities.community) == search_term)
                 results_page = FabricProjects.query.filter(
                     is_public_check &
                     (FabricProjects.active.is_(True)) &
                     ((func.lower(FabricProjects.name) == search_term) |
                      (func.lower(FabricProjects.description) == search_term) |
-                     (func.lower(FabricProjects.uuid) == search_term))
+                     (func.lower(FabricProjects.uuid) == search_term) |
+                     (FabricProjects.id.in_(communities_projects_id)))
                 ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
             else:
+                communities_projects_id = select(ProjectsCommunities.projects_id).where(
+                    ProjectsCommunities.community.ilike("%" + search + "%"))
                 results_page = FabricProjects.query.filter(
                     is_public_check &
                     (FabricProjects.active.is_(True)) &
                     ((FabricProjects.name.ilike("%" + search + "%")) |
                      (FabricProjects.description.ilike("%" + search + "%")) |
-                     (FabricProjects.uuid == search))
+                     (FabricProjects.uuid == search) |
+                     (FabricProjects.id.in_(communities_projects_id)))
                 ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
@@ -813,7 +820,8 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 project_one.profile = get_profile_projects(
                     profile_projects_id=fab_project.profile.id,
                     as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner))
-                project_one.project_creators = get_projects_personnel(fab_project=fab_project, personnel_type='creators')
+                project_one.project_creators = get_projects_personnel(fab_project=fab_project,
+                                                                      personnel_type='creators')
                 project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
                 project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
                 project_one.project_storage = get_projects_storage(fab_project=fab_project)
@@ -823,13 +831,15 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             else:
                 if not fab_project.is_public:
                     return cors_403(
-                        details="User: '{0}' does not have access to this private project".format(api_user.display_name))
+                        details="User: '{0}' does not have access to this private project".format(
+                            api_user.display_name))
                 project_prefs = {p.key: p.value for p in fab_project.preferences}
                 project_one.active = fab_project.active
                 project_one.modified = str(fab_project.modified)
                 project_one.profile = get_profile_projects(
                     profile_projects_id=fab_project.profile.id,
-                    as_owner=(project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
+                    as_owner=(
+                                project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
                     'show_profile') else None
                 project_one.project_creators = get_projects_personnel(fab_project=fab_project,
                                                                       personnel_type='creators')

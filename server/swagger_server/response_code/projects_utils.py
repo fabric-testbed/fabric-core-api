@@ -454,6 +454,7 @@ def update_projects_project_funding(api_user: FabricPeople = None, fab_project: 
     # add projects funding
     for fs in fs_add:
         agency = fs.get('agency', None)
+        agency_other = fs.get('agency_other', None)
         award_amount = fs.get('award_amount', None)
         award_number = fs.get('award_number', None)
         directorate = fs.get('directorate', None)
@@ -468,6 +469,7 @@ def update_projects_project_funding(api_user: FabricPeople = None, fab_project: 
             fab_fs = ProjectsFunding()
             fab_fs.projects_id = fab_project.id
             fab_fs.agency = agency
+            fab_fs.agency_other = agency_other
             fab_fs.award_amount = award_amount
             fab_fs.award_number = award_number
             fab_fs.directorate = directorate
@@ -482,11 +484,13 @@ def update_projects_project_funding(api_user: FabricPeople = None, fab_project: 
     # remove projects funding
     for fs in fs_remove:
         agency = fs.get('agency', None)
+        agency_other = fs.get('agency_other', None)
         award_amount = fs.get('award_amount', None)
         award_number = fs.get('award_number', None)
         fab_fs = ProjectsFunding.query.filter(
             ProjectsFunding.projects_id == fab_project.id,
             ProjectsFunding.agency == agency,
+            ProjectsFunding.agency_other == agency_other,
             ProjectsFunding.award_amount == award_amount,
             ProjectsFunding.award_number == award_number
         ).one_or_none()

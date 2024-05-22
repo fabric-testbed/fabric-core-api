@@ -14,11 +14,13 @@ class ProjectsFundingPatchProjectFunding(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, agency: str=None, award_amount: str=None, award_number: str=None, directorate: str=None):  # noqa: E501
+    def __init__(self, agency: str=None, agency_other: str=None, award_amount: str=None, award_number: str=None, directorate: str=None):  # noqa: E501
         """ProjectsFundingPatchProjectFunding - a model defined in Swagger
 
         :param agency: The agency of this ProjectsFundingPatchProjectFunding.  # noqa: E501
         :type agency: str
+        :param agency_other: The agency_other of this ProjectsFundingPatchProjectFunding.  # noqa: E501
+        :type agency_other: str
         :param award_amount: The award_amount of this ProjectsFundingPatchProjectFunding.  # noqa: E501
         :type award_amount: str
         :param award_number: The award_number of this ProjectsFundingPatchProjectFunding.  # noqa: E501
@@ -28,6 +30,7 @@ class ProjectsFundingPatchProjectFunding(Model):
         """
         self.swagger_types = {
             'agency': str,
+            'agency_other': str,
             'award_amount': str,
             'award_number': str,
             'directorate': str
@@ -35,11 +38,13 @@ class ProjectsFundingPatchProjectFunding(Model):
 
         self.attribute_map = {
             'agency': 'agency',
+            'agency_other': 'agency_other',
             'award_amount': 'award_amount',
             'award_number': 'award_number',
             'directorate': 'directorate'
         }
         self._agency = agency
+        self._agency_other = agency_other
         self._award_amount = award_amount
         self._award_number = award_number
         self._directorate = directorate
@@ -75,6 +80,27 @@ class ProjectsFundingPatchProjectFunding(Model):
         """
 
         self._agency = agency
+
+    @property
+    def agency_other(self) -> str:
+        """Gets the agency_other of this ProjectsFundingPatchProjectFunding.
+
+
+        :return: The agency_other of this ProjectsFundingPatchProjectFunding.
+        :rtype: str
+        """
+        return self._agency_other
+
+    @agency_other.setter
+    def agency_other(self, agency_other: str):
+        """Sets the agency_other of this ProjectsFundingPatchProjectFunding.
+
+
+        :param agency_other: The agency_other of this ProjectsFundingPatchProjectFunding.
+        :type agency_other: str
+        """
+
+        self._agency_other = agency_other
 
     @property
     def award_amount(self) -> str:

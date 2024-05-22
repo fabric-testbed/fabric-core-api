@@ -139,6 +139,7 @@ class ProjectsFunding(BaseMixin, db.Model):
 
     projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     agency = db.Column(db.Text, nullable=False)
+    agency_other = db.Column(db.Text, nullable=True)
     award_amount = db.Column(db.Text, nullable=True)
     award_number = db.Column(db.Text, nullable=True)
     directorate = db.Column(db.Text, nullable=True)

@@ -801,6 +801,7 @@ def restore_projects_funding_data():
                 id=c_id,
                 projects_id=int(c.get('projects_id')),
                 agency=c.get('agency'),
+                agency_other=c.get('agency_other'),
                 award_amount=c.get('award_amount'),
                 award_number=c.get('award_number'),
                 directorate=c.get('directorate')

@@ -772,6 +772,7 @@ def dump_projects_funding_data():
         for pf in fab_projects_funding:
             data = {
                 'agency': pf.agency,
+                'agency_other': pf.agency_other,
                 'award_amount': pf.award_amount,
                 'award_number': pf.award_number,
                 'directorate': pf.directorate,

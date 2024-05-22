@@ -249,6 +249,7 @@ def people_services_auth_get(sub):  # noqa: E501
         # get api_user
         api_user, id_source = get_person_by_login_claims()
         api_user_subs = []
+        print(api_user, api_user.active, id_source)
         if api_user.active:
             api_user_subs = [s.sub for s in api_user.user_sub_identities]
         if id_source != IdSourceEnum.SERVICES.value and sub not in api_user_subs:

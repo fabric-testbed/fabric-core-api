@@ -49,28 +49,38 @@ def vouch_get_custom_claims() -> dict:
     try:
         token = request.headers.get('Authorization', None)
         if token:
-            return token_get_custom_claims(token=token.replace('Bearer ', ''))
-        # get base64 encoded gzipped vouch JWT
-        base64_encoded_gzip_vouch_jwt = request.cookies.get(os.getenv('VOUCH_COOKIE_NAME'))
-        # decode base64
-        encoded_gzip_vouch_jwt_bytes = base64.urlsafe_b64decode(base64_encoded_gzip_vouch_jwt)
-        # gzip decompress
-        vouch_jwt_bytes = gzip.decompress(encoded_gzip_vouch_jwt_bytes)
-        # decode bytes
-        vouch_jwt = vouch_jwt_bytes.decode('utf-8')
-        # decode JWT using Vouch Proxy secret key (do not verify aud)
-        vouch_json = jwt.decode(
-            jwt=vouch_jwt,
-            key=os.getenv('VOUCH_JWT_SECRET'),
-            algorithms=["HS256"],
-            options={"verify_aud": False}
-        )
-        claims = vouch_json.get('CustomClaims')
-        claims.update(source=IdSourceEnum.COOKIE.value)
-        return claims
+            claims = token_get_custom_claims(token=token.replace('Bearer ', ''))
+        else:
+            # get base64 encoded gzipped vouch JWT
+            base64_encoded_gzip_vouch_jwt = request.cookies.get(os.getenv('VOUCH_COOKIE_NAME'))
+            # decode base64
+            encoded_gzip_vouch_jwt_bytes = base64.urlsafe_b64decode(base64_encoded_gzip_vouch_jwt)
+            # gzip decompress
+            vouch_jwt_bytes = gzip.decompress(encoded_gzip_vouch_jwt_bytes)
+            # decode bytes
+            vouch_jwt = vouch_jwt_bytes.decode('utf-8')
+            # decode JWT using Vouch Proxy secret key (do not verify aud)
+            vouch_json = jwt.decode(
+                jwt=vouch_jwt,
+                key=os.getenv('VOUCH_JWT_SECRET'),
+                algorithms=["HS256"],
+                options={"verify_aud": False}
+            )
+            claims = vouch_json.get('CustomClaims')
+            claims.update(source=IdSourceEnum.COOKIE.value)
     except Exception as exc:
         logging.warning("Missing cookie: {0} - {1}".format(os.getenv('VOUCH_COOKIE_NAME'), exc))
-        return {}
+        claims = {
+            'aud': None,
+            'email': None,
+            'family_name': None,
+            'given_name': None,
+            'iss': None,
+            'name': None,
+            'source': None,
+            'sub': None
+        }
+    return claims
 
 
 def token_get_custom_claims(token: str) -> dict:
@@ -163,7 +173,16 @@ def token_get_custom_claims(token: str) -> dict:
             }
     except Exception as exc:
         print(exc)
-        claims = {}
+        claims = {
+            'aud': None,
+            'email': None,
+            'family_name': None,
+            'given_name': None,
+            'iss': None,
+            'name': None,
+            'source': None,
+            'sub': None
+        }
     s.close()
     return claims
 

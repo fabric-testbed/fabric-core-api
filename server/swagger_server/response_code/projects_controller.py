@@ -735,8 +735,14 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
             else:
                 project_funding = body.project_funding
                 for fs in project_funding:
+                    # agency must be from the pre-defined list
                     if fs.agency not in PROJECTS_FUNDING_AGENCIES.options:
                         details = "Attempting to add invalid funding agency '{0}'".format(fs.agency)
+                        consoleLogger.error(details)
+                        return cors_400(details=details)
+                    # agency_other can only be used when agency = Other
+                    if fs.agency_other and str(fs.agency).casefold() != "other":
+                        details = "Attempting to add invalid funding agency for Other '{0}'".format(fs.agency)
                         consoleLogger.error(details)
                         return cors_400(details=details)
                 update_projects_project_funding(api_user=api_user, fab_project=fab_project,
@@ -807,7 +813,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.memberships = get_project_membership(fab_project=fab_project, fab_person=api_user)
             project_one.name = fab_project.name
             project_one.project_funding = [
-                {"agency": pf.agency, "award_amount": pf.award_amount,
+                {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
             project_one.uuid = fab_project.uuid
@@ -857,7 +863,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.is_public = fab_project.is_public
             project_one.name = fab_project.name
             project_one.project_funding = [
-                {"agency": pf.agency, "award_amount": pf.award_amount,
+                {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
             project_one.uuid = fab_project.uuid

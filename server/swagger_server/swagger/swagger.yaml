@@ -3183,6 +3183,8 @@ components:
       properties:
         agency:
           type: string
+        agency_other:
+          type: string
         award_amount:
           type: string
         award_number:
@@ -3871,6 +3873,8 @@ components:
       type: object
       properties:
         agency:
+          type: string
+        agency_other:
           type: string
         award_amount:
           type: string

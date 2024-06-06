@@ -1,7 +1,17 @@
 import os
+import enum
 
 from swagger_server.database.db import db
 from swagger_server.database.models.mixins import BaseMixin, TimestampMixin, TrackingMixin
+
+
+class EnumProjectTypes(enum.Enum):
+    educational = 1
+    industry = 2
+    maintenance = 3
+    research = 4
+    tutorial = 5
+
 
 projects_creators = db.Table('projects_creators',
                              db.Model.metadata,
@@ -55,6 +65,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - project_members - one-to-many people
     - project_owners - one-to-many people
     - projects_storage - one-to-many storage
+    - project_topics - array of topics as string
+    - project_type - project type as string from EnumProjectTypes
     - tags - array of tag strings
     - token_holders - one-to-many people
     - uuid - unique universal identifier
@@ -86,9 +98,11 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
                                      backref=db.backref('project_owners', lazy=True))
     project_storage = db.relationship('FabricStorage', secondary=projects_storage, lazy='subquery',
                                       backref=db.backref('projects_storage', lazy=True))
+    project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
     tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     token_holders = db.relationship('FabricPeople', secondary=token_holders, lazy='subquery',
                                     backref=db.backref('token_holders', lazy=True))
+    topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
 
@@ -143,3 +157,18 @@ class ProjectsFunding(BaseMixin, db.Model):
     award_amount = db.Column(db.Text, nullable=True)
     award_number = db.Column(db.Text, nullable=True)
     directorate = db.Column(db.Text, nullable=True)
+
+
+class ProjectsTopics(BaseMixin, db.Model):
+    """
+    - id - primary key (BaseMixin)
+    - projects_id - foreignkey link to projects table
+    - topic - topic as string
+    """
+    query: db.Query
+    __tablename__ = 'projects_topics'
+    __table_args__ = (db.UniqueConstraint('projects_id', 'topic', name='constraint_projects_topics'),)
+    __allow_unmapped__ = True
+
+    projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    topic = db.Column(db.Text, nullable=False)

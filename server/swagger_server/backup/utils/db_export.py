@@ -28,6 +28,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | projects_owners           | table | postgres  <-- projects_owners-v<VERSION>.json
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
  public | projects_tags             | table | postgres  <-- projects_tags-v<VERSION>.json
+ public | projects_topics           | table | postgres  <-- projects_topics-v<VERSION>.json
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
@@ -36,7 +37,10 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(31 rows)
+(32 rows)
+
+Changes from v1.6.2 --> v1.7.0
+- TODO: table: projects_topics
 """
 
 import json

@@ -6,7 +6,7 @@ from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
 from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, \
-    ProjectsTags
+    ProjectsTags, ProjectsTopics, EnumProjectTypes
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
@@ -68,6 +68,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.modified = now
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
+    fab_project.project_type = EnumProjectTypes.research
     fab_project.uuid = uuid4()
     db.session.add(fab_project)
     db.session.commit()
@@ -442,6 +443,45 @@ def update_projects_communities(api_user: FabricPeople = None, fab_project: Fabr
             log_msg = 'Project event prj:{0} modify-remove community \'{1}\' by usr:{2}'.format(str(fab_project.uuid),
                                                                                                 comm,
                                                                                                 str(api_user.uuid))
+            metricsLogger.info(log_msg)
+
+
+def update_projects_topics(api_user: FabricPeople = None, fab_project: FabricProjects = None,
+                           topics: [str] = None) -> None:
+    topics_orig = [p.topic for p in fab_project.topics]
+    topics_new = topics
+    topics_add = array_difference(topics_new, topics_orig)
+    topics_remove = array_difference(topics_orig, topics_new)
+    # add projects topics
+    for topic in topics_add:
+        topic = str(topic).casefold()
+        fab_topic = ProjectsTopics.query.filter(
+            ProjectsTopics.projects_id == fab_project.id, ProjectsTopics.topic == topic).one_or_none()
+        if not fab_topic:
+            fab_topic = ProjectsTopics()
+            fab_topic.projects_id = fab_project.id
+            fab_topic.topic = topic
+            fab_project.topics.append(fab_topic)
+            db.session.commit()
+            # metrics log - Project topic added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add community Networks by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-add topic \'{1}\' by usr:{2}'.format(str(fab_project.uuid),
+                                                                                         topic,
+                                                                                         str(api_user.uuid))
+            metricsLogger.info(log_msg)
+    # remove projects topics
+    for topic in topics_remove:
+        fab_topic = ProjectsTopics.query.filter(
+            ProjectsTopics.projects_id == fab_project.id, ProjectsTopics.topic == topic).one_or_none()
+        if fab_topic:
+            fab_project.topics.remove(fab_topic)
+            db.session.delete(fab_topic)
+            db.session.commit()
+            # metrics log - Project topic removed:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add community Network by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-remove topic \'{1}\' by usr:{2}'.format(str(fab_project.uuid),
+                                                                                            topic,
+                                                                                            str(api_user.uuid))
             metricsLogger.info(log_msg)
 
 

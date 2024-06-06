@@ -16,6 +16,7 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
+from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -66,13 +67,15 @@ def projects_funding_directorates_get(search=None):  # noqa: E501
     return rc.projects_funding_directorates_get(search)
 
 
-def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
+def projects_get(search=None, search_set=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None, order_by=None):  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param search_set: search set
+    :type search_set: str
     :param exact_match: Exact Match for Search term
     :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
@@ -88,7 +91,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
 
     :rtype: Projects
     """
-    return rc.projects_get(search, exact_match, offset, limit, person_uuid, sort_by, order_by)
+    return rc.projects_get(search, search_set, exact_match, offset, limit, person_uuid, sort_by, order_by)
 
 
 def projects_post(body=None):  # noqa: E501
@@ -132,6 +135,19 @@ def projects_profile_preferences_get(search=None):  # noqa: E501
     return rc.projects_profile_preferences_get(search)
 
 
+def projects_project_types_get(search=None):  # noqa: E501
+    """List of Projects Type options
+
+    List of Projects Type options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    return rc.projects_project_types_get(search)
+
+
 def projects_tags_get(search=None):  # noqa: E501
     """List of Projects Tags options
 
@@ -146,9 +162,9 @@ def projects_tags_get(search=None):  # noqa: E501
 
 
 def projects_uuid_communities_patch(uuid, body=None):  # noqa: E501
-    """Update Projects Communities as Project creator/owner
+    """Update Project Communities as Project creator/owner
 
-    Update Projects Communities as Project creator/owner # noqa: E501
+    Update Project Communities as Project creator/owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -331,9 +347,9 @@ def projects_uuid_project_owners_patch(operation, uuid, body=None):  # noqa: E50
 
 
 def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
-    """Update Projects Tags as Facility Operator
+    """Update Project Tags as Facility Operator
 
-    Update Projects Tags as Facility Operator # noqa: E501
+    Update Project Tags as Facility Operator # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -364,3 +380,20 @@ def projects_uuid_token_holders_patch(operation, uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProjectsTokenHoldersPatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_token_holders_patch(operation, uuid, body)
+
+
+def projects_uuid_topics_patch(uuid, body=None):  # noqa: E501
+    """Update Project Topics as Project creator/owner
+
+    Update Project Topics as Project creator/owner # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Topics as Project creator/owner
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsTopicsPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_topics_patch(uuid, body)

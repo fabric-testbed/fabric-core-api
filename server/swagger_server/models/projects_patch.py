@@ -15,7 +15,7 @@ class ProjectsPatch(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, description: str=None, is_public: bool=None, name: str=None, preferences: Preferences=None):  # noqa: E501
+    def __init__(self, description: str=None, is_public: bool=None, name: str=None, preferences: Preferences=None, project_type: str='research'):  # noqa: E501
         """ProjectsPatch - a model defined in Swagger
 
         :param description: The description of this ProjectsPatch.  # noqa: E501
@@ -26,24 +26,29 @@ class ProjectsPatch(Model):
         :type name: str
         :param preferences: The preferences of this ProjectsPatch.  # noqa: E501
         :type preferences: Preferences
+        :param project_type: The project_type of this ProjectsPatch.  # noqa: E501
+        :type project_type: str
         """
         self.swagger_types = {
             'description': str,
             'is_public': bool,
             'name': str,
-            'preferences': Preferences
+            'preferences': Preferences,
+            'project_type': str
         }
 
         self.attribute_map = {
             'description': 'description',
             'is_public': 'is_public',
             'name': 'name',
-            'preferences': 'preferences'
+            'preferences': 'preferences',
+            'project_type': 'project_type'
         }
         self._description = description
         self._is_public = is_public
         self._name = name
         self._preferences = preferences
+        self._project_type = project_type
 
     @classmethod
     def from_dict(cls, dikt) -> 'ProjectsPatch':
@@ -139,3 +144,30 @@ class ProjectsPatch(Model):
         """
 
         self._preferences = preferences
+
+    @property
+    def project_type(self) -> str:
+        """Gets the project_type of this ProjectsPatch.
+
+
+        :return: The project_type of this ProjectsPatch.
+        :rtype: str
+        """
+        return self._project_type
+
+    @project_type.setter
+    def project_type(self, project_type: str):
+        """Sets the project_type of this ProjectsPatch.
+
+
+        :param project_type: The project_type of this ProjectsPatch.
+        :type project_type: str
+        """
+        allowed_values = ["educational", "industry", "maintenance", "research", "tutorial"]  # noqa: E501
+        if project_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `project_type` ({0}), must be one of {1}"
+                .format(project_type, allowed_values)
+            )
+
+        self._project_type = project_type

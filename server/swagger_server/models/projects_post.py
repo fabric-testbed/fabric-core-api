@@ -14,7 +14,7 @@ class ProjectsPost(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, description: str=None, is_public: bool=True, name: str=None, project_members: List[str]=None, project_owners: List[str]=None):  # noqa: E501
+    def __init__(self, description: str=None, is_public: bool=True, name: str=None, project_members: List[str]=None, project_owners: List[str]=None, project_type: str='research'):  # noqa: E501
         """ProjectsPost - a model defined in Swagger
 
         :param description: The description of this ProjectsPost.  # noqa: E501
@@ -27,13 +27,16 @@ class ProjectsPost(Model):
         :type project_members: List[str]
         :param project_owners: The project_owners of this ProjectsPost.  # noqa: E501
         :type project_owners: List[str]
+        :param project_type: The project_type of this ProjectsPost.  # noqa: E501
+        :type project_type: str
         """
         self.swagger_types = {
             'description': str,
             'is_public': bool,
             'name': str,
             'project_members': List[str],
-            'project_owners': List[str]
+            'project_owners': List[str],
+            'project_type': str
         }
 
         self.attribute_map = {
@@ -41,13 +44,15 @@ class ProjectsPost(Model):
             'is_public': 'is_public',
             'name': 'name',
             'project_members': 'project_members',
-            'project_owners': 'project_owners'
+            'project_owners': 'project_owners',
+            'project_type': 'project_type'
         }
         self._description = description
         self._is_public = is_public
         self._name = name
         self._project_members = project_members
         self._project_owners = project_owners
+        self._project_type = project_type
 
     @classmethod
     def from_dict(cls, dikt) -> 'ProjectsPost':
@@ -170,3 +175,30 @@ class ProjectsPost(Model):
         """
 
         self._project_owners = project_owners
+
+    @property
+    def project_type(self) -> str:
+        """Gets the project_type of this ProjectsPost.
+
+
+        :return: The project_type of this ProjectsPost.
+        :rtype: str
+        """
+        return self._project_type
+
+    @project_type.setter
+    def project_type(self, project_type: str):
+        """Sets the project_type of this ProjectsPost.
+
+
+        :param project_type: The project_type of this ProjectsPost.
+        :type project_type: str
+        """
+        allowed_values = ["educational", "industry", "maintenance", "research", "tutorial"]  # noqa: E501
+        if project_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `project_type` ({0}), must be one of {1}"
+                .format(project_type, allowed_values)
+            )
+
+        self._project_type = project_type

@@ -28,6 +28,7 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | projects_owners           | table | postgres  <-- projects_owners-v<VERSION>.json
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
  public | projects_tags             | table | postgres  <-- projects_tags-v<VERSION>.json
+ public | projects_topics           | table | postgres  <-- projects_topics-v<VERSION>.json
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
@@ -36,14 +37,15 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(31 rows)
+(32 rows)
 
 Changes from v1.6.2 --> v1.7.0
 - table: people - added: receive_promotional_email
-- TODO: table: projects - added: communities, projects_funding
-- TODO: table: core_api_metrics
-- TODO: table: projects_communities
-- TODO: table: projects_funding
+- TODO: table: projects_topics
+- table: *core_api_metrics
+- table: *projects_communities
+- table: *projects_funding
+- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
 """
 
 import json
@@ -679,6 +681,8 @@ def restore_projects_data():
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
+    - project_topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
+    - project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - token_holders = db.relationship('FabricPeople', secondary=token_holders)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
@@ -711,10 +715,12 @@ def restore_projects_data():
                 name=p.get('name'),
                 # preferences=p.get('preferences'), <-- restore_preferences_data()
                 # profile=p.get('profile.id'), <-- restore_projects_profiles_data()
-                # project_creators=p.get('project_creators'), <-- restore_projects_creators_data()
-                # project_members=p.get('project_members'), <-- restore_projects_members_data()
-                # project_owners=p.get('project_owners'), <-- restore_projects_owners_data()
-                # project_storage=p.get('project_storage'), <-- restore_project_storage_data()
+                # project_creators=p.get('projects_creators'), <-- restore_projects_creators_data()
+                # project_members=p.get('projects_members'), <-- restore_projects_members_data()
+                # project_owners=p.get('projects_owners'), <-- restore_projects_owners_data()
+                # project_storage=p.get('projects_storage'), <-- restore_projects_storage_data()
+                # project_topics=p.get('projects_topics'), <-- restore_projects_topics_data()
+                project_type=p.get('project_type') if p.get('project_type') else 'research',
                 # tags=p.get('tags'), <-- restore_projects_tags_data()
                 # token_holders=p.get('token_holders'), <-- restore_token_holders_data()
                 uuid=p.get('uuid')
@@ -904,6 +910,35 @@ def restore_projects_tags_data():
             db.session.execute(stmt)
         db.session.commit()
         reset_serial_sequence(db_table='projects_tags', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+# export projects_tags as JSON output file
+def restore_projects_topics_data():
+    """
+    ProjectsTopics(BaseMixin, db.Model)
+    - id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    - topic = db.Column(db.Text, nullable=False)
+    """
+    try:
+        with open(BACKUP_DATA_DIR + '/projects_topics-v{0}.json'.format(api_version), 'r') as infile:
+            projects_topics_dict = json.load(infile)
+        projects_topics = projects_topics_dict.get('projects_topics')
+        max_id = 0
+        for c in projects_topics:
+            c_id = int(c.get('id'))
+            if c_id > max_id:
+                max_id = c_id
+            stmt = insert(db.Table('projects_topics')).values(
+                id=c_id,
+                projects_id=int(c.get('projects_id')),
+                topic=c.get('topic')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='projects_topics', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1537,11 +1572,11 @@ if __name__ == '__main__':
     verify_project_expiry()
 
     # import missing groups, roles, and project cous from COmanage
-    consoleLogger.info('import missing groups from COmanage')
-    import_missing_groups_from_comanage()
-
-    consoleLogger.info('import missing roles from COmanage')
-    import_missing_roles_from_comanage()
-
-    consoleLogger.info('import missing projects from COUs')
-    import_missing_projects_cous()
+    # consoleLogger.info('import missing groups from COmanage')
+    # import_missing_groups_from_comanage()
+    #
+    # consoleLogger.info('import missing roles from COmanage')
+    # import_missing_roles_from_comanage()
+    #
+    # consoleLogger.info('import missing projects from COUs')
+    # import_missing_projects_cous()

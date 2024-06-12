@@ -47,6 +47,7 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
+from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch
 from swagger_server.models.reference import Reference
 from swagger_server.models.service_auth_details import ServiceAuthDetails
 from swagger_server.models.service_auth_one import ServiceAuthOne

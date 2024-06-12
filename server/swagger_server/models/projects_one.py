@@ -21,7 +21,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -62,10 +62,14 @@ class ProjectsOne(Model):
         :type project_owners: List[Person]
         :param project_storage: The project_storage of this ProjectsOne.  # noqa: E501
         :type project_storage: List[StorageOne]
+        :param project_type: The project_type of this ProjectsOne.  # noqa: E501
+        :type project_type: str
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
         :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
         :type token_holders: List[Person]
+        :param topics: The topics of this ProjectsOne.  # noqa: E501
+        :type topics: List[str]
         :param uuid: The uuid of this ProjectsOne.  # noqa: E501
         :type uuid: str
         """
@@ -89,8 +93,10 @@ class ProjectsOne(Model):
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
+            'project_type': str,
             'tags': List[str],
             'token_holders': List[Person],
+            'topics': List[str],
             'uuid': str
         }
 
@@ -114,8 +120,10 @@ class ProjectsOne(Model):
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
+            'project_type': 'project_type',
             'tags': 'tags',
             'token_holders': 'token_holders',
+            'topics': 'topics',
             'uuid': 'uuid'
         }
         self._active = active
@@ -137,8 +145,10 @@ class ProjectsOne(Model):
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
+        self._project_type = project_type
         self._tags = tags
         self._token_holders = token_holders
+        self._topics = topics
         self._uuid = uuid
 
     @classmethod
@@ -564,6 +574,27 @@ class ProjectsOne(Model):
         self._project_storage = project_storage
 
     @property
+    def project_type(self) -> str:
+        """Gets the project_type of this ProjectsOne.
+
+
+        :return: The project_type of this ProjectsOne.
+        :rtype: str
+        """
+        return self._project_type
+
+    @project_type.setter
+    def project_type(self, project_type: str):
+        """Sets the project_type of this ProjectsOne.
+
+
+        :param project_type: The project_type of this ProjectsOne.
+        :type project_type: str
+        """
+
+        self._project_type = project_type
+
+    @property
     def tags(self) -> List[str]:
         """Gets the tags of this ProjectsOne.
 
@@ -604,6 +635,27 @@ class ProjectsOne(Model):
         """
 
         self._token_holders = token_holders
+
+    @property
+    def topics(self) -> List[str]:
+        """Gets the topics of this ProjectsOne.
+
+
+        :return: The topics of this ProjectsOne.
+        :rtype: List[str]
+        """
+        return self._topics
+
+    @topics.setter
+    def topics(self, topics: List[str]):
+        """Sets the topics of this ProjectsOne.
+
+
+        :param topics: The topics of this ProjectsOne.
+        :type topics: List[str]
+        """
+
+        self._topics = topics
 
     @property
     def uuid(self) -> str:

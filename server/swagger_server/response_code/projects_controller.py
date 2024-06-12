@@ -1,15 +1,16 @@
+import enum
 import os
 from datetime import datetime, timezone
 
 from sqlalchemy import func
-from sqlalchemy.sql import select
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesProjects
-from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities
+from swagger_server.database.models.projects import EnumProjectTypes, FabricProjects, ProjectsCommunities, \
+    ProjectsTopics
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects
 from swagger_server.models.projects import Project, Projects  # noqa: E501
@@ -25,6 +26,7 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
+from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLinks
@@ -41,11 +43,19 @@ from swagger_server.response_code.profiles_utils import delete_profile_projects,
     get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
     get_project_tags, get_projects_personnel, get_projects_storage, update_projects_communities, \
-    update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders
+    update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders, \
+    update_projects_topics
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
+
+
+class EnumSearchSetTypes(enum.Enum):
+    communities = 1
+    description = 2
+    topics = 3
+    type = 4
 
 
 @login_required
@@ -130,14 +140,16 @@ def projects_funding_directorates_get(search=None):  # noqa: E501
 
 
 # @login_or_token_required
-def projects_get(search=None, exact_match=None, offset=None, limit=None, person_uuid=None, sort_by=None,
-                 order_by=None) -> Projects:  # noqa: E501
+def projects_get(search=None, search_set=None, exact_match=None, offset=None, limit=None, person_uuid=None,
+                 sort_by=None, order_by=None) -> Projects:  # noqa: E501
     """Search for FABRIC Projects
 
     Search for FABRIC Projects by name # noqa: E501
 
     :param search: search term applied
     :type search: str
+    :param search_set: search set
+    :type search_set: str
     :param exact_match: Exact Match for Search term
     :type exact_match: bool
     :param offset: number of items to skip before starting to collect the result set
@@ -152,20 +164,30 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
     :type order_by: str
 
     :rtype: Projects
-
     {
-        "created": "string",
-        "description": "string",
-        "expires_on": "string",
-        "facility": "string",
-        "is_public": true,
-        "memberships": {
-            "is_creator": false,
-            "is_member": false,
-            "is_owner": false
-        },
-        "name": "string",
-        "uuid": "string"
+      "communities": [
+        "string"
+      ],
+      "created": "string",
+      "description": "string",
+      "expires_on": "string",
+      "facility": "string",
+      "is_public": true,
+      "memberships": {
+        "is_creator": false,
+        "is_member": false,
+        "is_owner": false,
+        "is_token_holder": false
+      },
+      "name": "string",
+      "tags": [
+        "string"
+      ],
+      "topics": [
+        "string"
+      ],
+      "project_type": "string",
+      "uuid": "string"
     }
     """
     try:
@@ -175,23 +197,24 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
         # establish if call is anonymous
         if not id_source:
             is_anonymous = True
+            fab_person = None
+            if person_uuid:
+                return cors_400(
+                    details='project_get(): anonymous api_user is not allowed to search projects by person_uuid')
         else:
             is_anonymous = False
-        # check api_user active flag
-        if not is_anonymous and not api_user.active:
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user".format(api_user.display_name))
-        # check for person_uuid
-        if not is_anonymous and person_uuid:
-            fab_person = FabricPeople.query.filter_by(uuid=person_uuid).one_or_none()
-            if not fab_person:
-                return cors_404(details="No match for Person with uuid = '{0}'".format(person_uuid))
-        else:
-            fab_person = None
-            person_uuid = None
+            # check api_user active flag
+            if not api_user.active:
+                return cors_403(
+                    details="User: '{0}' is not registered as an active FABRIC user".format(api_user.display_name))
+            # check for person_uuid
+            if person_uuid:
+                fab_person = FabricPeople.query.filter_by(uuid=person_uuid).one_or_none()
+                if not fab_person:
+                    return cors_404(details="No match for Person with uuid = '{0}'".format(person_uuid))
         # set page to retrieve
         _page = int((offset + limit) / limit)
-        # set sort_by and order_by
+        # sort_order query and path
         if sort_by.casefold() == 'created_time':
             if order_by.casefold() == 'asc':
                 _sort_order_query = FabricProjects.created.asc()
@@ -216,7 +239,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
         else:
             _sort_order_query = FabricProjects.name.asc()
             _sort_order_path = 'sort_by=name&order_by=asc&'
-        # get paginated results
+        # is_public_check
         if not is_anonymous:
             is_public_check = (
                     FabricProjects.is_public.is_(True) |
@@ -229,6 +252,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
             is_public_check = (
                 FabricProjects.is_public.is_(True)
             )
+        # search by search_set
         if not search and not person_uuid:
             base = '{0}/projects?{1}'.format(_SERVER_URL, _sort_order_path)
             results_page = FabricProjects.query.filter(
@@ -238,29 +262,62 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
                 page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
             base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
-            if exact_match:
+            # search_set
+            if search_set == EnumSearchSetTypes.communities.name:
+                # communities
+                search_terms = [i.strip() for i in str(search).casefold().split(',')]
+                project_ids = [p.projects_id for p in ProjectsCommunities.query.filter(
+                    func.lower(ProjectsCommunities.community).in_(search_terms)
+                ).all()]
+                if exact_match:
+                    project_ids = [p for p in project_ids if project_ids.count(p) == len(search_terms)]
+                projects_query = (FabricProjects.id.in_(list(set(project_ids))))
+            elif search_set == EnumSearchSetTypes.description.name:
+                # description
                 search_term = func.lower(search)
-                communities_projects_id = select(ProjectsCommunities.projects_id).where(
-                    func.lower(ProjectsCommunities.community) == search_term)
-                results_page = FabricProjects.query.filter(
-                    is_public_check &
-                    (FabricProjects.active.is_(True)) &
-                    ((func.lower(FabricProjects.name) == search_term) |
-                     (func.lower(FabricProjects.description) == search_term) |
-                     (func.lower(FabricProjects.uuid) == search_term) |
-                     (FabricProjects.id.in_(communities_projects_id)))
-                ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+                if not exact_match:
+                    projects_query = ((FabricProjects.name.ilike("%" + search + "%")) |
+                                      (FabricProjects.description.ilike("%" + search + "%")) |
+                                      (FabricProjects.uuid == search))
+                else:
+                    projects_query = ((func.lower(FabricProjects.name) == search_term) |
+                                      (func.lower(FabricProjects.description) == search_term) |
+                                      (func.lower(FabricProjects.uuid) == search_term))
+            elif search_set == EnumSearchSetTypes.topics.name:
+                # topics
+                search_terms = [i.strip().replace(' ', '-') for i in str(search).casefold().split(',')]
+                project_ids = [p.projects_id for p in ProjectsTopics.query.filter(
+                    func.lower(ProjectsTopics.topic).in_(search_terms)
+                ).all()]
+                if exact_match:
+                    project_ids = [p for p in project_ids if project_ids.count(p) == len(search_terms)]
+                projects_query = (FabricProjects.id.in_(list(set(project_ids))))
+            elif search_set == EnumSearchSetTypes.type.name:
+                # types
+                search_terms = [i.strip() for i in str(search).casefold().split(',')]
+                valid_types = [e.name for e in EnumProjectTypes]
+                for t in search_terms:
+                    if t not in valid_types:
+                        details = 'projects_get(): Invalid parameter for search_set = type, {0}'.format(t)
+                        consoleLogger.error(details)
+                        return cors_400(details=details)
+                projects_query = FabricProjects.project_type.in_(search_terms)
             else:
-                communities_projects_id = select(ProjectsCommunities.projects_id).where(
-                    ProjectsCommunities.community.ilike("%" + search + "%"))
+                # invalid search_set
+                search_term = func.lower(search)
+                projects_query = ((func.lower(FabricProjects.name) == search_term) |
+                                  (func.lower(FabricProjects.description) == search_term) |
+                                  (func.lower(FabricProjects.uuid) == search_term))
+            try:
                 results_page = FabricProjects.query.filter(
                     is_public_check &
                     (FabricProjects.active.is_(True)) &
-                    ((FabricProjects.name.ilike("%" + search + "%")) |
-                     (FabricProjects.description.ilike("%" + search + "%")) |
-                     (FabricProjects.uuid == search) |
-                     (FabricProjects.id.in_(communities_projects_id)))
+                    projects_query
                 ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+            except Exception as exc:
+                details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)
+                consoleLogger.error(details)
+                return cors_500(details=details)
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:
@@ -319,6 +376,7 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
                 else:
                     project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
                 project.name = item.name
+                project.project_type = item.project_type.name
                 if api_user.is_facility_operator():
                     project.tags = get_project_tags(fab_project=item, fab_person=api_user)
                 elif as_self and (
@@ -326,11 +384,15 @@ def projects_get(search=None, exact_match=None, offset=None, limit=None, person_
                     project.tags = get_project_tags(fab_project=item, fab_person=api_user)
                 else:
                     project.tags = []
+                project.topics = [t.topic for t in item.topics]
                 project.uuid = item.uuid
             else:
+                # anonymous user project list
                 project.communities = [c.community for c in item.communities]
                 project.description = item.description
                 project.name = item.name
+                project.project_type = item.project_type.name
+                project.topics = [t.topic for t in item.topics]
                 project.uuid = item.uuid
             # add project to results
             response.results.append(project)
@@ -454,6 +516,32 @@ def projects_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Profile.Preferences.Get()')
 
 
+def projects_project_types_get(search=None):  # noqa: E501
+    """List of Projects Type options
+
+    List of Projects Type options # noqa: E501
+
+    :param search: search term applied
+    :type search: str
+
+    :rtype: ApiOptions
+    """
+    try:
+        if search:
+            results = [e.name for e in EnumProjectTypes if search.casefold() in e.name]
+        else:
+            results = [e.name for e in EnumProjectTypes]
+        response = ApiOptions()
+        response.results = results
+        response.size = len(results)
+        response.status = 200
+        response.type = 'projects.project_types'
+        return cors_200(response_body=response)
+    except Exception as exc:
+        consoleLogger.error("projects_project_types_get(search=None): {0}".format(exc))
+        return cors_500(details='Ooops! something has gone wrong with projects_project_types_get()')
+
+
 @login_required
 def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
     """List of Projects Tags options
@@ -571,40 +659,50 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
                 not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
                 details="User: '{0}' is not the creator of the project".format(api_user.display_name))
-        # delete Tags
-        update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
-        # delete Preferences
-        delete_projects_preferences(fab_project=fab_project)
-        # delete Profile
-        delete_profile_projects(api_user=api_user, fab_project=fab_project)
-        # remove project_creators
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators',
-                                  operation='batch')
-        # remove project_members
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members',
-                                  operation='batch')
-        # remove project_owners
-        update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
-                                  operation='batch')
-        # remove project_storage allocations
-        for s in fab_project.project_storage:
-            s.active = False
-            fab_project.project_storage.remove(s)
+        if os.getenv('CORE_API_DEPLOYMENT_TIER') in ['beta', 'production']:
+            # do not allow projects to be hard deleted, instead lock and make inactive
+            fab_project.active = False
+            fab_project.is_locked = True
             db.session.commit()
-        # remove communities
-        update_projects_communities(fab_project=fab_project, communities=[])
-        # remove project funding
-        update_projects_project_funding(fab_project=fab_project, project_funding=[])
-        # delete COUs -pc, -pm, -po, -tk
-        delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
-        delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
-        delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
-        delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
-        # delete FabricProject
-        details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-        consoleLogger.info(details)
-        db.session.delete(fab_project)
-        db.session.commit()
+            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        else:
+            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+            consoleLogger.error(details)
+            return cors_500(details=details)
+            # delete Tags
+            update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
+            # delete Preferences
+            delete_projects_preferences(fab_project=fab_project)
+            # delete Profile
+            delete_profile_projects(api_user=api_user, fab_project=fab_project)
+            # remove project_creators
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators',
+                                      operation='batch')
+            # remove project_members
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members',
+                                      operation='batch')
+            # remove project_owners
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
+                                      operation='batch')
+            # remove project_storage allocations
+            for s in fab_project.project_storage:
+                s.active = False
+                fab_project.project_storage.remove(s)
+                db.session.commit()
+            # remove communities
+            update_projects_communities(fab_project=fab_project, communities=[])
+            # remove project funding
+            update_projects_project_funding(fab_project=fab_project, project_funding=[])
+            # delete COUs -pc, -pm, -po, -tk
+            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
+            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
+            delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+            delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
+            # delete FabricProject
+            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+            consoleLogger.info(details)
+            db.session.delete(fab_project)
+            db.session.commit()
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = details
@@ -816,6 +914,8 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
+            project_one.topics = [t.topic for t in fab_project.topics]
+            project_one.project_type = fab_project.project_type.name
             project_one.uuid = fab_project.uuid
             # set remaining attributes for project_creators, project_owners and project_members
             if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
@@ -845,7 +945,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 project_one.profile = get_profile_projects(
                     profile_projects_id=fab_project.profile.id,
                     as_owner=(
-                                project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
+                            project_one.memberships.is_creator or project_one.memberships.is_owner)) if project_prefs.get(
                     'show_profile') else None
                 project_one.project_creators = get_projects_personnel(fab_project=fab_project,
                                                                       personnel_type='creators')
@@ -857,6 +957,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                     'show_project_owners') else None
                 project_one.tags = []
         else:
+            # anonymous user project details
             project_one.communities = [c.community for c in fab_project.communities]
             project_one.description = fab_project.description
             project_one.fabric_matrix = get_fabric_matrix(project_id=fab_project.id)
@@ -866,6 +967,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
+            project_one.project_type = fab_project.project_type.name
             project_one.uuid = fab_project.uuid
         # set project_details response
         response = ProjectsDetails()
@@ -1010,6 +1112,27 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                     metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: projects_uuid_patch(): 'preferences' - {0}".format(exc))
+        # check for project type
+        try:
+            if len(body.project_type) != 0:
+                if body.project_type in [EnumProjectTypes.maintenance.name, EnumProjectTypes.industry.name] and not api_user.is_facility_operator():
+                    details = 'Invalid project type: {0}, must be set by facility-operator'.format(body.project_type)
+                    consoleLogger.error(details)
+                    return cors_400(details=details)
+                else:
+                    fab_project.project_type = body.project_type
+                    db.session.commit()
+                    consoleLogger.info('UPDATE: FabricProjects: uuid={0}, description={1}'.format(
+                        fab_project.uuid, fab_project.description))
+                    # metrics log - Project description modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify description DESC by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify description \'{1}\' by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        fab_project.description,
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_patch(): 'project_type' - {0}".format(exc))
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -1622,5 +1745,62 @@ def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
 
     except Exception as exc:
         details = 'Oops! something went wrong with projects_uuid_token_holders_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+def projects_uuid_topics_patch(uuid: str,
+                               body: ProjectsTopicsPatch = None) -> Status200OkNoContent:  # noqa: E501
+    """
+    NOTE: spaces between words in a single topic are replaced with dashes: " " --> "-"
+    Update Project Topics as Project creator/owner # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Topics as Project creator/owner
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # check if the project is locked or has exceeded expiry date
+        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
+            return cors_423(
+                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
+                                                                                  str(fab_project.expires_on)))
+        # verify active project_creator, project_owner or facility-operator
+        if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_project_creator(str(fab_project.uuid)) and \
+                not api_user.is_project_owner(str(fab_project.uuid)):
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
+                    api_user.display_name))
+        # check for topics
+        try:
+            topics = [str(t.replace(" ", "-")).casefold() for t in body.topics]
+            update_projects_topics(api_user=api_user, fab_project=fab_project,
+                                   topics=topics)
+            consoleLogger.info('UPDATE: FabricProjects: uuid={0}, topics={1}'.format(
+                fab_project.uuid, [c.topic for c in fab_project.topics]))
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_topics_patch(): 'communities' - {0}".format(exc))
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_topics_patch(): {0}'.format(exc)
         consoleLogger.error(details)
         return cors_500(details=details)

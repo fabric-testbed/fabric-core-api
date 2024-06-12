@@ -49,7 +49,14 @@ FABRIC Projects
 ### `/projects`
 
 - GET - retrieve list of projects
-  - param: `search` - optional search, 3 or more characters - matches on `name`
+    - param: `search` - optional search, 3 or more characters. 
+        - free-text search term
+        - comma separated terms convert to search array for communities, topics, and type searches
+  - param: `search_set` - optional search set parameter
+        - `communities` - search over project communities
+        - `description` - search over project name, description, and uuid (default)
+        - `topics` - search over project topics
+        - `type` - search over project type
   - param: `exact_match` - boolean flag that when true will only return exact matches found for a search query (default is false)
   - param: `offset` - number of items to skip before starting to collect the result set
   - param: `limit` - maximum number of results to return per page (1 or more)
@@ -66,6 +73,55 @@ FABRIC Projects
   - data: `project_owners` as array of string (optional)
   - authz: `project-leads` - only role allowed to create a new project
   - response type: singleton `projects.details`
+
+### `/projects/communities`
+
+- GET - retrieve list of valid FABRIC community options
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.communities`
+
+### `/projects/funding-agencies`
+
+- GET - retrieve list of valid funding agencies
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.funding_agencies`
+
+### `/projects/funding-directorates`
+
+- GET - retrieve list of valid funding directorates (NSF)
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.funding_directorates`
+
+### `/projects/preferences`
+
+- GET - retrieve list of valid FABRIC project preference types
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.preferences`
+
+### `/projects/profile/preferences`
+
+- GET - retrieve list of valid FABRIC project profile preference types
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.profile.preferences`
+
+### `/projects/project-types`
+
+- GET - retrieve list of valid FABRIC project types
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.project_types`
+
+### `/projects/tags`
+
+- GET - retrieve list of valid FABRIC project permission tags
+  - param: `search` - optional text search, 3 or more characters
+  - authz: open to all authenticated users
+  - response type: singleton `projects.tags`
 
 ### `/projects/{uuid}`
 
@@ -89,7 +145,26 @@ FABRIC Projects
   - authz: `facility-operators` can remove any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/profile`
+### `/projects/{uuid}/communities`
+
+- PATCH - update an existing project communities
+  - data: `communities` as array of string (optional)
+  - authz: project creator/owner can update their project
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects/{uuid}/expires-on`
+
+- PATCH - update an existing project expires on date
+  - data: `expires_on` as a string date / datetime
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects/{uuid}/personnel`
+
+- PATCH: Deprecated
+
+### `/projects/{uuid}/profile`
 
 - PATCH - update an existing project profile
   - data: `award_information` as string (optional - 5 or more characters
@@ -110,7 +185,7 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/project-creators`
+### `/projects/{uuid}/project-creators`
 
 - PATCH - update existing project creator personnel
   - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
@@ -118,7 +193,20 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/project-members`
+### `/projects/{uuid}/project-funding`
+
+- PATCH - update an existing project communities
+  - data: `project_funding` as array of funding objects (optional)
+  - data: `agency` as string, attribute of funding object
+  - data: `agency_other` as string, attribute of funding object (optional)
+  - data: `award_amount` as string, attribute of funding object (optional)
+  - data: `award_number` as string, attribute of funding object (optional)
+  - data: `directorate` as string, attribute of funding object (optional)
+  - authz: project creator/owner can update their project
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects/{uuid}/project-members`
 
 - PATCH - update existing project member personnel
   - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
@@ -127,7 +215,7 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/project-owners`
+### `/projects/{uuid}/project-owners`
 
 - PATCH - update existing project owner personnel
   - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
@@ -136,34 +224,13 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/tags`
+### `/projects/{uuid}/tags`
 
 - PATCH - update an existing project permission tags
   - data: `tags` as array of string (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
-
-### `/projects/preferences`
-
-- GET - retrieve list of valid FABRIC project preference types
-  - param: `search` - optional text search, 3 or more characters
-  - authz: open to all authenticated users
-  - response type: singleton `projects.preferences`
-
-### `/projects/profile/preferences`
-
-- GET - retrieve list of valid FABRIC project profile preference types
-  - param: `search` - optional text search, 3 or more characters
-  - authz: open to all authenticated users
-  - response type: singleton `projects.profile.preferences`
-
-### `/projects/tags`
-
-- GET - retrieve list of valid FABRIC project permission tags
-  - param: `search` - optional text search, 3 or more characters
-  - authz: open to all authenticated users
-  - response type: singleton `projects.tags`
 
 ### `/projects{uuid}/token-holders`
 
@@ -173,12 +240,43 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
+### `/projects/{uuid}/topics`
+
+- PATCH - update an existing project topics list
+  - data: `topics` as array of string (optional)
+  - authz: project creator/owner can update their project
+  - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
 ## Response and Request formats
 
-### GET response as list
+### GET projects response as list
+
+Anonymous User:
 
 ```
 {
+    "communities": [
+        "<string>",
+      ],
+    "description": "<string>",
+    "is_public": <boolean>,
+    "name": "<string>",
+    "project_type": "<string>",
+    "topics": [
+        "<string>",
+    ],
+    "uuid": "<string>"
+}
+```
+
+FABRIC User:
+
+```
+{
+    "communities": [
+        "<string>",
+      ],
     "created": "<string>",
     "description": "<string>",
     "facility": "<string>",
@@ -190,16 +288,50 @@ FABRIC Projects
         "is_token_holder": <boolean>  <-- based on identity of the API user
     },
     "name": "<string>",
-    "tags": [ ... ],             <-- shown to facility-operators and project creator/member/owner
+    "project_type": "<string>",
+    "tags": [
+        "<string>",                   <-- shown to facility-operators and project creator/member/owner
+    ],             
+    "topics": [
+        "<string>",
+    ],
     "uuid": "<string>"
 }
 ```
 
-### GET response as detail - facility-operators and project creator/member/owner
+### GET projects response as detail - facility-operators and project creator/member/owner
+
+Anonymous User:
 
 ```
 {
     "active": <boolean>,
+    "communities": [
+        "<string>",
+      ],
+    "description": "<string>",
+    "is_locked": <boolean>,
+    "is_public": <boolean>,
+    "name": "<string>",
+    "project_funding": [
+        "<funding_object>",
+    ],
+    "project_type": "<string>",
+    "topics": [
+        "<string>",
+    ],
+    "uuid": "<string>"
+}
+```
+
+FABRIC User:
+
+```
+{
+    "active": <boolean>,
+    "communities": [
+        "<string>",
+      ],
     "created": "<string>",
     "description": "<string>",
     "expires_on": "<string>",
@@ -214,6 +346,7 @@ FABRIC Projects
     },
     "modified": "<string>",
     "name": "<string>",
+    "project_type": "<string>",
     "preferences": {
         "show_profile": <boolean>,
         "show_project_members": <boolean>,
@@ -223,8 +356,6 @@ FABRIC Projects
     "profile": {
         "award_information": "<string>",
         "goals": "<string>",
-        "keywords": [ ... ],
-        "notebooks": [ ... ],
         "preferences": {
             "show_award_information": <boolean>,
             "show_goals": <boolean>,
@@ -239,46 +370,18 @@ FABRIC Projects
         "references": [ ... ]
     },
     "project_creators": [ ... ],
+    "project_funding": [
+        "<funding_object>",
+    ],
     "project_members": [ ... ],
     "project_owners": [ ... ],
     "project_storage": [ ... ],
-    "tags": [ ... ],
-    "uuid": "<string>"
-}
-```
-
-### GET response as detail - public project - non members
-
-```
-{
-    "active": <boolean>,
-    "created": "<string>",
-    "description": "<string>",
-    "expires_on": "<string>",
-    "facility": "<string>",
-    "is_locked": <boolean>,
-    "is_public": <boolean>,
-    "memberships": {
-        "is_creator": <boolean>,         <-- based on identity of the API user
-        "is_member": <boolean>,          <-- based on identity of the API user
-        "is_owner": <boolean>,           <-- based on identity of the API user
-        "is_token_holder": <boolean>     <-- based on identity of the API user
-    },
-    "modified": "<string>",
-    "name": "<string>",
-    "profile": {                         <-- based on preference "show_profile"
-        "award_information": "<string>", <-- based on preference "show_ award_information"
-        "goals": "<string>",             <-- based on preference "show_goals"
-        "keywords": [ ... ],             <-- based on preference "show_keywords"
-        "notebooks": [ ... ],            <-- based on preference "show_notebooks"
-        "project_status": "<string>",    <-- based on preference "show_project_status"
-        "purpose": "<string>",           <-- based on preference "show_purpose"
-        "references": [ ... ]            <-- based on preference "show_references"
-    },
-    "project_creators": [ ... ],
-    "project_members": [ ... ],          <-- based on preference "show_project_members"
-    "project_owners": [ ... ],           <-- based on preference "show_project_owners"
-    "publications": [ ... ],             <-- based on preference "show_publications"
+    "tags": [
+        "<string>",                   <-- shown to facility-operators and project creator/member/owner
+    ],            
+    "topics": [
+        "<string>",
+    ],
     "uuid": "<string>"
 }
 ```
@@ -311,7 +414,8 @@ FABRIC Projects
         "show_project_members": <boolean>, <-- optional - true/false
         "show_project_owners": <boolean>,  <-- optional - true/false
         "show_publications": <boolean>     <-- optional - true/false
-    }
+    },
+   "project_type": "<string>"              <-- optional - project_type options
 }
 ```
 
@@ -326,6 +430,16 @@ Valid project `preferences` keys:
 ]
 ```
 
+### PATCH project communities request body
+
+```
+{
+    "communities": [
+        "<string>"
+    ]
+}
+```
+
 ### PATCH project expires-on request body
 
 ```
@@ -333,6 +447,9 @@ Valid project `preferences` keys:
     "expires_on": "<string>" <-- optional - Date/Time
 }
 ```
+
+### PATCH project personnel request body
+Deprecated
 
 ### PATCH project profile request body
 
@@ -410,6 +527,22 @@ Valid `references` format:
 }
 ```
 
+### PATCH project-funding request body
+
+```
+    {
+    "project_funding": [       <-- optional - array of funding objects as string
+        {
+            "agency": "<string>",
+            "agency_other": "<string>",
+            "award_amount": "<string>",
+            "award_number": "<string>",
+            "directorate": "<string>"
+        }
+    ]
+}
+```
+
 ### PATCH project-members request body
 
 ```
@@ -478,6 +611,16 @@ Valid `project_tags`:
 ```
 {
     "token_holders": [       <-- optional - array of uuid as string
+        "<string>"
+    ]
+}
+```
+
+### PATCH project topics request body
+
+```
+{
+    "topics": [              <-- optional - array of topics as string
         "<string>"
     ]
 }

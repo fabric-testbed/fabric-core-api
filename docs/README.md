@@ -8,6 +8,7 @@ API endpoints
 
 - [/announcements](./announcements.md) - API endpoint (release 1.3)
 - [/check-cookie](./check-cookie.md) - API endpoint (release 1.6)
+- [/core-api-metrics](./core-api-metrics.md) - API endpoint (release 1.7)
 - [/people](./people.md) - API endpoint (release 1.0)
 - [/projects](./projects.md) - API endpoint (release 1.0)
 - [/sshkeys](./sshkeys.md) - API endpoint (release 1.3)
@@ -38,6 +39,11 @@ Check OIDC authentication cookie claims
 
 - GET: `/check-cookie`
 
+### core-api-metrics
+Core API metrics data
+
+- GET: `/core-api-metrics/overview`
+
 ### people
 FABRIC People
 
@@ -55,19 +61,27 @@ FABRIC Projects
 
 - GET: `/projects`
 - POST: `/projects`
+- GET: `/projects/communities`
+- GET: `/projects/funding-agencies`
+- GET: `/projects/funding-directorates`
+- GET: `/projects/preferences`
+- GET: `/projects/profile/preferences`
+- GET: `/projects/project-types`
+- GET: `/projects/tags`
 - GET: `/projects/{uuid}`
-- PATCH: `/projects/{uuid}`
 - DELETE: `/projects/{uuid}`
+- PATCH: `/projects/{uuid}`
+- PATCH: `/projects/{uuid}/communities`
 - PATCH: `/projects/{uuid}/expires-on`
+- PATCH: `/projects/{uuid}/personnel` *deprecated
 - PATCH: `/projects/{uuid}/profile`
 - PATCH: `/projects/{uuid}/project-creators`
+- PATCH: `/projects/{uuid}/project-funding`
 - PATCH: `/projects/{uuid}/project-members`
 - PATCH: `/projects/{uuid}/project-owners`
 - PATCH: `/projects/{uuid}/tags`
 - PATCH: `/projects/{uuid}/token-holders`
-- GET: `/projects/preferences`
-- GET: `/projects/profile/preferences`
-- GET: `/projects/tags`
+- PATCH: `/projects/{uuid}/topics`
 
 ### publications
 FABRIC Publications (release TBD)

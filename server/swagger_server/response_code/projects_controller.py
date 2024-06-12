@@ -535,7 +535,7 @@ def projects_project_types_get(search=None):  # noqa: E501
         response.results = results
         response.size = len(results)
         response.status = 200
-        response.type = 'projects.project-types'
+        response.type = 'projects.project_types'
         return cors_200(response_body=response)
     except Exception as exc:
         consoleLogger.error("projects_project_types_get(search=None): {0}".format(exc))

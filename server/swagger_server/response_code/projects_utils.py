@@ -127,6 +127,22 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
     log_msg = 'Project event prj:{0} create by usr:{1}'.format(str(fab_project.uuid), str(project_creator.uuid))
     metricsLogger.info(log_msg)
+    # add Slice.Multisite tag
+    tags_add = ['Slice.Multisite']
+    for tag in tags_add:
+        fab_tag = ProjectsTags.query.filter(
+            ProjectsTags.projects_id == fab_project.id, ProjectsTags.tag == tag).one_or_none()
+        if not fab_tag:
+            fab_tag = ProjectsTags()
+            fab_tag.projects_id = fab_project.id
+            fab_tag.tag = tag
+            fab_project.tags.append(fab_tag)
+            db.session.commit()
+            # metrics log - Project tag added:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add tag Net.Peering by usr:fead-beaf-fead-beaf
+            log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
+                                                                                       str(project_creator.uuid))
+            metricsLogger.info(log_msg)
 
     return fab_project
 

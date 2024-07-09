@@ -19,7 +19,7 @@ from swagger_server.response_code.response_utils import array_difference
 
 
 def project_funding_to_array(n):
-    return [{'agency': x.agency, 'award_amount': x.award_amount,
+    return [{'agency': x.agency, 'agency_other': x.agency_other, 'award_amount': x.award_amount,
              'award_number': x.award_number, 'directorate': x.directorate} for x in n]
 
 
@@ -517,10 +517,11 @@ def update_projects_project_funding(api_user: FabricPeople = None, fab_project: 
         fab_fs = ProjectsFunding.query.filter(
             ProjectsFunding.projects_id == fab_project.id,
             ProjectsFunding.agency == agency,
+            ProjectsFunding.agency_other == agency_other,
             ProjectsFunding.award_amount == award_amount,
-            ProjectsFunding.award_number == award_number
+            ProjectsFunding.award_number == award_number,
+            ProjectsFunding.directorate == directorate
         ).one_or_none()
-        print(fab_fs)
         if not fab_fs:
             fab_fs = ProjectsFunding()
             fab_fs.projects_id = fab_project.id
@@ -543,12 +544,14 @@ def update_projects_project_funding(api_user: FabricPeople = None, fab_project: 
         agency_other = fs.get('agency_other', None)
         award_amount = fs.get('award_amount', None)
         award_number = fs.get('award_number', None)
+        directorate = fs.get('directorate', None)
         fab_fs = ProjectsFunding.query.filter(
             ProjectsFunding.projects_id == fab_project.id,
             ProjectsFunding.agency == agency,
             ProjectsFunding.agency_other == agency_other,
             ProjectsFunding.award_amount == award_amount,
-            ProjectsFunding.award_number == award_number
+            ProjectsFunding.award_number == award_number,
+            ProjectsFunding.directorate == directorate
         ).one_or_none()
         if fab_fs:
             fab_project.project_funding.remove(fab_fs)

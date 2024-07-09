@@ -58,7 +58,6 @@ class EnumSearchSetTypes(enum.Enum):
     type = 4
 
 
-@login_required
 def projects_communities_get(search=None):  # noqa: E501
     """List of Projects Communities options
 
@@ -85,7 +84,6 @@ def projects_communities_get(search=None):  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with Projects.Communities.Get()')
 
 
-@login_required
 def projects_funding_agencies_get(search=None):  # noqa: E501
     """List of Projects Funding Agency options
 
@@ -112,7 +110,6 @@ def projects_funding_agencies_get(search=None):  # noqa: E501
         return cors_500(details='Ooops! something has gone wrong with projects_funding_agencies_get()')
 
 
-@login_required
 def projects_funding_directorates_get(search=None):  # noqa: E501
     """List of Projects Funding Directorate options
 

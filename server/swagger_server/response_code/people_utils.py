@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional, Tuple
 from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
@@ -17,7 +17,7 @@ from swagger_server.response_code.projects_utils import remove_project_token_hol
 from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
-def get_person_by_login_claims() -> FabricPeople:
+def get_person_by_login_claims() -> tuple[FabricPeople | Any, Any | None]:
     """
     Attempt to get FABRIC person based on 'sub' claim
 
@@ -34,40 +34,45 @@ def get_person_by_login_claims() -> FabricPeople:
     """
     try:
         claims = vouch_get_custom_claims()
-        # search for existing fab_person by sub
-        fab_person_id = UserSubjectIdentifiers.query.filter(
-            UserSubjectIdentifiers.sub == str(claims.get('sub'))
-        ).one_or_none()
-        if fab_person_id:
-            fab_person = FabricPeople.query.filter_by(
-                id=fab_person_id.people_id
-            ).first()
-        else:
-            # check COmanage for user by sub
-            co_person = api.copeople_view_per_identifier(
-                identifier=claims.get('sub'), distinct_by_id=True
-            ).get('CoPeople', [])
-            if co_person:
-                # co_person exists - try to get fab_person by co_person_id
-                fab_person = FabricPeople.query.filter(
-                    FabricPeople.co_person_id == co_person[0].get('Id')
-                ).one_or_none()
-                if fab_person:
-                    # fab_person exists, update person to pick up new sub from COmanage
-                    update_fabric_person(fab_person=fab_person)
-                else:
-                    # fab_person does not exist, create a new user account from login
-                    fab_person = create_fabric_person_from_login(claims=claims)
+        if claims.get('sub') is not None:
+            # search for existing fab_person by sub
+            fab_person_id = UserSubjectIdentifiers.query.filter(
+                UserSubjectIdentifiers.sub == str(claims.get('sub'))
+            ).one_or_none()
+            if fab_person_id:
+                fab_person = FabricPeople.query.filter_by(
+                    id=fab_person_id.people_id
+                ).first()
             else:
-                # co_person does not exist, return empty fab_person object
-                fab_person = FabricPeople()
-                consoleLogger.debug('OIDC - invalid sub: {0}'.format(claims))
+                # check COmanage for user by sub
+                co_person = api.copeople_view_per_identifier(
+                    identifier=claims.get('sub'), distinct_by_id=True
+                ).get('CoPeople', [])
+                if co_person:
+                    # co_person exists - try to get fab_person by co_person_id
+                    fab_person = FabricPeople.query.filter(
+                        FabricPeople.co_person_id == co_person[0].get('Id')
+                    ).one_or_none()
+                    if fab_person:
+                        # fab_person exists, update person to pick up new sub from COmanage
+                        update_fabric_person(fab_person=fab_person)
+                    else:
+                        # fab_person does not exist, create a new user account from login
+                        fab_person = create_fabric_person_from_login(claims=claims)
+                else:
+                    # co_person does not exist, return empty fab_person object
+                    fab_person = FabricPeople()
+                    consoleLogger.debug('OIDC - invalid sub: {0}'.format(claims))
+        else:
+            # sub value not part of claim information
+            fab_person = FabricPeople()
     except Exception as exc:
         details = 'Oops! something went wrong with get_person_by_login_claims(): {0}'.format(exc)
         consoleLogger.error(details)
+        claims = {'source': 'exception'}
         fab_person = FabricPeople()
 
-    return fab_person
+    return fab_person, claims.get('source')
 
 
 def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:

@@ -8,9 +8,11 @@ from six import BytesIO
 from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: E501
 from swagger_server.models.projects import Projects  # noqa: E501
+from swagger_server.models.projects_communities_patch import ProjectsCommunitiesPatch  # noqa: E501
 from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch  # noqa: E501
 from swagger_server.models.projects_details import ProjectsDetails  # noqa: E501
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch  # noqa: E501
+from swagger_server.models.projects_funding_patch import ProjectsFundingPatch  # noqa: E501
 from swagger_server.models.projects_members_patch import ProjectsMembersPatch  # noqa: E501
 from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # noqa: E501
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
@@ -18,6 +20,7 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
+from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
 from swagger_server.models.status400_bad_request import Status400BadRequest  # noqa: E501
 from swagger_server.models.status401_unauthorized import Status401Unauthorized  # noqa: E501
@@ -31,12 +34,52 @@ from swagger_server.test import BaseTestCase
 class TestProjectsController(BaseTestCase):
     """ProjectsController integration test stubs"""
 
+    def test_projects_communities_get(self):
+        """Test case for projects_communities_get
+
+        List of Projects Communities options
+        """
+        query_string = [('search', 'search_example')]
+        response = self.client.open(
+            '/projects/communities',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_funding_agencies_get(self):
+        """Test case for projects_funding_agencies_get
+
+        List of Projects Funding Agency options
+        """
+        query_string = [('search', 'search_example')]
+        response = self.client.open(
+            '/projects/funding-agencies',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_funding_directorates_get(self):
+        """Test case for projects_funding_directorates_get
+
+        List of Projects Funding Directorate options
+        """
+        query_string = [('search', 'search_example')]
+        response = self.client.open(
+            '/projects/funding-directorates',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_projects_get(self):
         """Test case for projects_get
 
         Search for FABRIC Projects
         """
         query_string = [('search', 'search_example'),
+                        ('search_set', 'description'),
                         ('exact_match', false),
                         ('offset', 1),
                         ('limit', 200),
@@ -90,6 +133,19 @@ class TestProjectsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_projects_project_types_get(self):
+        """Test case for projects_project_types_get
+
+        List of Projects Type options
+        """
+        query_string = [('search', 'search_example')]
+        response = self.client.open(
+            '/projects/project-types',
+            method='GET',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_projects_tags_get(self):
         """Test case for projects_tags_get
 
@@ -100,6 +156,20 @@ class TestProjectsController(BaseTestCase):
             '/projects/tags',
             method='GET',
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_communities_patch(self):
+        """Test case for projects_uuid_communities_patch
+
+        Update Project Communities as Project creator/owner
+        """
+        body = ProjectsCommunitiesPatch()
+        response = self.client.open(
+            '/projects/{uuid}/communities'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
@@ -197,6 +267,20 @@ class TestProjectsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_projects_uuid_project_funding_patch(self):
+        """Test case for projects_uuid_project_funding_patch
+
+        Update Project Funding as Project creator/owner
+        """
+        body = ProjectsFundingPatch()
+        response = self.client.open(
+            '/projects/{uuid}/project-funding'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_projects_uuid_project_members_patch(self):
         """Test case for projects_uuid_project_members_patch
 
@@ -232,7 +316,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_tags_patch(self):
         """Test case for projects_uuid_tags_patch
 
-        Update Projects Tags as Facility Operator
+        Update Project Tags as Facility Operator
         """
         body = ProjectsTagsPatch()
         response = self.client.open(
@@ -256,6 +340,20 @@ class TestProjectsController(BaseTestCase):
             data=json.dumps(body),
             content_type='application/json',
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_topics_patch(self):
+        """Test case for projects_uuid_topics_patch
+
+        Update Project Topics as Project creator/owner
+        """
+        body = ProjectsTopicsPatch()
+        response = self.client.open(
+            '/projects/{uuid}/topics'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

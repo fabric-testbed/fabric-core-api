@@ -8,17 +8,19 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.6.2
+  version: 1.7.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.6.2
+- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.7.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
   description: FABRIC Facility & Maintenance Announcements
 - name: check-cookie
   description: FABRIC Check Cookie
+- name: core-api-metrics
+  description: Core-API Metrics
 - name: people
   description: FABRIC People
 - name: projects
@@ -333,6 +335,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.check_cookie_controller
+  /core-api-metrics/overview:
+    get:
+      tags:
+      - core-api-metrics
+      summary: Core API metrics overview
+      description: Core API metrics overview
+      operationId: core_api_metrics_overview_get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core_api_metrics'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
   /people:
     get:
       tags:
@@ -723,8 +746,8 @@ paths:
     get:
       tags:
       - people
-      summary: List of People Preference options
-      description: List of People Preference options
+      summary: Service authorization details by OIDC sub
+      description: Service authorization details by OIDC sub
       operationId: people_services_auth_get
       parameters:
       - name: sub
@@ -742,7 +765,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api_options'
+                $ref: '#/components/schemas/service_auth_details'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
         "500":
           description: Internal Server Error
           content:
@@ -767,6 +814,20 @@ paths:
         schema:
           minLength: 3
           type: string
+      - name: search_set
+        in: query
+        description: search set
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          default: description
+          enum:
+          - communities
+          - description
+          - topics
+          - type
       - name: exact_match
         in: query
         description: Exact Match for Search term
@@ -1035,6 +1096,130 @@ paths:
           type: string
       requestBody:
         $ref: '#/components/requestBodies/payload_projects_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/communities:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Communities as Project creator/owner
+      description: Update Project Communities as Project creator/owner
+      operationId: projects_uuid_communities_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_communities_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-funding:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Funding as Project creator/owner
+      description: Update Project Funding as Project creator/owner
+      operationId: projects_uuid_project_funding_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_funding_patch'
       responses:
         "200":
           description: OK
@@ -1482,8 +1667,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Projects Tags as Facility Operator
-      description: Update Projects Tags as Facility Operator
+      summary: Update Project Tags as Facility Operator
+      description: Update Project Tags as Facility Operator
       operationId: projects_uuid_tags_patch
       parameters:
       - name: uuid
@@ -1615,6 +1800,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/topics:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Topics as Project creator/owner
+      description: Update Project Topics as Project creator/owner
+      operationId: projects_uuid_topics_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_projects_topics_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "423":
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_423_locked'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /projects/preferences:
     get:
       tags:
@@ -1653,6 +1900,130 @@ paths:
       summary: List of Projects Profile Preference options
       description: List of Projects Profile Preference options
       operationId: projects_profile_preferences_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/communities:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Communities options
+      description: List of Projects Communities options
+      operationId: projects_communities_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/funding-agencies:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Funding Agency options
+      description: List of Projects Funding Agency options
+      operationId: projects_funding_agencies_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/funding-directorates:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Funding Directorate options
+      description: List of Projects Funding Directorate options
+      operationId: projects_funding_directorates_get
+      parameters:
+      - name: search
+        in: query
+        description: search term applied
+        required: false
+        style: form
+        explode: true
+        schema:
+          minLength: 3
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/api_options'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/project-types:
+    get:
+      tags:
+      - projects
+      summary: List of Projects Type options
+      description: List of Projects Type options
+      operationId: projects_project_types_get
       parameters:
       - name: search
         in: query
@@ -2635,6 +3006,16 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/check_cookie_results'
+    core_api_metrics:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              type: object
     person:
       required:
       - name
@@ -2667,6 +3048,16 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/people_one'
+    service_auth_details:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/status_200_ok_single'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              $ref: '#/components/schemas/service_auth_one'
     people_one:
       required:
       - affiliation
@@ -2729,6 +3120,24 @@ components:
             type: string
         uuid:
           type: string
+    service_auth_one:
+      required:
+      - email
+      - name
+      - roles
+      - uuid
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/people_one_roles'
+        uuid:
+          type: string
     project:
       required:
       - created
@@ -2740,9 +3149,15 @@ components:
       - uuid
       type: object
       properties:
+        communities:
+          type: array
+          items:
+            type: string
         created:
           type: string
         description:
+          type: string
+        expires_on:
           type: string
         facility:
           type: string
@@ -2754,6 +3169,12 @@ components:
         name:
           type: string
         tags:
+          type: array
+          items:
+            type: string
+        project_type:
+          type: string
+        topics:
           type: array
           items:
             type: string
@@ -2793,6 +3214,10 @@ components:
         active:
           type: boolean
           default: true
+        communities:
+          type: array
+          items:
+            type: string
         created:
           type: string
           format: date-time
@@ -2800,6 +3225,8 @@ components:
           type: string
         expires_on:
           type: string
+        fabric_matrix:
+          $ref: '#/components/schemas/reference'
         facility:
           type: string
         is_locked:
@@ -2823,6 +3250,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/person'
+        project_funding:
+          type: array
+          items:
+            $ref: '#/components/schemas/project_funding'
         project_members:
           type: array
           items:
@@ -2835,6 +3266,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/storage_one'
+        project_type:
+          type: string
         tags:
           type: array
           items:
@@ -2843,6 +3276,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/person'
+        topics:
+          type: array
+          items:
+            type: string
         uuid:
           type: string
     project_membership:
@@ -2860,6 +3297,19 @@ components:
         is_token_holder:
           type: boolean
           default: false
+    project_funding:
+      type: object
+      properties:
+        agency:
+          type: string
+        agency_other:
+          type: string
+        award_amount:
+          type: string
+        award_number:
+          type: string
+        directorate:
+          type: string
     profile_people:
       type: object
       properties:
@@ -2907,13 +3357,20 @@ components:
         references:
           type: array
           items:
-            $ref: '#/components/schemas/profile_projects_references'
+            $ref: '#/components/schemas/reference'
     preferences:
       type: object
       additionalProperties:
         type: boolean
       example:
         show_XYZ: true
+    reference:
+      type: object
+      properties:
+        description:
+          type: string
+        url:
+          type: string
     sshkey_pair:
       type: object
       allOf:
@@ -3142,6 +3599,15 @@ components:
           type: array
           items:
             type: string
+        project_type:
+          type: string
+          default: research
+          enum:
+          - educational
+          - industry
+          - maintenance
+          - research
+          - tutorial
     projects_patch:
       type: object
       properties:
@@ -3153,6 +3619,15 @@ components:
           type: string
         preferences:
           $ref: '#/components/schemas/preferences'
+        project_type:
+          type: string
+          default: research
+          enum:
+          - educational
+          - industry
+          - maintenance
+          - research
+          - tutorial
     projects_expires_on_patch:
       type: object
       properties:
@@ -3205,6 +3680,27 @@ components:
           type: array
           items:
             type: string
+    projects_communities_patch:
+      type: object
+      properties:
+        communities:
+          type: array
+          items:
+            type: string
+    projects_topics_patch:
+      type: object
+      properties:
+        topics:
+          type: array
+          items:
+            type: string
+    projects_funding_patch:
+      type: object
+      properties:
+        project_funding:
+          type: array
+          items:
+            $ref: '#/components/schemas/projects_funding_patch_project_funding'
     sshkeys_post:
       required:
       - comment
@@ -3465,13 +3961,6 @@ components:
           type: string
         type:
           type: string
-    profile_projects_references:
-      type: object
-      properties:
-        description:
-          type: string
-        url:
-          type: string
     sshkey_pair_results:
       type: object
       properties:
@@ -3524,6 +4013,19 @@ components:
           type: string
         endpoint:
           type: string
+    projects_funding_patch_project_funding:
+      type: object
+      properties:
+        agency:
+          type: string
+        agency_other:
+          type: string
+        award_amount:
+          type: string
+        award_number:
+          type: string
+        directorate:
+          type: string
   responses:
     "200_check_cookie":
       description: OK
@@ -3531,6 +4033,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/check_cookie'
+    "200_core_api_metrics":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/core_api_metrics'
     "200_people":
       description: OK
       content:
@@ -3543,6 +4051,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/people_details'
+    "200_service_auth_details":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/service_auth_details'
     "200_projects":
       description: OK
       content:
@@ -3828,6 +4342,21 @@ components:
         enum:
         - asc
         - desc
+    search_set:
+      name: search_set
+      in: query
+      description: search set
+      required: false
+      style: form
+      explode: true
+      schema:
+        type: string
+        default: description
+        enum:
+        - communities
+        - description
+        - topics
+        - type
     uuid:
       name: uuid
       in: path
@@ -3910,6 +4439,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_tags_patch'
+    payload_projects_communities_patch:
+      description: Update Project Communities as Project creator/owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_communities_patch'
+    payload_projects_topics_patch:
+      description: Update Project Topics as Project creator/owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_topics_patch'
+    payload_projects_funding_patch:
+      description: Update Project Funding Source as Project creator/owner
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_funding_patch'
     payload_sshkeys_post:
       description: Create a public/private SSH Key Pair
       content:

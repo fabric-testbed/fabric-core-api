@@ -42,7 +42,7 @@ def storage_get(offset: int = None, limit: int = None, project_uuid: str = None)
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in
@@ -137,7 +137,7 @@ def storage_post(body: StoragePost = None) -> Storage:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in
@@ -223,7 +223,7 @@ def storage_uuid_delete(uuid: str) -> Status200OkNoContent:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in
@@ -286,7 +286,7 @@ def storage_uuid_get(uuid: str) -> Storage:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in
@@ -351,7 +351,7 @@ def storage_uuid_patch(uuid: str, body: StoragePatch = None) -> Status200OkNoCon
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # TODO: token access does not have an api_user --> choose first facility-operator
         if not api_user.id:
             fac_op_ids = [r.people_id for r in

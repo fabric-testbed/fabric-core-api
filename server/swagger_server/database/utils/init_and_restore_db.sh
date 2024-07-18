@@ -12,5 +12,6 @@ python -m flask db upgrade
 
 python -m server.swagger_server.database.utils.init_task_tracker
 python -m server.swagger_server.backup.utils.db_restore
+python -m server.swagger_server.backup.utils.db_version_updates
 
 exit 0;

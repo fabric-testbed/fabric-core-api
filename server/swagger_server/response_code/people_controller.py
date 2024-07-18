@@ -4,7 +4,7 @@ from sqlalchemy import func
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
-from swagger_server.database.models.people import FabricPeople, Organizations
+from swagger_server.database.models.people import FabricPeople, Organizations, UserSubjectIdentifiers
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, ProfilesOtherIdentities, \
     ProfilesPersonalPages
@@ -13,6 +13,7 @@ from swagger_server.models.people import People, Person, Status200OkPaginatedLin
 from swagger_server.models.people_details import PeopleDetails, PeopleOne  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch
 from swagger_server.models.profile_people import ProfilePeople
+from swagger_server.models.service_auth_details import ServiceAuthDetails, ServiceAuthOne
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_OTHER_IDENTITY_TYPES, \
@@ -27,6 +28,7 @@ from swagger_server.response_code.profiles_utils import get_profile_people, othe
     personal_pages_to_array
 from swagger_server.response_code.response_utils import array_difference, is_valid_url
 from swagger_server.response_code.sshkeys_utils import sshkeys_from_fab_person
+from swagger_server.response_code.vouch_utils import IdSourceEnum
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -52,7 +54,7 @@ def people_get(search: str = None, exact_match: bool = False, offset: int = None
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -233,6 +235,56 @@ def people_profile_preferences_get(search=None) -> ApiOptions:  # noqa: E501
 
 
 @login_or_token_required
+def people_services_auth_get(sub):  # noqa: E501
+    """
+    Service authorization details by OIDC sub # noqa: E501
+
+    :param sub: subject identifier
+    :type sub: str
+
+    :rtype: ServiceAuthDetails
+    """
+
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        api_user_subs = []
+        print(api_user, api_user.active, id_source)
+        if api_user.active:
+            api_user_subs = [s.sub for s in api_user.user_sub_identities]
+        if id_source != IdSourceEnum.SERVICES.value and sub not in api_user_subs:
+            return cors_403(
+                details="User: Does not have permission to access this information.")
+        # get person by sub
+        try:
+            fab_person = FabricPeople.query.filter_by(
+                id=UserSubjectIdentifiers.query.filter_by(sub=sub).first().people_id
+            ).one_or_none()
+        except Exception as exc:
+            consoleLogger.error(exc)
+            fab_person = None
+        if not fab_person:
+            return cors_404(details="No match for Person with sub = '{0}'".format(sub))
+        # set ServiceAuthOne object
+        service_auth_one = ServiceAuthOne()
+        service_auth_one.email = fab_person.preferred_email
+        service_auth_one.name = fab_person.display_name
+        service_auth_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
+        service_auth_one.uuid = fab_person.uuid
+        # set service_auth_details response
+        response = ServiceAuthDetails()
+        response.results = [service_auth_one]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'service.auth.details'
+        return cors_200(response_body=response)
+    except Exception as exc:
+        details = 'Oops! something went wrong with people_services_auth_get(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
+@login_or_token_required
 def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
     """Person details by UUID
 
@@ -247,7 +299,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -331,7 +383,7 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -431,7 +483,8 @@ def people_uuid_patch(uuid, body: PeoplePatch = None) -> Status200OkNoContent:  
                     fab_person.receive_promotional_email = False
                 db.session.commit()
                 consoleLogger.info(
-                    'UPDATE: FabricPeople: uuid={0}, receive_promotional_email={1}'.format(fab_person.uuid, fab_person.receive_promotional_email))
+                    'UPDATE: FabricPeople: uuid={0}, receive_promotional_email={1}'.format(fab_person.uuid,
+                                                                                           fab_person.receive_promotional_email))
                 # metrics log - User display_name modified:
                 # 2022-09-06 19:45:56,022 User event usr:dead-beef-dead-beef modify display_name NAME by usr:dead-beef-dead-beef
                 log_msg = 'User event usr:{0} modify receive_promotional_email \'{1}\' by usr:{2}'.format(
@@ -471,7 +524,7 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
     """
     try:
         # get api_user
-        api_user = get_person_by_login_claims()
+        api_user, id_source = get_person_by_login_claims()
         # check api_user active flag
         if not api_user.active:
             return cors_403(

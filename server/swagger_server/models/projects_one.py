@@ -9,7 +9,9 @@ from swagger_server.models.base_model_ import Model
 from swagger_server.models.person import Person  # noqa: F401,E501
 from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: F401,E501
+from swagger_server.models.project_funding import ProjectFunding  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
+from swagger_server.models.reference import Reference  # noqa: F401,E501
 from swagger_server.models.storage_one import StorageOne  # noqa: F401,E501
 from swagger_server import util
 
@@ -19,17 +21,21 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, created: datetime=None, description: str=None, expires_on: str=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, tags: List[str]=None, token_holders: List[Person]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
         :type active: bool
+        :param communities: The communities of this ProjectsOne.  # noqa: E501
+        :type communities: List[str]
         :param created: The created of this ProjectsOne.  # noqa: E501
         :type created: datetime
         :param description: The description of this ProjectsOne.  # noqa: E501
         :type description: str
         :param expires_on: The expires_on of this ProjectsOne.  # noqa: E501
         :type expires_on: str
+        :param fabric_matrix: The fabric_matrix of this ProjectsOne.  # noqa: E501
+        :type fabric_matrix: Reference
         :param facility: The facility of this ProjectsOne.  # noqa: E501
         :type facility: str
         :param is_locked: The is_locked of this ProjectsOne.  # noqa: E501
@@ -48,24 +54,32 @@ class ProjectsOne(Model):
         :type profile: ProfileProjects
         :param project_creators: The project_creators of this ProjectsOne.  # noqa: E501
         :type project_creators: List[Person]
+        :param project_funding: The project_funding of this ProjectsOne.  # noqa: E501
+        :type project_funding: List[ProjectFunding]
         :param project_members: The project_members of this ProjectsOne.  # noqa: E501
         :type project_members: List[Person]
         :param project_owners: The project_owners of this ProjectsOne.  # noqa: E501
         :type project_owners: List[Person]
         :param project_storage: The project_storage of this ProjectsOne.  # noqa: E501
         :type project_storage: List[StorageOne]
+        :param project_type: The project_type of this ProjectsOne.  # noqa: E501
+        :type project_type: str
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
         :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
         :type token_holders: List[Person]
+        :param topics: The topics of this ProjectsOne.  # noqa: E501
+        :type topics: List[str]
         :param uuid: The uuid of this ProjectsOne.  # noqa: E501
         :type uuid: str
         """
         self.swagger_types = {
             'active': bool,
+            'communities': List[str],
             'created': datetime,
             'description': str,
             'expires_on': str,
+            'fabric_matrix': Reference,
             'facility': str,
             'is_locked': bool,
             'is_public': bool,
@@ -75,19 +89,24 @@ class ProjectsOne(Model):
             'preferences': Preferences,
             'profile': ProfileProjects,
             'project_creators': List[Person],
+            'project_funding': List[ProjectFunding],
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
+            'project_type': str,
             'tags': List[str],
             'token_holders': List[Person],
+            'topics': List[str],
             'uuid': str
         }
 
         self.attribute_map = {
             'active': 'active',
+            'communities': 'communities',
             'created': 'created',
             'description': 'description',
             'expires_on': 'expires_on',
+            'fabric_matrix': 'fabric_matrix',
             'facility': 'facility',
             'is_locked': 'is_locked',
             'is_public': 'is_public',
@@ -97,17 +116,22 @@ class ProjectsOne(Model):
             'preferences': 'preferences',
             'profile': 'profile',
             'project_creators': 'project_creators',
+            'project_funding': 'project_funding',
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
+            'project_type': 'project_type',
             'tags': 'tags',
             'token_holders': 'token_holders',
+            'topics': 'topics',
             'uuid': 'uuid'
         }
         self._active = active
+        self._communities = communities
         self._created = created
         self._description = description
         self._expires_on = expires_on
+        self._fabric_matrix = fabric_matrix
         self._facility = facility
         self._is_locked = is_locked
         self._is_public = is_public
@@ -117,11 +141,14 @@ class ProjectsOne(Model):
         self._preferences = preferences
         self._profile = profile
         self._project_creators = project_creators
+        self._project_funding = project_funding
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
+        self._project_type = project_type
         self._tags = tags
         self._token_holders = token_holders
+        self._topics = topics
         self._uuid = uuid
 
     @classmethod
@@ -155,6 +182,27 @@ class ProjectsOne(Model):
         """
 
         self._active = active
+
+    @property
+    def communities(self) -> List[str]:
+        """Gets the communities of this ProjectsOne.
+
+
+        :return: The communities of this ProjectsOne.
+        :rtype: List[str]
+        """
+        return self._communities
+
+    @communities.setter
+    def communities(self, communities: List[str]):
+        """Sets the communities of this ProjectsOne.
+
+
+        :param communities: The communities of this ProjectsOne.
+        :type communities: List[str]
+        """
+
+        self._communities = communities
 
     @property
     def created(self) -> datetime:
@@ -222,6 +270,27 @@ class ProjectsOne(Model):
         """
 
         self._expires_on = expires_on
+
+    @property
+    def fabric_matrix(self) -> Reference:
+        """Gets the fabric_matrix of this ProjectsOne.
+
+
+        :return: The fabric_matrix of this ProjectsOne.
+        :rtype: Reference
+        """
+        return self._fabric_matrix
+
+    @fabric_matrix.setter
+    def fabric_matrix(self, fabric_matrix: Reference):
+        """Sets the fabric_matrix of this ProjectsOne.
+
+
+        :param fabric_matrix: The fabric_matrix of this ProjectsOne.
+        :type fabric_matrix: Reference
+        """
+
+        self._fabric_matrix = fabric_matrix
 
     @property
     def facility(self) -> str:
@@ -421,6 +490,27 @@ class ProjectsOne(Model):
         self._project_creators = project_creators
 
     @property
+    def project_funding(self) -> List[ProjectFunding]:
+        """Gets the project_funding of this ProjectsOne.
+
+
+        :return: The project_funding of this ProjectsOne.
+        :rtype: List[ProjectFunding]
+        """
+        return self._project_funding
+
+    @project_funding.setter
+    def project_funding(self, project_funding: List[ProjectFunding]):
+        """Sets the project_funding of this ProjectsOne.
+
+
+        :param project_funding: The project_funding of this ProjectsOne.
+        :type project_funding: List[ProjectFunding]
+        """
+
+        self._project_funding = project_funding
+
+    @property
     def project_members(self) -> List[Person]:
         """Gets the project_members of this ProjectsOne.
 
@@ -484,6 +574,27 @@ class ProjectsOne(Model):
         self._project_storage = project_storage
 
     @property
+    def project_type(self) -> str:
+        """Gets the project_type of this ProjectsOne.
+
+
+        :return: The project_type of this ProjectsOne.
+        :rtype: str
+        """
+        return self._project_type
+
+    @project_type.setter
+    def project_type(self, project_type: str):
+        """Sets the project_type of this ProjectsOne.
+
+
+        :param project_type: The project_type of this ProjectsOne.
+        :type project_type: str
+        """
+
+        self._project_type = project_type
+
+    @property
     def tags(self) -> List[str]:
         """Gets the tags of this ProjectsOne.
 
@@ -524,6 +635,27 @@ class ProjectsOne(Model):
         """
 
         self._token_holders = token_holders
+
+    @property
+    def topics(self) -> List[str]:
+        """Gets the topics of this ProjectsOne.
+
+
+        :return: The topics of this ProjectsOne.
+        :rtype: List[str]
+        """
+        return self._topics
+
+    @topics.setter
+    def topics(self, topics: List[str]):
+        """Sets the topics of this ProjectsOne.
+
+
+        :param topics: The topics of this ProjectsOne.
+        :type topics: List[str]
+        """
+
+        self._topics = topics
 
     @property
     def uuid(self) -> str:

@@ -17,6 +17,7 @@ from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.bastionkeys_one import BastionkeysOne
 from swagger_server.models.check_cookie import CheckCookie
 from swagger_server.models.check_cookie_results import CheckCookieResults
+from swagger_server.models.core_api_metrics import CoreApiMetrics
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.people_one import PeopleOne
@@ -28,13 +29,16 @@ from swagger_server.models.profile_people import ProfilePeople
 from swagger_server.models.profile_people_other_identities import ProfilePeopleOtherIdentities
 from swagger_server.models.profile_people_personal_pages import ProfilePeoplePersonalPages
 from swagger_server.models.profile_projects import ProfileProjects
-from swagger_server.models.profile_projects_references import ProfileProjectsReferences
 from swagger_server.models.project import Project
+from swagger_server.models.project_funding import ProjectFunding
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects import Projects
+from swagger_server.models.projects_communities_patch import ProjectsCommunitiesPatch
 from swagger_server.models.projects_creators_patch import ProjectsCreatorsPatch
 from swagger_server.models.projects_details import ProjectsDetails
 from swagger_server.models.projects_expires_on_patch import ProjectsExpiresOnPatch
+from swagger_server.models.projects_funding_patch import ProjectsFundingPatch
+from swagger_server.models.projects_funding_patch_project_funding import ProjectsFundingPatchProjectFunding
 from swagger_server.models.projects_members_patch import ProjectsMembersPatch
 from swagger_server.models.projects_one import ProjectsOne
 from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch
@@ -43,6 +47,10 @@ from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatc
 from swagger_server.models.projects_post import ProjectsPost
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
+from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch
+from swagger_server.models.reference import Reference
+from swagger_server.models.service_auth_details import ServiceAuthDetails
+from swagger_server.models.service_auth_one import ServiceAuthOne
 from swagger_server.models.sshkey_pair import SshkeyPair
 from swagger_server.models.sshkey_pair_results import SshkeyPairResults
 from swagger_server.models.sshkeys import Sshkeys

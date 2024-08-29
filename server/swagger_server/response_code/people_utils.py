@@ -335,10 +335,13 @@ def get_people_roles_as_other(people_roles: [FabricRoles] = None) -> [object]:
     """
     roles = []
     for r in people_roles:
-        if r.name[-3:] in ['-pc', '-pm', '-po']:
-            fab_project = FabricProjects.query.filter_by(uuid=r.name[0:-3]).one_or_none()
-            if fab_project.is_public:
-                roles.append({'name': r.name, 'description': r.description})
+        if r.name[-3:] in ['-pc', '-pm', '-po', '-tk']:
+            try:
+                fab_project = FabricProjects.query.filter_by(uuid=r.name[0:-3]).one_or_none()
+                if fab_project and fab_project.is_public:
+                    roles.append({'name': r.name, 'description': r.description})
+            except Exception as exc:
+                print('get_people_roles_as_other - role: {0}, error: {1}'.format(r.name, exc))
         else:
             roles.append({'name': r.name, 'description': r.description})
     roles = sorted(roles, key=lambda d: (d.get('name')).casefold())

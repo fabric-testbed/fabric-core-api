@@ -19,8 +19,8 @@
     "Net.FacilityPort.Cloud-Facility-GCP": "Google Cloud Platform Production",
     "Net.FacilityPort.Cloud-Facility-AWS": "Amazon Web Services Production",
     "Net.FacilityPort.Chameleon-TACC": "Chameleon@TACC Production",
-    "Net.FacilityPort.Cloud-Facility-Azure-Gov": "Microsoft Azure Gov Cloud Production",
-    "Net.FacilityPort.Cloud-Facility-Azure": "Microsoft Azure Cloud Production",
+    "Net.FacilityPort.Cloud-Facility-AZUREGOV": "Microsoft Azure Gov Cloud Production",
+    "Net.FacilityPort.Cloud-Facility-AZURE": "Microsoft Azure Cloud Production",
     "Net.FacilityPort.RCNF": "Rutgers CryoEM & Nanoimaging Facility (RCNF)",
     "Net.FacilityPort.OCT-MGHPCC": "Massachusetts Green High Performance Computing Center (MGHPCC)",
     "Net.FacilityPort.CloudLab-Clemson": "CloudLab-Clemson Production",
@@ -31,10 +31,6 @@
     "Net.FacilityPort.ESnet-NEWY": "ESnet NEWY Layer 3",
     "Net.FacilityPort.NIST-MAX": "NIST MAX Layer 2",
     "Net.FacilityPort.PacWave-SEAT": "SEAT PacWave Layer 2",
-    "Net.FacilityPort.SCM-FP-1": "SC FP 1",
-    "Net.FacilityPort.SCM-FP-2": "SC FP 2",
-    "Net.FacilityPort.SCM-FP-3": "SC FP 3",
-    "Net.FacilityPort.SCM-FP-4": "SC FP 4",
     "Net.FacilityPort.FP1-UCSD": "UCSD FP 1",
     "Net.FacilityPort.NRP-UCSD": "NRP UCSD FP",
     "Net.FacilityPort.SmartInternetLab-BRIST": "Smart Internet Lab Bristol",
@@ -49,6 +45,15 @@
     "Net.FacilityPort.StarLight-400G-2-STAR": "StarLight 400G STAR 2",
     "Net.FacilityPort.NetworkResearch-PRIN": "Research Network PRIN",
     "Net.FacilityPort.Cloud-Facility-NONCLOUD": "Non Cloud",
-    "Net.FacilityPort.Cloud-Facility-OCI": "Oracle Cloud Infrastructure"
+    "Net.FacilityPort.Cloud-Facility-OCI": "Oracle Cloud Infrastructure",
+    "Net.FacilityPort.Cloud-Facility-OCIGOV": "Oracle Gov Cloud Infrastructure",
+    "Net.FacilityPort.IIT-Network-Research-STAR": "IIT Network Research",
+    "Net.FacilityPort.JBDT-400G-1-WASH" : "JBDT-400G-1-WASH",
+    "Net.FacilityPort.JBDT-400G-2-WASH": "JBDT-400G-2-WASH",
+    "Net.FacilityPort.JBDT-400G-3-WASH": "JBDT-400G-3-WASH",
+    "Net.FacilityPort.SCIERA-STAR": "SCIERA STAR",
+    "Net.FacilityPort.SCIERA-WASH": "SCIERA WASH",
+    "Net.FacilityPort.SPHERE-LOSA": "SCIERA LOSA",
+    "Net.FacilityPort.StarLight-400G-3-STAR": "StarLight-400G-3-STAR"
   }
 }

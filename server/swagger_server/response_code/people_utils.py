@@ -34,19 +34,20 @@ def get_person_by_login_claims() -> tuple[FabricPeople | Any, Any | None]:
     """
     try:
         claims = vouch_get_custom_claims()
-        if claims.get('sub') is not None:
+        claims_sub = claims.get('sub', None)
+        if claims_sub:
             # search for existing fab_person by sub
             fab_person_id = UserSubjectIdentifiers.query.filter(
-                UserSubjectIdentifiers.sub == str(claims.get('sub'))
+                UserSubjectIdentifiers.sub == claims_sub
             ).one_or_none()
-            if fab_person_id:
+            if fab_person_id and fab_person_id.sub == claims_sub:
                 fab_person = FabricPeople.query.filter_by(
                     id=fab_person_id.people_id
                 ).first()
             else:
                 # check COmanage for user by sub
                 co_person = api.copeople_view_per_identifier(
-                    identifier=claims.get('sub'), distinct_by_id=True
+                    identifier=claims_sub, distinct_by_id=True
                 ).get('CoPeople', [])
                 if co_person:
                     # co_person exists - try to get fab_person by co_person_id

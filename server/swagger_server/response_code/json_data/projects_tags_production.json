@@ -54,6 +54,18 @@
     "Net.FacilityPort.SCIERA-STAR": "SCIERA STAR",
     "Net.FacilityPort.SCIERA-WASH": "SCIERA WASH",
     "Net.FacilityPort.SPHERE-LOSA": "SCIERA LOSA",
-    "Net.FacilityPort.StarLight-400G-3-STAR": "StarLight-400G-3-STAR"
+    "Net.FacilityPort.StarLight-400G-3-STAR": "StarLight-400G-3-STAR",
+    "Net.FacilityPort.CERN-HU16-wk4-pci3-p1": "CERN-HU16-wk4-pci3-p1",
+    "Net.FacilityPort.CERN-HU16-wk4-pci3-p2": "CERN-HU16-wk4-pci3-p2",
+    "Net.FacilityPort.CERN-HU16-wk4-pci6-p1": "CERN-HU16-wk4-pci6-p1",
+    "Net.FacilityPort.CERN-HU16-wk4-pci6-p2": "CERN-HU16-wk4-pci6-p2",
+    "Net.FacilityPort.CERN-HU16-wk3-pci3-p1": "CERN-HU16-wk3-pci3-p1",
+    "Net.FacilityPort.CERN-HU16-wk3-pci3-p2": "CERN-HU16-wk3-pci3-p2",
+    "Net.FacilityPort.CERN-HU16-wk3-pci6-p1": "CERN-HU16-wk3-pci6-p1",
+    "Net.FacilityPort.CERN-HU16-wk3-pci6-p2": "CERN-HU16-wk3-pci6-p2",
+    "Net.FacilityPort.CERN-HU16-wk2-pci3-p1": "CERN-HU16-wk2-pci3-p1",
+    "Net.FacilityPort.CERN-HU16-wk2-pci3-p2": "CERN-HU16-wk2-pci3-p2",
+    "Net.FacilityPort.CERN-HU16-wk2-pci6-p1": "CERN-HU16-wk2-pci6-p1",
+    "Net.FacilityPort.CERN-HU16-wk2-pci6-p2": "CERN-HU16-wk2-pci6-p2"
   }
 }

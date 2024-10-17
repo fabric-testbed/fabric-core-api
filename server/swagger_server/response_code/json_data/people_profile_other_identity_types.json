@@ -14,6 +14,7 @@
   "key_value_pairs": {
     "google_scholar": "Google Scholar identity - https://scholar.google.com",
     "orcid": "ORCiD identity - https://orcid.org",
-    "other": "Other identity - generic"
+    "other": "Other identity - generic",
+    "scopus": "Scopus scientific abstract and citation database - https://www.scopus.com/home.uri"
   }
 }

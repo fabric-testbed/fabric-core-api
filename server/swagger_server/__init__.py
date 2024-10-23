@@ -1,4 +1,4 @@
-__API_VERSION__ = '1.6.1'
+__API_VERSION__ = '1.7.0'
 __API_REFERENCE__ = 'https://github.com/fabric-testbed/fabric-core-api'
 
 from pathlib import Path

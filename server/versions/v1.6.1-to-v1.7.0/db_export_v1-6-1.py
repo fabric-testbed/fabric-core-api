@@ -1,5 +1,5 @@
 """
-v1.7.0 - database tables
+v1.6.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -39,8 +39,8 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (32 rows)
 
-Changes from v1.7.0 --> v1.8.0
-- TODO: add new v1.8.0 db items (TBD)
+Changes from v1.6.2 --> v1.7.0
+- TODO: table: projects_topics
 """
 
 import json
@@ -58,7 +58,7 @@ from swagger_server.database.models.people import EmailAddresses, FabricGroups, 
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
-from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, ProjectsTags, ProjectsTopics
+from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, ProjectsTags
 from swagger_server.database.models.sshkeys import FabricSshKeys
 from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
@@ -897,33 +897,6 @@ def dump_projects_tags_data():
         consoleLogger.error(exc)
 
 
-# export projects_topics as JSON output file
-def dump_projects_topics_data():
-    """
-    projects_topics
-    - id - primary key (BaseMixin)
-    - projects_id - foreignkey link to projects table
-    - topic - topic as string
-    """
-    try:
-        projects_topics = []
-        fab_projects_topics = ProjectsTopics.query.order_by('id').all()
-        for t in fab_projects_topics:
-            data = {
-                'id': t.id,
-                'projects_id': t.projects_id,
-                'topic': t.topic
-            }
-            projects_topics.append(data)
-        output_dict = {'projects_topics': projects_topics}
-        output_json = json.dumps(output_dict, indent=2)
-        # print(json.dumps(output_dict, indent=2))
-        with open(BACKUP_DATA_DIR + '/projects_topics-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-            outfile.write(output_json)
-    except Exception as exc:
-        consoleLogger.error(exc)
-
-
 # export sshkeys as JSON output file
 def dump_sshkeys_data():
     """
@@ -1297,10 +1270,6 @@ if __name__ == '__main__':
     #  public | projects_tags             | table | postgres
     consoleLogger.info('dump projects_tags table')
     dump_projects_tags_data()
-
-    #  public | projects_topics           | table | postgres
-    consoleLogger.info('dump projects_topics table')
-    dump_projects_topics_data()
 
     #  public | sshkeys                   | table | postgres
     consoleLogger.info('dump sshkeys table')

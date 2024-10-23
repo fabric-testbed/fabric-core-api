@@ -38,13 +38,14 @@ def create_sshkey(body: SshkeysPost, fab_person: FabricPeople) -> SshkeyPairResu
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
     try:
-        sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
         response = SshkeyPairResults()
         if str(body.store_pubkey).casefold() == 'false':
+            sshkey = FABRICSSHKey.generate('ephemeral_' + fab_person.bastion_login, os.getenv('SSH_KEY_ALGORITHM'))
             store_key = False
             consoleLogger.info("Generating key of type 'unsaved' for '{0}' with comment '{1}'".format(
                 fab_person.display_name, body.comment))
         else:
+            sshkey = FABRICSSHKey.generate(body.comment, os.getenv('SSH_KEY_ALGORITHM'))
             store_key = True
             consoleLogger.info("Generating key of type '{0}' for '{1}' with comment '{2}'".format(
                 body.keytype, fab_person.display_name, body.comment))

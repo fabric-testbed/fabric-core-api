@@ -283,8 +283,8 @@ def update_people_roles(fab_person_id: int, co_person_id: int) -> None:
         fab_person = FabricPeople.query.filter_by(id=fab_person_id).one_or_none()
         co_roles = api.coperson_roles_view_per_coperson(coperson_id=co_person_id).get('CoPersonRoles', [])
         fab_roles = fab_person.roles
-        co_role_ids = [r.get('Id') for r in co_roles]
-        fab_role_ids = [str(r.co_person_role_id) for r in fab_roles]
+        co_role_ids = [int(r.get('Id')) for r in co_roles]
+        fab_role_ids = [int(r.co_person_role_id) for r in fab_roles]
         roles_added = array_difference(co_role_ids, fab_role_ids)
         roles_removed = array_difference(fab_role_ids, co_role_ids)
         # remove old Fabric roles

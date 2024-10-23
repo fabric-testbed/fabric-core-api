@@ -22,9 +22,8 @@ def whoami_get() -> Whoami:  # noqa: E501
     try:
         # get person from people table
         api_user, id_source = get_person_by_login_claims()
-        print(id_source)
-        if id_source in []:
-            pass
+        if id_source in ['exception']:
+            consoleLogger.info('WARNING: Exception detected: get_person_by_login_claims')
         if not api_user.co_person_id:
             details = 'Enrollment required: {0}'.format(os.getenv('CORE_API_401_UNAUTHORIZED_TEXT'))
             consoleLogger.info("unauthorized_access(): {0}".format(details))

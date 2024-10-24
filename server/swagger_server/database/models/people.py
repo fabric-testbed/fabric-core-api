@@ -124,6 +124,9 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     def is_facility_operator(self) -> bool:
         return os.getenv('COU_NAME_FACILITY_OPERATORS').casefold() in [r.name.casefold() for r in self.roles]
 
+    def is_facility_viewer(self) -> bool:
+        return os.getenv('COU_NAME_FACILITY_VIEWERS').casefold() in [r.name.casefold() for r in self.roles]
+
     def is_project_creator(self, project_uuid: str = None) -> bool:
         return project_uuid + '-pc' in [r.name.casefold() for r in self.roles]
 

@@ -1,5 +1,5 @@
 """
-v1.6.2 --> v1.7.0 - database tables
+v1.7.0 --> v1.8.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -60,7 +60,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.6.1'
+api_version = '1.7.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'

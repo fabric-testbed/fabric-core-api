@@ -95,7 +95,10 @@ def people_get(search: str = None, exact_match: bool = False, offset: int = None
             prefs = get_people_preferences(fab_person=FabricPeople.query.filter_by(uuid=item.uuid).one_or_none())
             # set person attributes
             person = Person()
-            person.email = item.preferred_email if prefs.__getattribute__('show_email') else None
+            if api_user.is_facility_operator() or api_user.is_facility_viewer():
+                person.email = item.preferred_email
+            else:
+                person.email = item.preferred_email if prefs.__getattribute__('show_email') else None
             person.name = item.display_name
             person.uuid = str(item.uuid)
             # add person to people results
@@ -325,7 +328,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         people_one.user_org_affiliations = [a.affiliation for a in fab_person.user_org_affiliations]
         people_one.uuid = fab_person.uuid
         # set remaining attributes for uuid == self
-        if as_self and api_user.uuid == uuid:
+        if as_self and api_user.uuid == uuid or api_user.is_facility_operator() or api_user.is_facility_viewer():
             people_one.bastion_login = fab_person.bastion_login
             people_one.cilogon_email = fab_person.oidc_claim_email
             people_one.cilogon_family_name = fab_person.oidc_claim_family_name

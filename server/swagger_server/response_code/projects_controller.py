@@ -243,7 +243,8 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     FabricProjects.project_creators.any(FabricPeople.id == api_user.id) |
                     FabricProjects.project_owners.any(FabricPeople.id == api_user.id) |
                     FabricProjects.project_members.any(FabricPeople.id == api_user.id) |
-                    api_user.is_facility_operator()
+                    api_user.is_facility_operator() |
+                    api_user.is_facility_viewer()
             )
         else:
             is_public_check = (
@@ -374,7 +375,7 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
                 project.name = item.name
                 project.project_type = item.project_type.name
-                if api_user.is_facility_operator():
+                if api_user.is_facility_operator() or api_user.is_facility_viewer():
                     project.tags = get_project_tags(fab_project=item, fab_person=api_user)
                 elif as_self and (
                         project.memberships.is_creator or project.memberships.is_member or project.memberships.is_owner):
@@ -594,6 +595,7 @@ def projects_uuid_communities_patch(uuid: str,
                                                                                   str(fab_project.expires_on)))
         # verify active project_creator, project_owner or facility-operator
         if not api_user.active or not api_user.is_facility_operator() and \
+                not api_user.is_facility_viewer() and \
                 not api_user.is_project_creator(str(fab_project.uuid)) and \
                 not api_user.is_project_owner(str(fab_project.uuid)):
             return cors_403(
@@ -916,7 +918,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.uuid = fab_project.uuid
             # set remaining attributes for project_creators, project_owners and project_members
             if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
-                    or api_user.is_facility_operator():
+                    or api_user.is_facility_operator() or api_user.is_facility_viewer():
                 project_one.active = fab_project.active
                 project_one.modified = str(fab_project.modified)
                 project_one.preferences = {p.key: p.value for p in fab_project.preferences}

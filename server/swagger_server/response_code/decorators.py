@@ -81,6 +81,9 @@ def validate_authorization_token(token: str) -> bool:
     # account for Ansible script which uses a static token for now
     if token == 'Bearer {0}'.format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
         is_valid = True
+    # account for Read Only Auth which uses a static token for now
+    elif token == 'Bearer {0}'.format(os.getenv('READONLY_AUTHORIZATION_TOKEN')):
+        is_valid = True
     # account for Services Auth which uses a static token for now
     elif token == 'Bearer {0}'.format(os.getenv('SERVICES_AUTHORIZATION_TOKEN')):
         is_valid = True

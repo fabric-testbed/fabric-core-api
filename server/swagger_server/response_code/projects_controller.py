@@ -42,7 +42,7 @@ from swagger_server.response_code.preferences_utils import delete_projects_prefe
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_fabric_matrix, \
     get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_storage, update_projects_communities, \
+    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, update_projects_communities, \
     update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders, \
     update_projects_topics
 from swagger_server.response_code.response_utils import is_valid_url
@@ -675,10 +675,12 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             # delete Profile
             delete_profile_projects(api_user=api_user, fab_project=fab_project)
             # remove project_creators
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='creators',
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+                                      personnel_type='creators',
                                       operation='batch')
             # remove project_members
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='members',
+            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+                                      personnel_type='members',
                                       operation='batch')
             # remove project_owners
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
@@ -930,6 +932,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 project_one.project_members = get_projects_personnel(fab_project=fab_project, personnel_type='members')
                 project_one.project_owners = get_projects_personnel(fab_project=fab_project, personnel_type='owners')
                 project_one.project_storage = get_projects_storage(fab_project=fab_project)
+                project_one.quotas = get_projects_quotas(fab_project=fab_project)
                 project_one.tags = [t.tag for t in fab_project.tags]
                 project_one.token_holders = get_projects_personnel(fab_project=fab_project, personnel_type='tokens')
             # set remaining attributes for everyone else
@@ -1114,7 +1117,8 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         # check for project type
         try:
             if len(body.project_type) != 0:
-                if body.project_type in [EnumProjectTypes.maintenance.name, EnumProjectTypes.industry.name] and not api_user.is_facility_operator():
+                if body.project_type in [EnumProjectTypes.maintenance.name,
+                                         EnumProjectTypes.industry.name] and not api_user.is_facility_operator():
                     details = 'Invalid project type: {0}, must be set by facility-operator'.format(body.project_type)
                     consoleLogger.error(details)
                     return cors_400(details=details)

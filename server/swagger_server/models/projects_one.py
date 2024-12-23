@@ -11,6 +11,7 @@ from swagger_server.models.preferences import Preferences  # noqa: F401,E501
 from swagger_server.models.profile_projects import ProfileProjects  # noqa: F401,E501
 from swagger_server.models.project_funding import ProjectFunding  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
+from swagger_server.models.quotas_one import QuotasOne  # noqa: F401,E501
 from swagger_server.models.reference import Reference  # noqa: F401,E501
 from swagger_server.models.storage_one import StorageOne  # noqa: F401,E501
 from swagger_server import util
@@ -21,7 +22,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, quotas: List[QuotasOne]=None, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -64,6 +65,8 @@ class ProjectsOne(Model):
         :type project_storage: List[StorageOne]
         :param project_type: The project_type of this ProjectsOne.  # noqa: E501
         :type project_type: str
+        :param quotas: The quotas of this ProjectsOne.  # noqa: E501
+        :type quotas: List[QuotasOne]
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
         :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
@@ -94,6 +97,7 @@ class ProjectsOne(Model):
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
             'project_type': str,
+            'quotas': List[QuotasOne],
             'tags': List[str],
             'token_holders': List[Person],
             'topics': List[str],
@@ -121,6 +125,7 @@ class ProjectsOne(Model):
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
             'project_type': 'project_type',
+            'quotas': 'quotas',
             'tags': 'tags',
             'token_holders': 'token_holders',
             'topics': 'topics',
@@ -146,6 +151,7 @@ class ProjectsOne(Model):
         self._project_owners = project_owners
         self._project_storage = project_storage
         self._project_type = project_type
+        self._quotas = quotas
         self._tags = tags
         self._token_holders = token_holders
         self._topics = topics
@@ -593,6 +599,27 @@ class ProjectsOne(Model):
         """
 
         self._project_type = project_type
+
+    @property
+    def quotas(self) -> List[QuotasOne]:
+        """Gets the quotas of this ProjectsOne.
+
+
+        :return: The quotas of this ProjectsOne.
+        :rtype: List[QuotasOne]
+        """
+        return self._quotas
+
+    @quotas.setter
+    def quotas(self, quotas: List[QuotasOne]):
+        """Sets the quotas of this ProjectsOne.
+
+
+        :param quotas: The quotas of this ProjectsOne.
+        :type quotas: List[QuotasOne]
+        """
+
+        self._quotas = quotas
 
     @property
     def tags(self) -> List[str]:

@@ -50,6 +50,7 @@ def quotas_get(project_uuid: str = None, offset: int = None, limit: int = None) 
     """
     # get api_user
     api_user, id_source = get_person_by_login_claims()
+    print(id_source)
     if id_source is IdSourceEnum.SERVICES.value or api_user.is_facility_operator():
         try:
             # set page to retrieve
@@ -101,7 +102,7 @@ def quotas_get(project_uuid: str = None, offset: int = None, limit: int = None) 
             response.offset = offset
             response.total = results_page.total
             response.size = len(response.results)
-            response.type = 'storage'
+            response.type = 'quotas'
             return cors_200(response_body=response)
         except Exception as exc:
             details = 'Oops! something went wrong with quotas_get(): {0}'.format(exc)
@@ -312,7 +313,7 @@ def quotas_uuid_put(uuid, body=None):  # noqa: E501
                 consoleLogger.info("NOP: quotas_uuid_put(): 'project_uuid' - {0}".format(exc))
             # check for quota_limit
             try:
-                if len(body.quota_limit) != 0:
+                if isinstance(body.quota_limit, float):
                     fab_quota.quota_limit = body.quota_limit
                     fab_quota_modified = True
                     consoleLogger.info('UPDATE: FabricQuotas: uuid={0}, quota_limit={1}'.format(
@@ -321,7 +322,7 @@ def quotas_uuid_put(uuid, body=None):  # noqa: E501
                 consoleLogger.info("NOP: quotas_uuid_put(): 'quota_limit' - {0}".format(exc))
             # check for quota_used
             try:
-                if len(body.quota_used) != 0:
+                if isinstance(body.quota_used, float):
                     fab_quota.quota_used = body.quota_used
                     fab_quota_modified = True
                     consoleLogger.info('UPDATE: FabricQuotas: uuid={0}, quota_used={1}'.format(

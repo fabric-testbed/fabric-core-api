@@ -1,4 +1,5 @@
 """
+REV: v1.8.0
 v1.7.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
@@ -38,9 +39,6 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (32 rows)
-
-Changes from v1.7.0 --> v1.8.0
-- TODO: add new v1.8.0 db items (TBD)
 """
 
 import json
@@ -74,6 +72,11 @@ def dump_alembic_version_data():
     """
     alembic_version
     - version_num = String
+
+    Table "public.alembic_version"
+       Column    |         Type          | Collation | Nullable | Default
+    -------------+-----------------------+-----------+----------+---------
+     version_num | character varying(32) |           | not null |
     """
     try:
         alembic_version = []
@@ -113,6 +116,27 @@ def dump_announcements_data():
     - start_date = db.Column(db.DateTime(timezone=True), nullable=False)
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.announcements"
+            Column        |           Type           | Collation | Nullable |                  Default
+    ----------------------+--------------------------+-----------+----------+-------------------------------------------
+     announcement_type    | enumannouncementtypes    |           | not null |
+     background_image_url | character varying        |           |          |
+     button               | character varying        |           |          |
+     content              | character varying        |           | not null |
+     display_date         | timestamp with time zone |           |          |
+     end_date             | timestamp with time zone |           |          |
+     is_active            | boolean                  |           | not null |
+     link                 | character varying        |           |          |
+     sequence             | integer                  |           |          |
+     start_date           | timestamp with time zone |           |          |
+     title                | character varying        |           | not null |
+     uuid                 | character varying        |           | not null |
+     id                   | integer                  |           | not null | nextval('announcements_id_seq'::regclass)
+     created              | timestamp with time zone |           | not null |
+     modified             | timestamp with time zone |           |          |
+     created_by_uuid      | character varying        |           |          |
+     modified_by_uuid     | character varying        |           |          |
     """
     try:
         announcements = []
@@ -153,6 +177,14 @@ def dump_core_api_metrics_data():
     - json_data = db.Column(JSONB, nullable=False)
     - last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - metrics_type = db.Column(db.Enum(EnumCoreApiMetricsTypes), default=EnumCoreApiMetricsTypes.overview, nullable=False)
+
+    Table "public.core_api_metrics"
+        Column    |           Type           | Collation | Nullable |                   Default
+    --------------+--------------------------+-----------+----------+----------------------------------------------
+     json_data    | jsonb                    |           | not null |
+     last_updated | timestamp with time zone |           | not null |
+     metrics_type | enumcoreapimetricstypes  |           | not null |
+     id           | integer                  |           | not null | nextval('core_api_metrics_id_seq'::regclass)
     """
     try:
         core_api_metrics = []
@@ -187,6 +219,18 @@ def dump_groups_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - name = db.Column(db.String(), nullable=False)
+
+    Table "public.groups"
+          Column      |           Type           | Collation | Nullable |              Default
+    ------------------+--------------------------+-----------+----------+------------------------------------
+     co_cou_id        | integer                  |           | not null |
+     co_parent_cou_id | integer                  |           |          |
+     deleted          | boolean                  |           | not null |
+     description      | text                     |           |          |
+     name             | character varying        |           | not null |
+     id               | integer                  |           | not null | nextval('groups_id_seq'::regclass)
+     created          | timestamp with time zone |           | not null |
+     modified         | timestamp with time zone |           |          |
     """
     try:
         groups = []
@@ -236,12 +280,36 @@ def dump_people_data():
     - preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     - preferred_email = db.Column(db.String(), nullable=False)
     - profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
-    # - publications = db.relationship('Publications', secondary=publications)
     - registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - roles = db.relationship('FabricRoles', backref='people', lazy=True)
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
     - updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.people"
+              Column           |           Type           | Collation | Nullable |              Default
+    ---------------------------+--------------------------+-----------+----------+------------------------------------
+     active                    | boolean                  |           | not null |
+     bastion_login             | character varying        |           |          |
+     co_person_id              | integer                  |           |          |
+     display_name              | character varying        |           | not null |
+     eppn                      | character varying        |           |          |
+     fabric_id                 | character varying        |           |          |
+     gecos                     | character varying        |           |          |
+     oidc_claim_email          | character varying        |           |          |
+     oidc_claim_family_name    | character varying        |           |          |
+     oidc_claim_given_name     | character varying        |           |          |
+     oidc_claim_name           | character varying        |           |          |
+     oidc_claim_sub            | character varying        |           |          |
+     org_affiliation           | integer                  |           |          |
+     preferred_email           | character varying        |           | not null |
+     receive_promotional_email | boolean                  |           | not null |
+     registered_on             | timestamp with time zone |           | not null |
+     updated                   | timestamp with time zone |           | not null |
+     uuid                      | character varying        |           | not null |
+     id                        | integer                  |           | not null | nextval('people_id_seq'::regclass)
+     created                   | timestamp with time zone |           | not null |
+     modified                  | timestamp with time zone |           |          |
     """
     try:
         people = []
@@ -295,6 +363,15 @@ def dump_people_email_addresses_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - type = db.Column(db.String())
+
+    Table "public.people_email_addresses"
+           Column        |       Type        | Collation | Nullable |                      Default
+    ---------------------+-------------------+-----------+----------+----------------------------------------------------
+     co_email_address_id | integer           |           |          |
+     email               | character varying |           |          |
+     people_id           | integer           |           | not null |
+     type                | character varying |           |          |
+     id                  | integer           |           | not null | nextval('people_email_addresses_id_seq'::regclass)
     """
     try:
         people_email_addresses = []
@@ -325,6 +402,14 @@ def dump_people_organizations_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - org_identity_id = db.Column(db.Integer)
     - organization = db.Column(db.String(), nullable=False)
+
+    Table "public.people_organizations"
+         Column      |       Type        | Collation | Nullable |                     Default
+    -----------------+-------------------+-----------+----------+--------------------------------------------------
+     affiliation     | character varying |           | not null |
+     org_identity_id | integer           |           |          |
+     organization    | character varying |           | not null |
+     id              | integer           |           | not null | nextval('people_organizations_id_seq'::regclass)
     """
     try:
         people_organizations = []
@@ -359,6 +444,19 @@ def dump_people_roles_data():
     - description = db.Column(db.String(), nullable=True)
     - people_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=False)
     - status = db.Column(db.String(), nullable=False)
+
+    Table "public.people_roles"
+          Column       |       Type        | Collation | Nullable |                 Default
+    -------------------+-------------------+-----------+----------+------------------------------------------
+     affiliation       | character varying |           | not null |
+     co_cou_id         | integer           |           | not null |
+     co_person_id      | integer           |           | not null |
+     co_person_role_id | integer           |           | not null |
+     name              | character varying |           | not null |
+     description       | character varying |           |          |
+     people_id         | integer           |           | not null |
+     status            | character varying |           | not null |
+     id                | integer           |           | not null | nextval('people_roles_id_seq'::regclass)
     """
     try:
         people_roles = []
@@ -399,6 +497,20 @@ def dump_preferences_data():
     - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
     - type = db.Column(db.Enum(EnumPreferenceTypes), nullable=False)
     - value = db.Column(db.Boolean, default=True, nullable=False)
+
+    Table "public.preferences"
+            Column        |           Type           | Collation | Nullable |                 Default
+    ----------------------+--------------------------+-----------+----------+-----------------------------------------
+     key                  | character varying        |           | not null |
+     people_id            | integer                  |           |          |
+     profiles_people_id   | integer                  |           |          |
+     profiles_projects_id | integer                  |           |          |
+     projects_id          | integer                  |           |          |
+     type                 | enumpreferencetypes      |           | not null |
+     value                | boolean                  |           | not null |
+     id                   | integer                  |           | not null | nextval('preferences_id_seq'::regclass)
+     created              | timestamp with time zone |           | not null |
+     modified             | timestamp with time zone |           |          |
     """
     try:
         preferences = []
@@ -433,6 +545,13 @@ def dump_profiles_keywords_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - keyword = db.Column(db.String(), nullable=False)
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
+
+    Table "public.profiles_keywords"
+            Column        |       Type        | Collation | Nullable |                    Default
+    ----------------------+-------------------+-----------+----------+-----------------------------------------------
+     keyword              | character varying |           | not null |
+     profiles_projects_id | integer           |           | not null |
+     id                   | integer           |           | not null | nextval('profiles_keywords_id_seq'::regclass)
     """
     try:
         profiles_keywords = []
@@ -461,6 +580,14 @@ def dump_profiles_other_identities_data():
     - identity = db.Column(db.String(), nullable=False)
     - profiles_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     - type = db.Column(db.String(), nullable=False)
+
+    Table "public.profiles_other_identities"
+       Column    |       Type        | Collation | Nullable |                        Default
+    -------------+-------------------+-----------+----------+-------------------------------------------------------
+     identity    | character varying |           | not null |
+     profiles_id | integer           |           | not null |
+     type        | character varying |           | not null |
+     id          | integer           |           | not null | nextval('profiles_other_identities_id_seq'::regclass)
     """
     try:
         profiles_other_identities = []
@@ -499,6 +626,20 @@ def dump_profiles_people_data():
     - pronouns = db.Column(db.String(), nullable=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     - website = db.Column(db.String(), nullable=True)
+
+    Table "public.profiles_people"
+      Column   |           Type           | Collation | Nullable |                   Default
+    -----------+--------------------------+-----------+----------+---------------------------------------------
+     bio       | character varying        |           |          |
+     cv        | character varying        |           |          |
+     job       | character varying        |           |          |
+     people_id | integer                  |           | not null |
+     pronouns  | character varying        |           |          |
+     uuid      | character varying        |           | not null |
+     website   | character varying        |           |          |
+     id        | integer                  |           | not null | nextval('profiles_people_id_seq'::regclass)
+     created   | timestamp with time zone |           | not null |
+     modified  | timestamp with time zone |           |          |
     """
     try:
         profiles_people = []
@@ -537,6 +678,14 @@ def dump_profiles_personal_pages_data():
     - profiles_people_id = db.Column(db.Integer, db.ForeignKey('profiles_people.id'), nullable=False)
     - type = db.Column(db.String(), nullable=False)
     - url = db.Column(db.String(), nullable=False)
+
+    Table "public.profiles_personal_pages"
+           Column       |       Type        | Collation | Nullable |                       Default
+    --------------------+-------------------+-----------+----------+-----------------------------------------------------
+     profiles_people_id | integer           |           | not null |
+     url                | character varying |           | not null |
+     type               | character varying |           | not null |
+     id                 | integer           |           | not null | nextval('profiles_personal_pages_id_seq'::regclass)
     """
     try:
         profiles_personal_pages = []
@@ -575,6 +724,19 @@ def dump_profiles_projects_data():
     - purpose = db.Column(db.String(), nullable=True)
     - references = db.relationship('ProfilesReferences', backref='profiles_projects', lazy=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.profiles_projects"
+          Column       |           Type           | Collation | Nullable |                    Default
+    -------------------+--------------------------+-----------+----------+-----------------------------------------------
+     award_information | character varying        |           |          |
+     goals             | character varying        |           |          |
+     project_status    | character varying        |           |          |
+     projects_id       | integer                  |           | not null |
+     purpose           | character varying        |           |          |
+     uuid              | character varying        |           | not null |
+     id                | integer                  |           | not null | nextval('profiles_projects_id_seq'::regclass)
+     created           | timestamp with time zone |           | not null |
+     modified          | timestamp with time zone |           |          |
     """
     try:
         profiles_projects = []
@@ -613,6 +775,14 @@ def dump_profiles_references_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - profiles_projects_id = db.Column(db.Integer, db.ForeignKey('profiles_projects.id'), nullable=False)
     - url = db.Column(db.String(), nullable=False)
+
+    Table "public.profiles_references"
+            Column        |       Type        | Collation | Nullable |                     Default
+    ----------------------+-------------------+-----------+----------+-------------------------------------------------
+     description          | character varying |           | not null |
+     profiles_projects_id | integer           |           | not null |
+     url                  | character varying |           | not null |
+     id                   | integer           |           | not null | nextval('profiles_references_id_seq'::regclass)
     """
     try:
         profiles_references = []
@@ -643,6 +813,7 @@ def dump_projects_data():
     - co_cou_id_pm = db.Column(db.Integer, nullable=True)
     - co_cou_id_po = db.Column(db.Integer, nullable=True)
     - co_cou_id_tk = db.Column(db.Integer, nullable=True)
+    - communities = db.relationship('ProjectsCommunities', backref='projects', lazy=True)
     - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - created_by_uuid = db.Column(db.String(), nullable=True)
     - description = db.Column(db.Text, nullable=False)
@@ -657,17 +828,42 @@ def dump_projects_data():
     - preferences = db.relationship('FabricPreferences', backref='projects')
     - profile = db.relationship('FabricProfilesProjects', backref='projects')
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
+    - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
-    # - publications = db.relationship('Publications', secondary=publications)
+    - project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - token_holders = db.relationship('FabricPeople', secondary=token_holders)
+    - topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.projects"
+          Column      |           Type           | Collation | Nullable |               Default
+    ------------------+--------------------------+-----------+----------+--------------------------------------
+     active           | boolean                  |           | not null |
+     co_cou_id_pc     | integer                  |           |          |
+     co_cou_id_pm     | integer                  |           |          |
+     co_cou_id_po     | integer                  |           |          |
+     co_cou_id_tk     | integer                  |           |          |
+     description      | text                     |           | not null |
+     expires_on       | timestamp with time zone |           |          |
+     facility         | character varying        |           | not null |
+     is_locked        | boolean                  |           | not null |
+     is_public        | boolean                  |           | not null |
+     name             | character varying        |           | not null |
+     project_type     | enumprojecttypes         |           | not null |
+     uuid             | character varying        |           | not null |
+     id               | integer                  |           | not null | nextval('projects_id_seq'::regclass)
+     created          | timestamp with time zone |           | not null |
+     modified         | timestamp with time zone |           |          |
+     created_by_uuid  | character varying        |           |          |
+     modified_by_uuid | character varying        |           |          |
     """
     try:
         projects = []
         fab_projects = FabricProjects.query.order_by('id').all()
+        # TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
         for p in fab_projects:
             data = {
                 'active': p.active,
@@ -675,6 +871,7 @@ def dump_projects_data():
                 'co_cou_id_pm': p.co_cou_id_pm,
                 'co_cou_id_po': p.co_cou_id_po,
                 'co_cou_id_tk': p.co_cou_id_tk,
+                'communities': [c.id for c in p.communities],  # [ProjectsCommunities.id]
                 'created': normalize_date_to_utc(date_str=str(p.created), return_type='str') if p.created else None,
                 'created_by_uuid': p.created_by_uuid,
                 'description': p.description,
@@ -690,12 +887,14 @@ def dump_projects_data():
                 'preferences': [pr.id for pr in p.preferences],  # [FabricPreferences.id]
                 'profile': p.profile.id,
                 'project_creators': [pc.id for pc in p.project_creators],  # [FabricPeople.id]
+                'project_funding': [pf.id for pf in p.project_funding],  # [ProjectsFunding.id]
                 'project_members': [pm.id for pm in p.project_members],  # [FabricPeople.id]
                 'project_owners': [po.id for po in p.project_owners],  # [FabricPeople.id]
                 'project_storage': [ps.id for ps in p.project_storage],  # [FabricStorage.id]
-                # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
-                'tags': [t.id for t in p.tags],  # [String]
+                'project_type': p.project_type,
+                'tags': [t.id for t in p.tags],  # [ProjectsTags.id]
                 'token_holders': [tk.id for tk in p.token_holders],  # [FabricPeople.id]
+                'topics': [t.id for t in p.topics],  # [ProjectsTopics.id]
                 'uuid': p.uuid
             }
             projects.append(data)
@@ -714,6 +913,13 @@ def dump_projects_communities_data():
     projects_communities
     - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     - community = db.Column(db.Text, nullable=False)
+
+    Table "public.projects_communities"
+       Column    |  Type   | Collation | Nullable |                     Default
+    -------------+---------+-----------+----------+--------------------------------------------------
+     projects_id | integer |           | not null |
+     community   | text    |           | not null |
+     id          | integer |           | not null | nextval('projects_communities_id_seq'::regclass)
     """
     try:
         projects_communities = []
@@ -740,6 +946,12 @@ def dump_projects_creators_data():
     projects_creators
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+
+    Table "public.projects_creators"
+       Column    |  Type   | Collation | Nullable | Default
+    -------------+---------+-----------+----------+---------
+     people_id   | integer |           | not null |
+     projects_id | integer |           | not null |
     """
     try:
         projects_creators = []
@@ -769,6 +981,17 @@ def dump_projects_funding_data():
     - award_amount = db.Column(db.Text, nullable=True)
     - award_number = db.Column(db.Text, nullable=True)
     - directorate = db.Column(db.Text, nullable=True)
+
+    Table "public.projects_funding"
+        Column    |  Type   | Collation | Nullable |                   Default
+    --------------+---------+-----------+----------+----------------------------------------------
+     projects_id  | integer |           | not null |
+     agency       | text    |           | not null |
+     agency_other | text    |           |          |
+     award_amount | text    |           |          |
+     award_number | text    |           |          |
+     directorate  | text    |           |          |
+     id           | integer |           | not null | nextval('projects_funding_id_seq'::regclass)
     """
     try:
         projects_funding = []
@@ -799,6 +1022,12 @@ def dump_projects_members_data():
     projects_members
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+
+    Table "public.projects_members"
+       Column    |  Type   | Collation | Nullable | Default
+    -------------+---------+-----------+----------+---------
+     people_id   | integer |           | not null |
+     projects_id | integer |           | not null |
     """
     try:
         projects_members = []
@@ -825,6 +1054,12 @@ def dump_projects_owners_data():
     projects_owners
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+
+    Table "public.projects_owners"
+       Column    |  Type   | Collation | Nullable | Default
+    -------------+---------+-----------+----------+---------
+     people_id   | integer |           | not null |
+     projects_id | integer |           | not null |
     """
     try:
         projects_owners = []
@@ -850,6 +1085,12 @@ def dump_projects_storage_data():
     projects_storage
     - storage_id = db.Column('storage_id', db.Integer, db.ForeignKey('storage.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+
+    Table "public.projects_storage"
+       Column    |  Type   | Collation | Nullable | Default
+    -------------+---------+-----------+----------+---------
+     storage_id  | integer |           | not null |
+     projects_id | integer |           | not null |
     """
     try:
         projects_storage = []
@@ -877,6 +1118,13 @@ def dump_projects_tags_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - projects_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     - tag = db.Column(db.Text, nullable=False)
+
+    Table "public.projects_tags"
+       Column    |  Type   | Collation | Nullable |                  Default
+    -------------+---------+-----------+----------+-------------------------------------------
+     projects_id | integer |           | not null |
+     tag         | text    |           | not null |
+     id          | integer |           | not null | nextval('projects_tags_id_seq'::regclass)
     """
     try:
         projects_tags = []
@@ -904,6 +1152,13 @@ def dump_projects_topics_data():
     - id - primary key (BaseMixin)
     - projects_id - foreignkey link to projects table
     - topic - topic as string
+
+    Table "public.projects_topics"
+       Column    |  Type   | Collation | Nullable |                   Default
+    -------------+---------+-----------+----------+---------------------------------------------
+     projects_id | integer |           | not null |
+     topic       | text    |           | not null |
+     id          | integer |           | not null | nextval('projects_topics_id_seq'::regclass)
     """
     try:
         projects_topics = []
@@ -944,6 +1199,26 @@ def dump_sshkeys_data():
     - ssh_key_type = db.Column(db.String())
     - status = db.Column(db.Enum(EnumSshKeyStatus), default=EnumSshKeyStatus.active, nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.sshkeys"
+           Column       |           Type           | Collation | Nullable |               Default
+    --------------------+--------------------------+-----------+----------+-------------------------------------
+     active             | boolean                  |           | not null |
+     comment            | character varying        |           |          |
+     deactivated_on     | timestamp with time zone |           |          |
+     deactivated_reason | character varying        |           |          |
+     description        | character varying        |           |          |
+     expires_on         | timestamp with time zone |           | not null |
+     fabric_key_type    | enumsshkeytypes          |           | not null |
+     fingerprint        | character varying        |           |          |
+     people_id          | integer                  |           | not null |
+     public_key         | character varying        |           |          |
+     ssh_key_type       | character varying        |           |          |
+     status             | enumsshkeystatus         |           | not null |
+     uuid               | character varying        |           | not null |
+     id                 | integer                  |           | not null | nextval('sshkeys_id_seq'::regclass)
+     created            | timestamp with time zone |           | not null |
+     modified           | timestamp with time zone |           |          |
     """
     try:
         sshkeys = []
@@ -995,6 +1270,22 @@ def dump_storage_data():
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
     - volume_name = db.Column(db.String())
     - volume_size_gb = db.Column(db.Integer, nullable=True)
+
+    Table "public.storage"
+          Column      |           Type           | Collation | Nullable |               Default
+    ------------------+--------------------------+-----------+----------+-------------------------------------
+     active           | boolean                  |           | not null |
+     expires_on       | timestamp with time zone |           | not null |
+     project_id       | integer                  |           | not null |
+     requested_by_id  | integer                  |           | not null |
+     uuid             | character varying        |           | not null |
+     volume_name      | character varying        |           |          |
+     volume_size_gb   | integer                  |           |          |
+     id               | integer                  |           | not null | nextval('storage_id_seq'::regclass)
+     created          | timestamp with time zone |           | not null |
+     modified         | timestamp with time zone |           |          |
+     created_by_uuid  | character varying        |           |          |
+     modified_by_uuid | character varying        |           |          |
     """
     try:
         storage = []
@@ -1031,6 +1322,13 @@ def dump_storage_sites_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - storage_id = db.Column(db.Integer, db.ForeignKey('storage.id'), nullable=False)
     - site = db.Column(db.Text, nullable=False)
+
+    Table "public.storage_sites"
+       Column   |  Type   | Collation | Nullable |                  Default
+    ------------+---------+-----------+----------+-------------------------------------------
+     storage_id | integer |           | not null |
+     site       | text    |           | not null |
+     id         | integer |           | not null | nextval('storage_sites_id_seq'::regclass)
     """
     try:
         storage_sites = []
@@ -1061,6 +1359,17 @@ def dump_task_timeout_tracker_data():
     - timeout_in_seconds
     - uuid
     - value
+
+    Table "public.task_timeout_tracker"
+           Column       |           Type           | Collation | Nullable |                     Default
+    --------------------+--------------------------+-----------+----------+--------------------------------------------------
+     description        | character varying        |           | not null |
+     last_updated       | timestamp with time zone |           | not null |
+     name               | character varying        |           | not null |
+     timeout_in_seconds | integer                  |           | not null |
+     uuid               | character varying        |           | not null |
+     value              | character varying        |           |          |
+     id                 | integer                  |           | not null | nextval('task_timeout_tracker_id_seq'::regclass)
     """
     try:
         task_timeout_tracker = []
@@ -1097,6 +1406,18 @@ def dump_testbed_info_data():
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - modified_by_uuid = db.Column(db.String(), nullable=True)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    Table "public.testbed_info"
+          Column      |           Type           | Collation | Nullable |                 Default
+    ------------------+--------------------------+-----------+----------+------------------------------------------
+     is_active        | boolean                  |           |          |
+     json_data        | jsonb                    |           | not null |
+     uuid             | character varying        |           | not null |
+     id               | integer                  |           | not null | nextval('testbed_info_id_seq'::regclass)
+     created          | timestamp with time zone |           | not null |
+     modified         | timestamp with time zone |           |          |
+     created_by_uuid  | character varying        |           |          |
+     modified_by_uuid | character varying        |           |          |
     """
     try:
         testbed_info = []
@@ -1128,6 +1449,12 @@ def dump_token_holders_data():
     token_holders
     - people_id = db.Column('people_id', db.Integer, db.ForeignKey('people.id'), primary_key=True),
     - projects_id = db.Column('projects_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True)
+
+    Table "public.token_holders"
+       Column    |  Type   | Collation | Nullable | Default
+    -------------+---------+-----------+----------+---------
+     people_id   | integer |           | not null |
+     projects_id | integer |           | not null |
     """
     try:
         token_holders = []
@@ -1154,6 +1481,13 @@ def dump_user_org_affiliations_data():
     - id - primary key (BaseMixin)
     - people_id - foreignkey link to people table
     - affiliation - affiliation as string
+
+    Table "public.user_org_affiliations"
+       Column    |  Type   | Collation | Nullable |                      Default
+    -------------+---------+-----------+----------+---------------------------------------------------
+     people_id   | integer |           | not null |
+     affiliation | text    |           | not null |
+     id          | integer |           | not null | nextval('user_org_affiliations_id_seq'::regclass)
     """
     try:
         user_org_affiliations = []
@@ -1180,6 +1514,13 @@ def dump_user_subject_identifiers_data():
     - id - primary key (BaseMixin)
     - people_id - foreignkey link to people table
     - sub - subject identifier as string
+
+    Table "public.user_subject_identifiers"
+      Column   |  Type   | Collation | Nullable |                       Default
+    -----------+---------+-----------+----------+------------------------------------------------------
+     people_id | integer |           | not null |
+     sub       | text    |           | not null |
+     id        | integer |           | not null | nextval('user_subject_identifiers_id_seq'::regclass)
     """
     try:
         user_subject_identifiers = []

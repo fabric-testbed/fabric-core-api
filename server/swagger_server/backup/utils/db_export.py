@@ -891,7 +891,7 @@ def dump_projects_data():
                 'project_members': [pm.id for pm in p.project_members],  # [FabricPeople.id]
                 'project_owners': [po.id for po in p.project_owners],  # [FabricPeople.id]
                 'project_storage': [ps.id for ps in p.project_storage],  # [FabricStorage.id]
-                'project_type': p.project_type,
+                'project_type': p.project_type.name,
                 'tags': [t.id for t in p.tags],  # [ProjectsTags.id]
                 'token_holders': [tk.id for tk in p.token_holders],  # [FabricPeople.id]
                 'topics': [t.id for t in p.topics],  # [ProjectsTopics.id]

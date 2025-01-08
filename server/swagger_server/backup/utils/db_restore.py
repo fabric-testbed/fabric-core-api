@@ -1574,6 +1574,11 @@ if __name__ == '__main__':
     #  public | projects_tags             | table | postgres
     consoleLogger.info('restore projects_tags table')
     restore_projects_tags_data()
+    restore_projects_owners_data()
+
+    #  public | projects_topics           | table | postgres
+    consoleLogger.info('restore projects_topics table')
+    restore_projects_topics_data()
 
     #  public | preferences               | table | postgres
     consoleLogger.info('restore preferences table')

@@ -16,6 +16,8 @@ from swagger_server.response_code.comanage_utils import create_comanage_group, c
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
+from swagger_server.models.quotas_one import QuotasOne
+from swagger_server.database.models.quotas import FabricQuotas
 
 
 def project_funding_to_array(n):
@@ -269,6 +271,26 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel_data.append(person)
 
     return personnel_data
+
+
+# Storage - Projects
+def get_projects_quotas(fab_project: FabricProjects = None) -> [QuotasOne]:
+    """
+    Retrieve quota objects associated to the project
+    """
+    project_quotas = []
+    fab_quotas = FabricQuotas.query.filter_by(project_uuid=fab_project.uuid).order_by('resource_type').all()
+    for q in fab_quotas:
+        # set quota attributes
+        quota = QuotasOne()
+        quota.quota_limit = q.quota_limit
+        quota.quota_used = q.quota_used
+        quota.resource_type = q.resource_type.value
+        quota.resource_unit = q.resource_unit.value
+        # add quota to project_quotas
+        project_quotas.append(quota)
+
+    return project_quotas
 
 
 # Storage - Projects

@@ -26,8 +26,9 @@ api = ComanageApi(
 
 
 class IdSourceEnum(Enum):
-    COOKIE = 'cookie-vouch-proxy'
     ANSIBLE = 'token-ansible'
+    COOKIE = 'cookie-vouch-proxy'
+    READONLY = 'token-readonly'
     SERVICES = 'token-services'
     USER = 'token-user'
 
@@ -139,6 +140,19 @@ def token_get_custom_claims(token: str) -> dict:
         if token == format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
             # print('ANSIBLE AUTHORIZATION TOKEN')
             claims = first_valid_facility_operator()
+        # account for Ansible script which uses a static token for now
+        if token == format(os.getenv('READONLY_AUTHORIZATION_TOKEN')):
+            # print('SERVICES AUTHORIZATION TOKEN')
+            claims = {
+                'aud': 'FABRIC',
+                'email': None,
+                'family_name': 'Services',
+                'given_name': 'READONLY',
+                'iss': 'core-api',
+                'name': 'FABRIC Read Only',
+                'source': IdSourceEnum.READONLY.value,
+                'sub': None
+            }
         # account for CF Services which uses a static token for now
         elif token == format(os.getenv('SERVICES_AUTHORIZATION_TOKEN')):
             # print('SERVICES AUTHORIZATION TOKEN')

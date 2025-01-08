@@ -1,6 +1,5 @@
 """
-REV: v1.8.0
-v1.7.0 --> v1.8.0 - database tables
+v1.6.2 --> v1.7.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -30,7 +29,6 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
  public | projects_tags             | table | postgres  <-- projects_tags-v<VERSION>.json
  public | projects_topics           | table | postgres  <-- projects_topics-v<VERSION>.json
- public | quotas                    | table | postgres  <-- quotas-v<VERSION>.json
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
@@ -39,10 +37,9 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
+(32 rows)
 
-Changes from v1.7.0 --> v1.8.0
-- table: quotas
+Changes from v1.6.2 --> v1.7.0
 - table: people - added: receive_promotional_email
 - TODO: table: projects_topics
 - table: *core_api_metrics
@@ -63,7 +60,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.7.0'
+api_version = '1.6.1'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -667,7 +664,6 @@ def restore_projects_data():
     - * co_cou_id_pm = db.Column(db.Integer, nullable=True)
     - * co_cou_id_po = db.Column(db.Integer, nullable=True)
     - * co_cou_id_tk = db.Column(db.Integer, nullable=True)
-    - communities = db.relationship('ProjectsCommunities', backref='projects', lazy=True)
     - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - * created_by_uuid = db.Column(db.String(), nullable=True)
     - * description = db.Column(db.Text, nullable=False)
@@ -682,7 +678,6 @@ def restore_projects_data():
     - preferences = db.relationship('FabricPreferences', backref='projects', lazy=True)
     - profile = db.relationship('FabricProfilesProjects', backref='projects', uselist=False, lazy=True)
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
-    - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
@@ -707,7 +702,6 @@ def restore_projects_data():
                 co_cou_id_pm=int(p.get('co_cou_id_pm')) if p.get('co_cou_id_pm') else None,
                 co_cou_id_po=int(p.get('co_cou_id_po')) if p.get('co_cou_id_po') else None,
                 co_cou_id_tk=int(p.get('co_cou_id_tk')) if p.get('co_cou_id_tk') else None,
-                # communities=p.get('communities'), <-- restore_projects_communities_data()
                 created=normalize_date_to_utc(p.get('created')) if p.get('created') else None,
                 created_by_uuid=p.get('created_by_uuid') if p.get('created_by_uuid') else None,
                 description=p.get('description'),
@@ -722,7 +716,6 @@ def restore_projects_data():
                 # preferences=p.get('preferences'), <-- restore_preferences_data()
                 # profile=p.get('profile.id'), <-- restore_projects_profiles_data()
                 # project_creators=p.get('projects_creators'), <-- restore_projects_creators_data()
-                # project_funding=p.get('project_funding'), <-- restore_project_funding_data()
                 # project_members=p.get('projects_members'), <-- restore_projects_members_data()
                 # project_owners=p.get('projects_owners'), <-- restore_projects_owners_data()
                 # project_storage=p.get('projects_storage'), <-- restore_projects_storage_data()
@@ -946,47 +939,6 @@ def restore_projects_topics_data():
             db.session.execute(stmt)
         db.session.commit()
         reset_serial_sequence(db_table='projects_topics', seq_value=max_id + 1)
-    except Exception as exc:
-        consoleLogger.error(exc)
-
-
-# export projects_tags as JSON output file
-def restore_quotas_data():
-    """
-    FabricQuotas(db.Model)
-    - created_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - project_uuid = db.Column(db.String(), nullable=False)
-    - quota_limit = db.Column(db.Float, nullable=False)
-    - quota_used = db.Column(db.Float, nullable=False)
-    - resource_type = db.Column(db.Enum(EnumResourceTypes), default=EnumResourceTypes.core, nullable=False)
-    - resource_unit = db.Column(db.Enum(EnumResourceUnits), default=EnumResourceUnits.hours, nullable=False)
-    - updated_at = db.Column(db.DateTime(timezone=True), nullable=False)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-    """
-    try:
-        with open(BACKUP_DATA_DIR + '/quotas-v{0}.json'.format(api_version), 'r') as infile:
-            quotas_dict = json.load(infile)
-        quotas = quotas_dict.get('quotas')
-        max_id = 0
-        for q in quotas:
-            q_id = int(q.get('id'))
-            if q_id > max_id:
-                max_id = q_id
-            stmt = insert(db.Table('quotas')).values(
-                created_at=normalize_date_to_utc(q.get('created_at')),
-                id=q_id,
-                project_uuid=int(q.get('project_uuid')),
-                quota_limit=q.get('quota_limit'),
-                quota_used=q.get('quota_used'),
-                resource_type=q.get('resource_type'),
-                resource_unit=q.get('resource_unit'),
-                updated_at=normalize_date_to_utc(q.get('updated_at')) if k.get('updated_at') else None,
-                uuid=q.get('uuid')
-            ).on_conflict_do_nothing()
-            db.session.execute(stmt)
-        db.session.commit()
-        reset_serial_sequence(db_table='quotas', seq_value=max_id + 1)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -1574,11 +1526,6 @@ if __name__ == '__main__':
     #  public | projects_tags             | table | postgres
     consoleLogger.info('restore projects_tags table')
     restore_projects_tags_data()
-    restore_projects_owners_data()
-
-    #  public | projects_topics           | table | postgres
-    consoleLogger.info('restore projects_topics table')
-    restore_projects_topics_data()
 
     #  public | preferences               | table | postgres
     consoleLogger.info('restore preferences table')

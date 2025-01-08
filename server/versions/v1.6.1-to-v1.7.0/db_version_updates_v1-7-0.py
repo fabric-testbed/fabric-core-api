@@ -1,6 +1,5 @@
 """
-REV: v1.8.0
-v1.7.0 --> v1.8.0 - database tables
+v1.6.2 --> v1.7.0 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -30,7 +29,6 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
  public | projects_tags             | table | postgres  <-- projects_tags-v<VERSION>.json
  public | projects_topics           | table | postgres  <-- projects_topics-v<VERSION>.json
- public | quotas                    | table | postgres  <-- quotas-v<VERSION>.json
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
@@ -39,10 +37,15 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
+(32 rows)
 
-Changes from v1.7.0 --> v1.8.0
-- table: quotas
+Changes from v1.6.2 --> v1.7.0
+- table: people - added: receive_promotional_email
+- TODO: table: projects_topics
+- table: *core_api_metrics
+- table: *projects_communities
+- table: *projects_funding
+- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
 """
 
 import os
@@ -52,7 +55,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.projects import FabricProjects, ProjectsTags
 
 # API version of data to restore from
-api_version = '1.7.0'
+api_version = '1.6.1'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'

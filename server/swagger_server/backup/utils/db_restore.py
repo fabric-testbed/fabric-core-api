@@ -2,7 +2,6 @@
 REV: v1.8.0
 v1.7.0 --> v1.8.0 - database tables
 
-$ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
  Schema |           Name            | Type  |  Owner
 --------+---------------------------+-------+----------

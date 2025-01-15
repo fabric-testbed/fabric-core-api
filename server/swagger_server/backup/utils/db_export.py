@@ -113,6 +113,7 @@ def dump_announcements_data():
     - link = db.Column(db.String())
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - modified_by_uuid = db.Column(db.String(), nullable=True)
+    - sequence = db.Column(db.Integer(), nullable=True)
     - start_date = db.Column(db.DateTime(timezone=True), nullable=False)
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
@@ -156,6 +157,7 @@ def dump_announcements_data():
                 'link': a.link,
                 'modified': normalize_date_to_utc(date_str=str(a.modified), return_type='str'),
                 'modified_by_uuid': str(a.modified_by_uuid),
+                'sequence': a.sequence,
                 'start_date': normalize_date_to_utc(date_str=str(a.start_date), return_type='str'),
                 'title': a.title,
                 'uuid': str(a.uuid)

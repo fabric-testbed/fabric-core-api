@@ -122,7 +122,7 @@ def restore_announcements_data():
             stmt = insert(db.Table('announcements')).values(
                 announcement_type=a.get('announcement_type'),
                 background_image_url=a.get('background_image_url') if a.get('background_image_url') else None,
-                button=a.get('button'),
+                button=a.get('button') if a.get('button') else None,
                 content=a.get('content'),
                 created=normalize_date_to_utc(a.get('created')) if a.get('created') else None,
                 created_by_uuid=a.get('created_by_uuid'),

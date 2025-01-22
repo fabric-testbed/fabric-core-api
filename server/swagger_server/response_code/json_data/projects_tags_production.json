@@ -79,6 +79,8 @@
     "Net.FacilityPort.UCSD-HU0-wk3-pci3-p1": "UCSD-HU0-wk3-pci3-p1",
     "Net.FacilityPort.UCSD-HU2-wk3-pci3-p2": "UCSD-HU2-wk3-pci3-p2",
     "Net.FacilityPort.UCSD-HU4-wk3-pci6-p1": "UCSD-HU4-wk3-pci6-p1",
-    "Net.FacilityPort.UCSD-HU6-wk3-pci6-p2": "UCSD-HU6-wk3-pci6-p2"
+    "Net.FacilityPort.UCSD-HU6-wk3-pci6-p2": "UCSD-HU6-wk3-pci6-p2",
+    "Net.FacilityPort.KentState-WASH": "KentState-WASH",
+    "Net.FacilityPort.NRP-CERN": "NRP-CERN"
   }
 }

@@ -14,7 +14,7 @@ class JourneyTrackerPeopleOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=None, affiliation: str=None, deactivated_date: datetime=None, email_address: str=None, fabric_last_seen: datetime=None, fabric_roles: List[str]=None, fabric_uuid: str=None, name: str=None):  # noqa: E501
+    def __init__(self, active: bool=None, affiliation: str=None, deactivated_date: datetime=None, email_address: str=None, fabric_last_seen: datetime=None, fabric_registered_on: datetime=None, fabric_roles: List[str]=None, fabric_uuid: str=None, name: str=None):  # noqa: E501
         """JourneyTrackerPeopleOne - a model defined in Swagger
 
         :param active: The active of this JourneyTrackerPeopleOne.  # noqa: E501
@@ -27,6 +27,8 @@ class JourneyTrackerPeopleOne(Model):
         :type email_address: str
         :param fabric_last_seen: The fabric_last_seen of this JourneyTrackerPeopleOne.  # noqa: E501
         :type fabric_last_seen: datetime
+        :param fabric_registered_on: The fabric_registered_on of this JourneyTrackerPeopleOne.  # noqa: E501
+        :type fabric_registered_on: datetime
         :param fabric_roles: The fabric_roles of this JourneyTrackerPeopleOne.  # noqa: E501
         :type fabric_roles: List[str]
         :param fabric_uuid: The fabric_uuid of this JourneyTrackerPeopleOne.  # noqa: E501
@@ -40,6 +42,7 @@ class JourneyTrackerPeopleOne(Model):
             'deactivated_date': datetime,
             'email_address': str,
             'fabric_last_seen': datetime,
+            'fabric_registered_on': datetime,
             'fabric_roles': List[str],
             'fabric_uuid': str,
             'name': str
@@ -51,6 +54,7 @@ class JourneyTrackerPeopleOne(Model):
             'deactivated_date': 'deactivated_date',
             'email_address': 'email_address',
             'fabric_last_seen': 'fabric_last_seen',
+            'fabric_registered_on': 'fabric_registered_on',
             'fabric_roles': 'fabric_roles',
             'fabric_uuid': 'fabric_uuid',
             'name': 'name'
@@ -60,6 +64,7 @@ class JourneyTrackerPeopleOne(Model):
         self._deactivated_date = deactivated_date
         self._email_address = email_address
         self._fabric_last_seen = fabric_last_seen
+        self._fabric_registered_on = fabric_registered_on
         self._fabric_roles = fabric_roles
         self._fabric_uuid = fabric_uuid
         self._name = name
@@ -179,6 +184,27 @@ class JourneyTrackerPeopleOne(Model):
         """
 
         self._fabric_last_seen = fabric_last_seen
+
+    @property
+    def fabric_registered_on(self) -> datetime:
+        """Gets the fabric_registered_on of this JourneyTrackerPeopleOne.
+
+
+        :return: The fabric_registered_on of this JourneyTrackerPeopleOne.
+        :rtype: datetime
+        """
+        return self._fabric_registered_on
+
+    @fabric_registered_on.setter
+    def fabric_registered_on(self, fabric_registered_on: datetime):
+        """Sets the fabric_registered_on of this JourneyTrackerPeopleOne.
+
+
+        :param fabric_registered_on: The fabric_registered_on of this JourneyTrackerPeopleOne.
+        :type fabric_registered_on: datetime
+        """
+
+        self._fabric_registered_on = fabric_registered_on
 
     @property
     def fabric_roles(self) -> List[str]:

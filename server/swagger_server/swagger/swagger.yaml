@@ -3371,6 +3371,9 @@ components:
         fabric_last_seen:
           type: string
           format: date-time
+        fabric_registered_on:
+          type: string
+          format: date-time
         fabric_roles:
           type: array
           items:

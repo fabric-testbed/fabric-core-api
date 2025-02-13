@@ -21,6 +21,7 @@ def journey_tracker_people_by_since_date(since_date: datetime = None, until_date
             p.deactivated_date = None
             p.email_address = res.preferred_email
             p.fabric_last_seen = str(res.updated)
+            p.fabric_registered_on = str(res.registered_on)
             roles = FabricRoles.query.filter_by(people_id=res.id).order_by('name').all()
             p.fabric_roles = [r.name for r in roles]
             p.fabric_uuid = res.uuid

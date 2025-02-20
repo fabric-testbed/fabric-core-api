@@ -1,6 +1,6 @@
 """
-REV: v1.8.0
-v1.7.0 --> v1.8.0 - database tables
+REV: v1.8.1
+v1.8.0 --> v1.8.1 - database tables
 
 $ docker exec -u postgres api-database psql -c "\dt;"
                    List of relations
@@ -41,42 +41,74 @@ $ docker exec -u postgres api-database psql -c "\dt;"
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (33 rows)
 
-Changes from v1.7.0 --> v1.8.0
-- table: quotas
+Changes from v1.8.0 --> v1.8.1
+- update table: quotas, EnumResourceTypes changes
 """
 
 import os
+from datetime import datetime, timezone
+from uuid import uuid4
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
-from swagger_server.database.models.projects import FabricProjects, ProjectsTags
+from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 
 # API version of data to restore from
-api_version = '1.7.0'
+api_version = '1.8.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 
 
-def projects_tags_slice_multisite_backfill():
+def projects_quota_placeholder_backfill():
     """
-    Ensure that tag Slice.Multisite is applied to all projects
+    Backfill projects quota placeholder for the following
+    - p4 = "P4"
+    - core = "Core"
+    - ram = "RAM"
+    - disk = "Disk"
+    - gpu_rtx6000 = "GPU RTX6000"
+    - gpu_tesla_t4 = "GPU TESLA T4"
+    - gpu_a40 = "GPU A40"
+    - gpu_a30 = "GPU A30"
+    - sharednic_connectx_6 = "ShareDNIC ConnectX 6"
+    - smartnic_bluefield_2_connectx_6 = "SmartNIC Bluefield 2 ConnectX 6"
+    - smartnic_connectx_6 = "SmartNIC ConnectX 6"
+    - smartnic_connectx_5 = "SmartNIC ConnectX 5"
+    - nvme_p4510 = "NVME P4510"
+    - storage_nas = "Storage NAS"
+    - fpga_xilinx_u280 = "FPGA XILINX U280"
+    - fpga_xilinx_sn1022 = "FPGA XILINX SN1022"
     """
+    resource_types = [r.name for r in EnumResourceTypes]
     try:
         fab_projects = FabricProjects.query.all()
         for fp in fab_projects:
             consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
-            fab_tag = ProjectsTags.query.filter(
-                ProjectsTags.projects_id == fp.id,
-                ProjectsTags.tag == 'Slice.Multisite'
-            ).one_or_none()
-            if not fab_tag:
-                consoleLogger.info('  - add tag: Slice.Multisite to project: id {0}'.format(fp.id))
-                fab_tag = ProjectsTags()
-                fab_tag.projects_id = fp.id
-                fab_tag.tag = 'Slice.Multisite'
-                fp.tags.append(fab_tag)
-                db.session.commit()
+            fp_quota_objs = FabricQuotas.query.filter(FabricQuotas.project_uuid == fp.uuid).all()
+            fp_quota_list = [q.resource_type.name for q in fp_quota_objs]
+            for rt in resource_types:
+                if rt not in fp_quota_list:
+                    # create Quota
+                    now = datetime.now(timezone.utc)
+                    fab_quota = FabricQuotas()
+                    fab_quota.created_at = now
+                    fab_quota.project_uuid = fp.uuid
+                    fab_quota.quota_limit = 0.0
+                    fab_quota.quota_used = 0.0
+                    fab_quota.resource_type = rt
+                    fab_quota.resource_unit = EnumResourceUnits.hours.name
+                    fab_quota.updated_at = now
+                    fab_quota.uuid = str(uuid4())
+                    try:
+                        db.session.add(fab_quota)
+                        db.session.commit()
+                    except Exception as exc:
+                        db.session.rollback()
+                        details = 'Oops! something went wrong with projects_quota_placeholder_backfill(): {0}'.format(
+                            exc)
+                        print(details)
     except Exception as exc:
         consoleLogger.error(exc)
 
@@ -86,5 +118,5 @@ if __name__ == '__main__':
 
     consoleLogger.info('Update data from API version {0}'.format(api_version))
 
-    # Projects: backfill tag Slice.Multisite for all projects that don't already have it
-    projects_tags_slice_multisite_backfill()
+    # Projects: backfill quota information for existing projects that don't already have it
+    projects_quota_placeholder_backfill()

@@ -5,19 +5,19 @@ from uuid import uuid4
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
-from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, \
-    ProjectsTags, ProjectsTopics, EnumProjectTypes
+from swagger_server.database.models.projects import EnumProjectTypes, FabricProjects, ProjectsCommunities, \
+    ProjectsFunding, ProjectsTags, ProjectsTopics
+from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.quotas_one import QuotasOne
 from swagger_server.models.storage_one import StorageOne
 from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
     delete_comanage_role
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
-from swagger_server.models.quotas_one import QuotasOne
-from swagger_server.database.models.quotas import FabricQuotas
 
 
 def project_funding_to_array(n):
@@ -145,6 +145,27 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
             log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
                                                                                        str(project_creator.uuid))
             metricsLogger.info(log_msg)
+    # add quota placeholders
+    resource_types = [r.name for r in EnumResourceTypes]
+    for rt in resource_types:
+        # create Quota
+        fab_quota = FabricQuotas()
+        fab_quota.created_at = now
+        fab_quota.project_uuid = fab_project.uuid
+        fab_quota.quota_limit = 0.0
+        fab_quota.quota_used = 0.0
+        fab_quota.resource_type = rt
+        fab_quota.resource_unit = EnumResourceUnits.hours.name
+        fab_quota.updated_at = now
+        fab_quota.uuid = str(uuid4())
+        try:
+            db.session.add(fab_quota)
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            details = 'Oops! something went wrong with create_fabric_project_from_api() / Quota: {0}'.format(
+                exc)
+            consoleLogger.error(details)
 
     return fab_project
 
@@ -215,6 +236,27 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
                 if po:
                     fab_project.project_owners.append(po)
             db.session.commit()
+            # add quota placeholders
+            resource_types = [r.name for r in EnumResourceTypes]
+            for rt in resource_types:
+                # create Quota
+                fab_quota = FabricQuotas()
+                fab_quota.created_at = now
+                fab_quota.project_uuid = fab_project.uuid
+                fab_quota.quota_limit = 0.0
+                fab_quota.quota_used = 0.0
+                fab_quota.resource_type = rt
+                fab_quota.resource_unit = EnumResourceUnits.hours.name
+                fab_quota.updated_at = now
+                fab_quota.uuid = str(uuid4())
+                try:
+                    db.session.add(fab_quota)
+                    db.session.commit()
+                except Exception as exc:
+                    db.session.rollback()
+                    details = 'Oops! something went wrong with create_fabric_project_from_uuid() / Quota: {0}'.format(
+                        exc)
+                    consoleLogger.error(details)
         else:
             consoleLogger.warning(
                 "NOT FOUND: create_fabric_project_from_uuid(): Unable to find cou with uuid: '{0}'".format(uuid))

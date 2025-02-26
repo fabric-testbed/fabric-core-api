@@ -53,6 +53,7 @@ from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch
 from swagger_server.models.quotas import Quotas
 from swagger_server.models.quotas_details import QuotasDetails
 from swagger_server.models.quotas_one import QuotasOne
+from swagger_server.models.quotas_one_resource_type import QuotasOneResourceType
 from swagger_server.models.quotas_post import QuotasPost
 from swagger_server.models.quotas_put import QuotasPut
 from swagger_server.models.reference import Reference

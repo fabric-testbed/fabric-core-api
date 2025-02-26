@@ -3774,7 +3774,7 @@ components:
         quota_used:
           type: number
         resource_type:
-          type: string
+          $ref: '#/components/schemas/quotas_one_resource_type'
         resource_unit:
           type: string
         updated_at:
@@ -4403,6 +4403,13 @@ components:
         url:
           type: string
         type:
+          type: string
+    quotas_one_resource_type:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
           type: string
     sshkey_pair_results:
       type: object

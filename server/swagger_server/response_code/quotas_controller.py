@@ -8,7 +8,7 @@ from swagger_server.database.models.projects import FabricProjects
 from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 from swagger_server.models.quotas import Quotas  # noqa: E501
 from swagger_server.models.quotas_details import QuotasDetails
-from swagger_server.models.quotas_one import QuotasOne
+from swagger_server.models.quotas_one import QuotasOne, QuotasOneResourceType
 from swagger_server.models.quotas_post import QuotasPost  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent, \
     Status200OkNoContentResults  # noqa: E501
@@ -75,11 +75,14 @@ def quotas_get(project_uuid: str = None, offset: int = None, limit: int = None) 
             response.results = []
             for item in results_page.items:
                 quota = QuotasOne()
+                quota_resource_type = QuotasOneResourceType()
                 quota.created_at = str(item.created_at)
                 quota.project_uuid = item.project_uuid
                 quota.quota_limit = item.quota_limit
                 quota.quota_used = item.quota_used
-                quota.resource_type = item.resource_type.value
+                quota_resource_type.name = item.resource_type.name
+                quota_resource_type.value = item.resource_type.value
+                quota.resource_type = quota_resource_type
                 quota.resource_unit = item.resource_unit.value
                 quota.updated_at = str(item.updated_at)
                 quota.uuid = item.uuid
@@ -246,11 +249,14 @@ def quotas_uuid_get(uuid: str):  # noqa: E501
                 return cors_404(details="No match for Quota with uuid = '{0}'".format(uuid))
             # set QuotasOne object
             quota_one = QuotasOne()
+            quota_one_resource_type = QuotasOneResourceType
             quota_one.created_at = str(fab_quota.created_at)
             quota_one.project_uuid = fab_quota.project_uuid
             quota_one.quota_limit = fab_quota.quota_limit
             quota_one.quota_used = fab_quota.quota_used
-            quota_one.resource_type = fab_quota.resource_type.value
+            quota_one_resource_type.name = fab_quota.resource_type.name
+            quota_one_resource_type.value = fab_quota.resource_type.value
+            quota_one.resource_type = quota_one_resource_type
             quota_one.resource_unit = fab_quota.resource_unit.value
             quota_one.updated_at = str(fab_quota.updated_at)
             quota_one.uuid = fab_quota.uuid

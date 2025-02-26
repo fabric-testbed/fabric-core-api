@@ -33,7 +33,7 @@ class EnumResourceTypes(enum.Enum):
     gpu_tesla_t4 = "GPU TESLA T4"
     gpu_a40 = "GPU A40"
     gpu_a30 = "GPU A30"
-    sharednic_connectx_6 = "ShareDNIC ConnectX 6"
+    sharednic_connectx_6 = "SharedNIC ConnectX 6"
     smartnic_bluefield_2_connectx_6 = "SmartNIC Bluefield 2 ConnectX 6"
     smartnic_connectx_6 = "SmartNIC ConnectX 6"
     smartnic_connectx_5 = "SmartNIC ConnectX 5"

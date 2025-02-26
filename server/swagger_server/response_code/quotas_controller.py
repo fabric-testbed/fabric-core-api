@@ -249,7 +249,7 @@ def quotas_uuid_get(uuid: str):  # noqa: E501
                 return cors_404(details="No match for Quota with uuid = '{0}'".format(uuid))
             # set QuotasOne object
             quota_one = QuotasOne()
-            quota_one_resource_type = QuotasOneResourceType
+            quota_one_resource_type = QuotasOneResourceType()
             quota_one.created_at = str(fab_quota.created_at)
             quota_one.project_uuid = fab_quota.project_uuid
             quota_one.quota_limit = fab_quota.quota_limit

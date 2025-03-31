@@ -93,10 +93,11 @@
     "Net.FacilityPort.Net.FacilityPort.CIEN-HU5-wk2-pci2-p1": "CIEN-HU5-wk2-pci2-p1",
     "Net.FacilityPort.Net.FacilityPort.CIEN-HU6-wk2-pci2-p2": "CIEN-HU6-wk2-pci2-p2",
     "Net.FacilityPort.Net.FacilityPort.FP1-CIEN": "FP1-CIEN",
+    "Net.FacilityPort.Net.FacilityPort.FP2-CIEN": "FP2-CIEN",
+    "Net.FacilityPort.Net.FacilityPort.FP3-CIEN": "FP3-CIEN",
+    "Net.FacilityPort.Net.FacilityPort.FP4-CIEN": "FP4-CIEN",
     "Net.FacilityPort.Net.FacilityPort.FP1-SALT": "FP1-SALT",
     "Net.FacilityPort.Net.FacilityPort.FP2-SALT": "FP2-SALT",
-    "Net.FacilityPort.Net.FacilityPort.FP3-CIEN": "FP3-CIEN",
-    "Net.FacilityPort.Net.FacilityPort.FP3-SALT": "FP3-SALT",
-    "Net.FacilityPort.Net.FacilityPort.FP4-CIEN": "FP4-CIEN"
+    "Net.FacilityPort.Net.FacilityPort.FP3-SALT": "FP3-SALT"
   }
 }

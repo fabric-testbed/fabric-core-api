@@ -18,6 +18,7 @@ from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # n
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_review_required_patch import ProjectsReviewRequiredPatch  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
 from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch  # noqa: E501
@@ -310,6 +311,20 @@ class TestProjectsController(BaseTestCase):
             data=json.dumps(body),
             content_type='application/json',
             query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_review_required_patch(self):
+        """Test case for projects_uuid_review_required_patch
+
+        Update Project review status as Facility Operator
+        """
+        body = ProjectsReviewRequiredPatch()
+        response = self.client.open(
+            '/projects/{uuid}/review-required'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

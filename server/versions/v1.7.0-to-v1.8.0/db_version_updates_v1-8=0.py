@@ -45,7 +45,7 @@ Changes from v1.8.0 --> v1.8.1
 """
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from swagger_server.__main__ import app, db
@@ -112,49 +112,10 @@ def projects_quota_placeholder_backfill():
         consoleLogger.error(exc)
 
 
-def projects_retire_after_365_days_expired():
-    """
-    Migrate projects that have expired for more than 180 days to retired status
-    """
-    try:
-        fab_projects = FabricProjects.query.all()
-        for fp in fab_projects:
-            consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
-            now = datetime.now(timezone.utc)
-            # check if project is expired, but not retired
-            if fp.expires_on < now and not fp.retired_date:
-                fp.review_required = True
-                consoleLogger.info(' - Expired: date {0}'.format(fp.expires_on))
-            # check if project retired
-            if fp.retired_date and fp.retired_date < now and not fp.is_locked:
-                fp.is_locked = True
-                fp.review_required = False
-            # check if project should be retired - auto retire after PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS
-            if fp.expires_on + timedelta(days=float(
-                    os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fp.retired_date:
-                fp.is_locked = True
-                fp.review_required = False
-                fp.retired_date = now
-                consoleLogger.info(' - Retired: date {0}'.format(fp.expires_on + timedelta(days=float())))
-            # determine if project is active
-            if not fp.review_required and not fp.is_locked and not fp.retired_date:
-                fp.active = True
-            else:
-                fp.active = False
-            db.session.commit()
-    except Exception as exc:
-        consoleLogger.error(exc)
-
-
 if __name__ == '__main__':
     app.app_context().push()
 
     consoleLogger.info('Update data from API version {0}'.format(api_version))
 
     # Projects: backfill quota information for existing projects that don't already have it
-    consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
     projects_quota_placeholder_backfill()
-
-    # Projects: migrate projects that have expired for more than 180 days to retired status
-    consoleLogger.info('Projects: migrate projects that have expired for more than 180 days to retired status')
-    projects_retire_after_365_days_expired()

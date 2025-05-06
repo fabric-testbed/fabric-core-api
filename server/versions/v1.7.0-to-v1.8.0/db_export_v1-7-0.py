@@ -1,6 +1,6 @@
 """
-REV: v1.8.1
-v1.8.0 - database tables
+REV: v1.8.0
+v1.7.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -29,7 +29,6 @@ v1.8.0 - database tables
  public | projects_storage          | table | postgres  <-- projects_storage-v<VERSION>.json
  public | projects_tags             | table | postgres  <-- projects_tags-v<VERSION>.json
  public | projects_topics           | table | postgres  <-- projects_topics-v<VERSION>.json
- public | quotas                    | table | postgres  <-- quotas-v<VERSION>.json
  public | sshkeys                   | table | postgres  <-- sshkeys-v<VERSION>.json
  public | storage                   | table | postgres  <-- storage-v<VERSION>.json
  public | storage_sites             | table | postgres  <-- storage_sites-v<VERSION>.json
@@ -38,15 +37,7 @@ v1.8.0 - database tables
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
-
-- table: quotas
-- table: people - added: receive_promotional_email
-- TODO: table: projects_topics
-- table: *core_api_metrics
-- table: *projects_communities
-- table: *projects_funding
-- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
+(32 rows)
 """
 
 import json
@@ -70,7 +61,6 @@ from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
-from swagger_server.database.models.quotas import FabricQuotas
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -291,7 +281,6 @@ def dump_people_data():
     - preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     - preferred_email = db.Column(db.String(), nullable=False)
     - profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
-    - receive_promotional_email
     - registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     - roles = db.relationship('FabricRoles', backref='people', lazy=True)
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
@@ -349,7 +338,6 @@ def dump_people_data():
                 'preferred_email': p.preferred_email,
                 'profile': p.profile.id,
                 # 'publications': [pu.id for pu in p.publications], # [FabricPublications.id]
-                'receive_promotional_email': p.receive_promotional_email,
                 'registered_on': normalize_date_to_utc(date_str=str(p.registered_on),
                                                        return_type='str') if p.registered_on else None,
                 'roles': [r.id for r in p.roles],
@@ -846,8 +834,6 @@ def dump_projects_data():
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
     - project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
-    - retired_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    - review_required = db.Column(db.Boolean, default=True, nullable=False)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - token_holders = db.relationship('FabricPeople', secondary=token_holders)
     - topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
@@ -868,16 +854,12 @@ def dump_projects_data():
      is_public        | boolean                  |           | not null |
      name             | character varying        |           | not null |
      project_type     | enumprojecttypes         |           | not null |
-     retired_date     | timestamp with time zone |           |          |
-     review_required  | boolean                  |           | not null |
      uuid             | character varying        |           | not null |
      id               | integer                  |           | not null | nextval('projects_id_seq'::regclass)
      created          | timestamp with time zone |           | not null |
      modified         | timestamp with time zone |           |          |
      created_by_uuid  | character varying        |           |          |
      modified_by_uuid | character varying        |           |          |
-    Indexes:
-        "projects_pkey" PRIMARY KEY, btree (id)
     """
     try:
         projects = []
@@ -911,8 +893,6 @@ def dump_projects_data():
                 'project_owners': [po.id for po in p.project_owners],  # [FabricPeople.id]
                 'project_storage': [ps.id for ps in p.project_storage],  # [FabricStorage.id]
                 'project_type': p.project_type.name,
-                # 'retired_date': normalize_date_to_utc(date_str=str(p.retired_date), return_type='str') if p.retired_date else None,
-                # 'review_required': p.review_required,
                 'tags': [t.id for t in p.tags],  # [ProjectsTags.id]
                 'token_holders': [tk.id for tk in p.token_holders],  # [FabricPeople.id]
                 'topics': [t.id for t in p.topics],  # [ProjectsTopics.id]
@@ -1195,61 +1175,6 @@ def dump_projects_topics_data():
         output_json = json.dumps(output_dict, indent=2)
         # print(json.dumps(output_dict, indent=2))
         with open(BACKUP_DATA_DIR + '/projects_topics-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
-            outfile.write(output_json)
-    except Exception as exc:
-        consoleLogger.error(exc)
-
-
-# export quotas as JSON output file
-def dump_quotas_data():
-    """
-    Quotas - Control Framework quotas for projects
-    - created_at = UTC datetime
-    - id - primary key
-    - project_uuid = UUID as string
-    - quota_limit = Float
-    - quota_used = Float
-    - resource_type = in [p4, core, ram, disk, gpu, smartnic, sharednic, fpga, nvme, storage] as string
-    - resource_unit = in [hours, ...] as string
-    - updated_at = UTC datetime
-    - uuid = UUID as string
-
-    Table "public.quotas"
-        Column     |           Type           | Collation | Nullable |              Default
-    ---------------+--------------------------+-----------+----------+------------------------------------
-     created_at    | timestamp with time zone |           | not null |
-     id            | integer                  |           | not null | nextval('quotas_id_seq'::regclass)
-     project_uuid  | character varying        |           | not null |
-     quota_limit   | double precision         |           | not null |
-     quota_used    | double precision         |           | not null |
-     resource_type | enumresourcetypes        |           | not null |
-     resource_unit | enumresourceunits        |           | not null |
-     updated_at    | timestamp with time zone |           | not null |
-     uuid          | character varying        |           | not null |
-    Indexes:
-        "quotas_pkey" PRIMARY KEY, btree (id)
-        "project_resource_type_unit" UNIQUE CONSTRAINT, btree (project_uuid, resource_type, resource_unit)
-    """
-    try:
-        quotas = []
-        fab_quotas = FabricQuotas.query.order_by('id').all()
-        for q in fab_quotas:
-            data = {
-                'created_at': normalize_date_to_utc(date_str=str(q.created_at), return_type='str') if q.created_at else None,
-                'id': q.id,
-                'project_uuid': q.project_uuid,
-                'quota_limit': q.quota_limit,
-                'quota_used': q.quota_used,
-                'resource_type': { 'name': q.resource_type.name, 'value': q.resource_type.value },
-                'resource_unit': q.resource_unit.value,
-                'updated_at': normalize_date_to_utc(date_str=str(q.updated_at), return_type='str') if q.updated_at else None,
-                'uuid': q.uuid
-            }
-            quotas.append(data)
-        output_dict = {'quotas': quotas}
-        output_json = json.dumps(output_dict, indent=2)
-        # print(json.dumps(output_dict, indent=2))
-        with open(BACKUP_DATA_DIR + '/quotas-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
             outfile.write(output_json)
     except Exception as exc:
         consoleLogger.error(exc)
@@ -1718,10 +1643,6 @@ if __name__ == '__main__':
     #  public | projects_topics           | table | postgres
     consoleLogger.info('dump projects_topics table')
     dump_projects_topics_data()
-
-    #  public | quotas                    | table | postgres
-    consoleLogger.info('dump quotas table')
-    dump_quotas_data()
 
     #  public | sshkeys                   | table | postgres
     consoleLogger.info('dump sshkeys table')

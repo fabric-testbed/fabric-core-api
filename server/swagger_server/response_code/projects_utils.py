@@ -27,22 +27,33 @@ def project_funding_to_array(n):
 
 def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPeople) -> FabricProjects:
     """
-    * Denotes required fields
-    - *active
-    - co_cou_id_pc
-    - co_cou_id_pm
-    - co_cou_id_po
-    - *description
-    - *facility
-    - *is_public
-    - *name
-    - preferences
-    - profile
-    - project_creators
-    - project_members
-    - project_owners
-    - tags
-    - *uuid
+    FabricProject object
+    - active - project status
+    - communities - array of community strings
+    - created - timestamp created (TimestampMixin)
+    - created_by_uuid - uuid of person created_by (TrackingMixin)
+    - description - project description
+    - expires_on - project expiry date - petition to add extension
+    - facility - project facility (default = FABRIC)
+    - id - primary key (BaseMixin)
+    - is_locked - lock project from PUT/PATCH while being updated (default: False)
+    - is_public - show/hide project in all public interfaces (default: True)
+    - modified - timestamp modified (TimestampMixin)
+    - modified_by_uuid - uuid of person modified_by (TrackingMixin)
+    - name - project name
+    - preferences - array of preference booleans
+    - profile - foreignkey link to profile_projects
+    - project_creators - one-to-many people (initially one person)
+    - project_members - one-to-many people
+    - project_owners - one-to-many people
+    - projects_storage - one-to-many storage
+    - project_topics - array of topics as string
+    - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
+    - tags - array of tag strings
+    - token_holders - one-to-many people
+    - uuid - unique universal identifier
 
     {
         "description": "string",
@@ -71,6 +82,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
     fab_project.project_type = EnumProjectTypes.research
+    fab_project.retired_date = None
+    fab_project.review_required = True
     fab_project.uuid = uuid4()
     db.session.add(fab_project)
     db.session.commit()
@@ -172,23 +185,35 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
 
 def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
     """
-    * Denotes required fields
-    - *active
-    - co_cou_id_pc
-    - co_cou_id_pm
-    - co_cou_id_po
-    - *description
-    - *facility
-    - *is_public
-    - *name
-    - preferences
-    - profile
-    - project_creators
-    - project_members
-    - project_owners
-    - tags
-    - *uuid
+    FabricProject object
+    - active - project status
+    - communities - array of community strings
+    - created - timestamp created (TimestampMixin)
+    - created_by_uuid - uuid of person created_by (TrackingMixin)
+    - description - project description
+    - expires_on - project expiry date - petition to add extension
+    - facility - project facility (default = FABRIC)
+    - id - primary key (BaseMixin)
+    - is_locked - lock project from PUT/PATCH while being updated (default: False)
+    - is_public - show/hide project in all public interfaces (default: True)
+    - modified - timestamp modified (TimestampMixin)
+    - modified_by_uuid - uuid of person modified_by (TrackingMixin)
+    - name - project name
+    - preferences - array of preference booleans
+    - profile - foreignkey link to profile_projects
+    - project_creators - one-to-many people (initially one person)
+    - project_members - one-to-many people
+    - project_owners - one-to-many people
+    - projects_storage - one-to-many storage
+    - project_topics - array of topics as string
+    - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
+    - tags - array of tag strings
+    - token_holders - one-to-many people
+    - uuid - unique universal identifier
     """
+    # TODO: review to ensure creation by UUID is compliant with v1.8.1
     fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
     if not fab_project:
         fab_project = FabricProjects()
@@ -380,7 +405,7 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
     # add
     if operation == 'add':
         if fab_group:
-            # add token holders
+            # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     # batch
     elif operation == 'batch':
@@ -396,14 +421,14 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
         p_add = array_difference(personnel, p_orig)
         p_remove = array_difference(p_orig, personnel)
         if fab_group:
-            # add token holders
+            # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, p_add, personnel_type)
-            # remove token holders
+            # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, p_remove, personnel_type)
     # remove
     elif operation == 'remove':
         if fab_group:
-            # remove token-holders
+            # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     else:
         consoleLogger.error('Invalid operation provided')
@@ -742,3 +767,28 @@ def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProj
                     str(p.uuid),
                     str(api_user.uuid))
                 metricsLogger.info(log_msg)
+
+
+def projects_set_active(fab_project: FabricProjects):
+    """
+    Evaluate whether project is active
+    """
+    now = datetime.now(timezone.utc)
+    # check if project is expired, but not retired
+    if fab_project.expires_on < now and not fab_project.retired_date:
+        fab_project.review_required = True
+    # check if project retired
+    if fab_project.retired_date and fab_project.retired_date < now and not fab_project.is_locked:
+        fab_project.is_locked = True
+        fab_project.review_required = False
+    # check if project should be retired - auto retire after PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS
+    if fab_project.expires_on + timedelta(days=float(os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fab_project.retired_date:
+        fab_project.is_locked = True
+        fab_project.review_required = False
+        fab_project.retired_date = now
+    # determine if project is active
+    if not fab_project.review_required and not fab_project.is_locked and not fab_project.retired_date:
+        fab_project.active = True
+    else:
+        fab_project.active = False
+    db.session.commit()

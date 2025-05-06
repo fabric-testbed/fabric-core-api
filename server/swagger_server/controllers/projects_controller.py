@@ -14,6 +14,7 @@ from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # n
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_review_required_patch import ProjectsReviewRequiredPatch  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
 from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch  # noqa: E501
@@ -344,6 +345,23 @@ def projects_uuid_project_owners_patch(operation, uuid, body=None):  # noqa: E50
     if connexion.request.is_json:
         body = ProjectsOwnersPatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_project_owners_patch(operation, uuid, body)
+
+
+def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
+    """Update Project review status as Facility Operator
+
+    Update Project review status as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project review as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsReviewRequiredPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_review_required_patch(uuid, body)
 
 
 def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501

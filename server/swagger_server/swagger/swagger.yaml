@@ -1731,6 +1731,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/status_500_internal_server_error'
       x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/review-required:
+    patch:
+      tags:
+      - projects
+      summary: Update Project review status as Facility Operator
+      description: Update Project review status as Facility Operator
+      operationId: projects_uuid_review_required_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/payload_review_required_patch'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_200_ok_no_content'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_400_bad_request'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_401_unauthorized'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_403_forbidden'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_404_not_found'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status_500_internal_server_error'
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
   /projects/{uuid}/tags:
     patch:
       tags:
@@ -3515,6 +3571,9 @@ components:
       - uuid
       type: object
       properties:
+        active:
+          type: boolean
+          default: true
         communities:
           type: array
           items:
@@ -3534,12 +3593,17 @@ components:
           $ref: '#/components/schemas/project_membership'
         name:
           type: string
+        project_type:
+          type: string
+        retired_date:
+          type: string
+        review_required:
+          type: boolean
+          default: true
         tags:
           type: array
           items:
             type: string
-        project_type:
-          type: string
         topics:
           type: array
           items:
@@ -3638,6 +3702,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/quotas_one'
+        retired_date:
+          type: string
+        review_required:
+          type: boolean
+          default: true
         tags:
           type: array
           items:
@@ -4112,6 +4181,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/projects_funding_patch_project_funding'
+    projects_review_required_patch:
+      type: object
+      properties:
+        review_required:
+          type: boolean
+          example: true
     quotas_post:
       required:
       - project_uuid
@@ -4935,6 +5010,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/projects_funding_patch'
+    payload_review_required_patch:
+      description: Update Project review as Facility Operator
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/projects_review_required_patch'
     payload_quotas_post:
       description: Create a new Resource Quota
       content:

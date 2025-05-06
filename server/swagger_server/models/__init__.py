@@ -47,6 +47,7 @@ from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch
 from swagger_server.models.projects_patch import ProjectsPatch
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.projects_review_required_patch import ProjectsReviewRequiredPatch
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch
 from swagger_server.models.projects_topics_patch import ProjectsTopicsPatch

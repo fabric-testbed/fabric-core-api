@@ -67,6 +67,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - projects_storage - one-to-many storage
     - project_topics - array of topics as string
     - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
     - tags - array of tag strings
     - token_holders - one-to-many people
     - uuid - unique universal identifier
@@ -99,6 +101,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     project_storage = db.relationship('FabricStorage', secondary=projects_storage, lazy='subquery',
                                       backref=db.backref('projects_storage', lazy=True))
     project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
+    retired_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    review_required = db.Column(db.Boolean, default=True, nullable=False)
     tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     token_holders = db.relationship('FabricPeople', secondary=token_holders, lazy='subquery',
                                     backref=db.backref('token_holders', lazy=True))

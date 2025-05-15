@@ -22,8 +22,8 @@ class TestJourneyTrackerController(BaseTestCase):
 
         Get people information for Journey Tracker
         """
-        query_string = [('since_date', 'since_date_example'),
-                        ('until_date', 'until_date_example')]
+        query_string = [('start_date', 'start_date_example'),
+                        ('end_date', 'end_date_example')]
         response = self.client.open(
             '/journey-tracker/people',
             method='GET',

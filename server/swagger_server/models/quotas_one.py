@@ -6,6 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
+from swagger_server.models.quotas_one_resource_type import QuotasOneResourceType  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -14,7 +15,7 @@ class QuotasOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, created_at: datetime=None, project_uuid: str=None, quota_limit: float=None, quota_used: float=None, resource_type: str=None, resource_unit: str=None, updated_at: datetime=None, uuid: str=None):  # noqa: E501
+    def __init__(self, created_at: datetime=None, project_uuid: str=None, quota_limit: float=None, quota_used: float=None, resource_type: QuotasOneResourceType=None, resource_unit: str=None, updated_at: datetime=None, uuid: str=None):  # noqa: E501
         """QuotasOne - a model defined in Swagger
 
         :param created_at: The created_at of this QuotasOne.  # noqa: E501
@@ -26,7 +27,7 @@ class QuotasOne(Model):
         :param quota_used: The quota_used of this QuotasOne.  # noqa: E501
         :type quota_used: float
         :param resource_type: The resource_type of this QuotasOne.  # noqa: E501
-        :type resource_type: str
+        :type resource_type: QuotasOneResourceType
         :param resource_unit: The resource_unit of this QuotasOne.  # noqa: E501
         :type resource_unit: str
         :param updated_at: The updated_at of this QuotasOne.  # noqa: E501
@@ -39,7 +40,7 @@ class QuotasOne(Model):
             'project_uuid': str,
             'quota_limit': float,
             'quota_used': float,
-            'resource_type': str,
+            'resource_type': QuotasOneResourceType,
             'resource_unit': str,
             'updated_at': datetime,
             'uuid': str
@@ -160,22 +161,22 @@ class QuotasOne(Model):
         self._quota_used = quota_used
 
     @property
-    def resource_type(self) -> str:
+    def resource_type(self) -> QuotasOneResourceType:
         """Gets the resource_type of this QuotasOne.
 
 
         :return: The resource_type of this QuotasOne.
-        :rtype: str
+        :rtype: QuotasOneResourceType
         """
         return self._resource_type
 
     @resource_type.setter
-    def resource_type(self, resource_type: str):
+    def resource_type(self, resource_type: QuotasOneResourceType):
         """Sets the resource_type of this QuotasOne.
 
 
         :param resource_type: The resource_type of this QuotasOne.
-        :type resource_type: str
+        :type resource_type: QuotasOneResourceType
         """
 
         self._resource_type = resource_type

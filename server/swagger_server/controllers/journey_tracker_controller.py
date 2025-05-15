@@ -11,16 +11,16 @@ from swagger_server import util
 from swagger_server.response_code import journey_tracker_controller as rc
 
 
-def journey_tracker_people_get(since_date, until_date=None):  # noqa: E501
+def journey_tracker_people_get(start_date=None, end_date=None):  # noqa: E501
     """Get people information for Journey Tracker
 
     Get people information for Journey Tracker # noqa: E501
 
-    :param since_date: starting date to search from
-    :type since_date: str
-    :param until_date: ending date to search to
-    :type until_date: str
+    :param start_date: starting date to search from
+    :type start_date: str
+    :param end_date: end date to search to
+    :type end_date: str
 
     :rtype: JourneyTrackerPeople
     """
-    return rc.journey_tracker_people_get(since_date, until_date)
+    return rc.journey_tracker_people_get(start_date, end_date)

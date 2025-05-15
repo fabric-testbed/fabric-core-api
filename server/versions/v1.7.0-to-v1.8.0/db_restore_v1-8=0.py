@@ -1,6 +1,6 @@
 """
-REV: v1.8.1
-v1.8.0 --> v1.8.1 - database tables
+REV: v1.8.0
+v1.7.0 --> v1.8.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -40,10 +40,7 @@ v1.8.0 --> v1.8.1 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (33 rows)
 
-Changes from v1.8.0 --> v1.8.1
-- table: projects - added: retired_date, review_required
-
-
+Changes from v1.7.0 --> v1.8.0
 - table: quotas
 - table: people - added: receive_promotional_email
 - TODO: table: projects_topics
@@ -65,7 +62,7 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.8.0'
+api_version = '1.7.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -76,13 +73,6 @@ def restore_alembic_version_data():
     """
     alembic_version
     - version_num = String
-
-    Table "public.alembic_version"
-       Column    |         Type          | Collation | Nullable | Default
-    -------------+-----------------------+-----------+----------+---------
-     version_num | character varying(32) |           | not null |
-    Indexes:
-        "alembic_version_pkc" PRIMARY KEY, btree (version_num)
     """
     try:
         with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(api_version), 'r') as infile:
@@ -119,29 +109,6 @@ def restore_announcements_data():
     - start_date = db.Column(db.DateTime(timezone=True), nullable=False)
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.announcements"
-            Column        |           Type           | Collation | Nullable |                  Default
-    ----------------------+--------------------------+-----------+----------+-------------------------------------------
-     announcement_type    | enumannouncementtypes    |           | not null |
-     background_image_url | character varying        |           |          |
-     button               | character varying        |           |          |
-     content              | character varying        |           | not null |
-     display_date         | timestamp with time zone |           |          |
-     end_date             | timestamp with time zone |           |          |
-     is_active            | boolean                  |           | not null |
-     link                 | character varying        |           |          |
-     sequence             | integer                  |           |          |
-     start_date           | timestamp with time zone |           |          |
-     title                | character varying        |           | not null |
-     uuid                 | character varying        |           | not null |
-     id                   | integer                  |           | not null | nextval('announcements_id_seq'::regclass)
-     created              | timestamp with time zone |           | not null |
-     modified             | timestamp with time zone |           |          |
-     created_by_uuid      | character varying        |           |          |
-     modified_by_uuid     | character varying        |           |          |
-    Indexes:
-        "announcements_pkey" PRIMARY KEY, btree (id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(api_version), 'r') as infile:
@@ -178,7 +145,7 @@ def restore_announcements_data():
         consoleLogger.error(exc)
 
 
-# export core_api_metrics as JSON output file
+# export testbed_info as JSON output file
 def restore_core_api_metrics_data():
     """
     CoreApiMetrics(BaseMixin, db.Model):
@@ -186,16 +153,6 @@ def restore_core_api_metrics_data():
     - json_data = db.Column(JSONB, nullable=False)
     - last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - metrics_type = db.Column(db.Enum(EnumCoreApiMetricsTypes), ...)
-
-    Table "public.core_api_metrics"
-        Column    |           Type           | Collation | Nullable |                   Default
-    --------------+--------------------------+-----------+----------+----------------------------------------------
-     json_data    | jsonb                    |           | not null |
-     last_updated | timestamp with time zone |           | not null |
-     metrics_type | enumcoreapimetricstypes  |           | not null |
-     id           | integer                  |           | not null | nextval('core_api_metrics_id_seq'::regclass)
-    Indexes:
-        "core_api_metrics_pkey" PRIMARY KEY, btree (id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/core_api_metrics-v{0}.json'.format(api_version), 'r') as infile:
@@ -231,21 +188,6 @@ def restore_groups_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - name = db.Column(db.String(), nullable=False)
-
-    Table "public.groups"
-          Column      |           Type           | Collation | Nullable |              Default
-    ------------------+--------------------------+-----------+----------+------------------------------------
-     co_cou_id        | integer                  |           | not null |
-     co_parent_cou_id | integer                  |           |          |
-     deleted          | boolean                  |           | not null |
-     description      | text                     |           |          |
-     name             | character varying        |           | not null |
-     id               | integer                  |           | not null | nextval('groups_id_seq'::regclass)
-     created          | timestamp with time zone |           | not null |
-     modified         | timestamp with time zone |           |          |
-    Indexes:
-        "groups_pkey" PRIMARY KEY, btree (id)
-        "constraint_fabric_groups" UNIQUE CONSTRAINT, btree (co_cou_id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(api_version), 'r') as infile:
@@ -304,35 +246,6 @@ def restore_people_data():
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
     - * updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.people"
-              Column           |           Type           | Collation | Nullable |              Default
-    ---------------------------+--------------------------+-----------+----------+------------------------------------
-     active                    | boolean                  |           | not null |
-     bastion_login             | character varying        |           |          |
-     co_person_id              | integer                  |           |          |
-     display_name              | character varying        |           | not null |
-     eppn                      | character varying        |           |          |
-     fabric_id                 | character varying        |           |          |
-     gecos                     | character varying        |           |          |
-     oidc_claim_email          | character varying        |           |          |
-     oidc_claim_family_name    | character varying        |           |          |
-     oidc_claim_given_name     | character varying        |           |          |
-     oidc_claim_name           | character varying        |           |          |
-     oidc_claim_sub            | character varying        |           |          |
-     org_affiliation           | integer                  |           |          |
-     preferred_email           | character varying        |           | not null |
-     receive_promotional_email | boolean                  |           | not null |
-     registered_on             | timestamp with time zone |           | not null |
-     updated                   | timestamp with time zone |           | not null |
-     uuid                      | character varying        |           | not null |
-     id                        | integer                  |           | not null | nextval('people_id_seq'::regclass)
-     created                   | timestamp with time zone |           | not null |
-     modified                  | timestamp with time zone |           |          |
-    Indexes:
-        "people_pkey" PRIMARY KEY, btree (id)
-        "constraint_fabric_people" UNIQUE CONSTRAINT, btree (co_person_id)
-        "idx_people" btree (uuid, co_person_id, id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(api_version), 'r') as infile:
@@ -748,63 +661,35 @@ def restore_profiles_references_data():
 def restore_projects_data():
     """
     FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model)
-    - active = db.Column(db.Boolean, default=True, nullable=False)
-    - co_cou_id_pc = db.Column(db.Integer, nullable=True)
-    - co_cou_id_pm = db.Column(db.Integer, nullable=True)
-    - co_cou_id_po = db.Column(db.Integer, nullable=True)
-    - co_cou_id_tk = db.Column(db.Integer, nullable=True)
+    - * active = db.Column(db.Boolean, default=True, nullable=False)
+    - * co_cou_id_pc = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_pm = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_po = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_tk = db.Column(db.Integer, nullable=True)
     - communities = db.relationship('ProjectsCommunities', backref='projects', lazy=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - created_by_uuid = db.Column(db.String(), nullable=True)
-    - description = db.Column(db.Text, nullable=False)
-    - expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
-    - facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - is_locked = db.Column(db.Boolean, default=False, nullable=False)
-    - is_public = db.Column(db.Boolean, default=True, nullable=False)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
-    - modified_by_uuid = db.Column(db.String(), nullable=True)
-    - name = db.Column(db.String(), nullable=False)
-    - preferences = db.relationship('FabricPreferences', backref='projects')
-    - profile = db.relationship('FabricProfilesProjects', backref='projects')
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * created_by_uuid = db.Column(db.String(), nullable=True)
+    - * description = db.Column(db.Text, nullable=False)
+    - * expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
+    - * facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * is_locked = db.Column(db.Boolean, default=False, nullable=False)
+    - * is_public = db.Column(db.Boolean, default=True, nullable=False)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
+    - * modified_by_uuid = db.Column(db.String(), nullable=True)
+    - * name = db.Column(db.String(), nullable=False)
+    - preferences = db.relationship('FabricPreferences', backref='projects', lazy=True)
+    - profile = db.relationship('FabricProfilesProjects', backref='projects', uselist=False, lazy=True)
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
     - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
+    - project_topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     - project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
-    - retired_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    - review_required = db.Column(db.Boolean, default=True, nullable=False)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - token_holders = db.relationship('FabricPeople', secondary=token_holders)
-    - topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.projects"
-          Column      |           Type           | Collation | Nullable |               Default
-    ------------------+--------------------------+-----------+----------+--------------------------------------
-     active           | boolean                  |           | not null |
-     co_cou_id_pc     | integer                  |           |          |
-     co_cou_id_pm     | integer                  |           |          |
-     co_cou_id_po     | integer                  |           |          |
-     co_cou_id_tk     | integer                  |           |          |
-     description      | text                     |           | not null |
-     expires_on       | timestamp with time zone |           |          |
-     facility         | character varying        |           | not null |
-     is_locked        | boolean                  |           | not null |
-     is_public        | boolean                  |           | not null |
-     name             | character varying        |           | not null |
-     project_type     | enumprojecttypes         |           | not null |
-     retired_date     | timestamp with time zone |           |          |
-     review_required  | boolean                  |           | not null |
-     uuid             | character varying        |           | not null |
-     id               | integer                  |           | not null | nextval('projects_id_seq'::regclass)
-     created          | timestamp with time zone |           | not null |
-     modified         | timestamp with time zone |           |          |
-     created_by_uuid  | character varying        |           |          |
-     modified_by_uuid | character varying        |           |          |
-    Indexes:
-        "projects_pkey" PRIMARY KEY, btree (id)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
     try:
         with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(api_version), 'r') as infile:
@@ -842,8 +727,6 @@ def restore_projects_data():
                 # project_storage=p.get('projects_storage'), <-- restore_projects_storage_data()
                 # project_topics=p.get('projects_topics'), <-- restore_projects_topics_data()
                 project_type=p.get('project_type') if p.get('project_type') else 'research',
-                retired_date=normalize_date_to_utc(p.get('retired_date')) if p.get('retired_date') else None,
-                review_required=p.get('review_required') if p.get('review_required') else False,
                 # tags=p.get('tags'), <-- restore_projects_tags_data()
                 # token_holders=p.get('token_holders'), <-- restore_token_holders_data()
                 uuid=p.get('uuid')

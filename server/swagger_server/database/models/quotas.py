@@ -7,16 +7,40 @@ from swagger_server.database.db import db
 
 # Enum for Resource Types
 class EnumResourceTypes(enum.Enum):
-    core = "Core"
-    disk = "Disk"
-    fpga = "FPGA"
-    gpu = "GPU"
-    nvme = "NVME"
+    """
+    ['p4',
+    'core',
+    'ram',
+    'disk',
+    'gpu_rtx6000',
+    'gpu_tesla_t4',
+    'gpu_a40',
+    'gpu_a30',
+    'sharednic_connectx_6',
+    'smartnic_bluefield_2_connectx_6',
+    'smartnic_connectx_6',
+    'smartnic_connectx_5',
+    'nvme_p4510',
+    'storage_nas',
+    'fpga_xilinx_u280',
+    'fpga_xilinx_sn1022']
+    """
     p4 = "P4"
+    core = "Core"
     ram = "RAM"
-    sharednic = "SharedNIC"
-    smartnic = "SmartNIC"
-    storage = "Storage"
+    disk = "Disk"
+    gpu_rtx6000 = "GPU RTX6000"
+    gpu_tesla_t4 = "GPU TESLA T4"
+    gpu_a40 = "GPU A40"
+    gpu_a30 = "GPU A30"
+    sharednic_connectx_6 = "SharedNIC ConnectX 6"
+    smartnic_bluefield_2_connectx_6 = "SmartNIC Bluefield 2 ConnectX 6"
+    smartnic_connectx_6 = "SmartNIC ConnectX 6"
+    smartnic_connectx_5 = "SmartNIC ConnectX 5"
+    nvme_p4510 = "NVME P4510"
+    storage_nas = "Storage NAS"
+    fpga_xilinx_u280 = "FPGA XILINX U280"
+    fpga_xilinx_sn1022 = "FPGA XILINX SN1022"
 
 
 # Enum for Resource Units
@@ -40,7 +64,7 @@ class FabricQuotas(db.Model):
     query: db.Query
     __tablename__ = 'quotas'
     __table_args__ = (
-    UniqueConstraint('project_uuid', 'resource_type', 'resource_unit', name='project_resource_type_unit'),)
+        UniqueConstraint('project_uuid', 'resource_type', 'resource_unit', name='project_resource_type_unit'),)
     __allow_unmapped__ = True
 
     created_at = db.Column(db.DateTime(timezone=True), nullable=False)

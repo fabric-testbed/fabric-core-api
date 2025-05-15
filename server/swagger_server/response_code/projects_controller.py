@@ -967,7 +967,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
             project_one.project_type = fab_project.project_type.name
-            project_one.retired_date = str(fab_project.retired_date)
+            project_one.retired_date = str(fab_project.retired_date) if fab_project.retired_date else None
             project_one.review_required = bool(fab_project.review_required)
             project_one.topics = [t.topic for t in fab_project.topics]
             project_one.uuid = fab_project.uuid

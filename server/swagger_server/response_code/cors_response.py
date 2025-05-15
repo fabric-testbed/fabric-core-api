@@ -87,7 +87,8 @@ def cors_200(response_body: Union[
     return cors_response(
         req=request,
         status_code=200,
-        body=json.dumps(delete_none(response_body.to_dict()), indent=_INDENT, sort_keys=True)
+        # body=json.dumps(delete_none(response_body.to_dict()), indent=_INDENT, sort_keys=True)
+        body=json.dumps(response_body.to_dict(), indent=_INDENT, sort_keys=True)
         if _INDENT != 0 else json.dumps(delete_none(response_body.to_dict()), sort_keys=True)
     )
 

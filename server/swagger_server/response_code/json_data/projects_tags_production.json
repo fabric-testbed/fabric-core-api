@@ -98,6 +98,10 @@
     "Net.FacilityPort.FP4-CIEN": "FP4-CIEN",
     "Net.FacilityPort.FP1-SALT": "FP1-SALT",
     "Net.FacilityPort.FP2-SALT": "FP2-SALT",
-    "Net.FacilityPort.FP3-SALT": "FP3-SALT"
+    "Net.FacilityPort.FP3-SALT": "FP3-SALT",
+    "Net.FacilityPort.CESNET-AMST": "CESNET-AMST",
+    "Net.FacilityPort.OCT-MGHPCC-400G": "OCT-MGHPCC-400G",
+    "Net.FacilityPort.SENSE-MGHPCC": "SENSE-MGHPCC",
+    "Net.FacilityPort.SLU-KANS": "SLU-KANS"
   }
 }

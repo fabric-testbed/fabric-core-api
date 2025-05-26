@@ -13,13 +13,13 @@ from swagger_server import util
 from swagger_server.response_code import core_api_metrics_controller as rc
 
 
-def core_api_metrics_events_get(announcement_type=None, start_date=None, end_date=None):  # noqa: E501
+def core_api_metrics_events_get(event_type=None, start_date=None, end_date=None):  # noqa: E501
     """Core API metrics events
 
     Core API metrics events # noqa: E501
 
-    :param announcement_type: announcement type
-    :type announcement_type: str
+    :param event_type: event type
+    :type event_type: str
     :param start_date: starting date to search from
     :type start_date: str
     :param end_date: end date to search to
@@ -27,7 +27,7 @@ def core_api_metrics_events_get(announcement_type=None, start_date=None, end_dat
 
     :rtype: CoreApiMetricsEvents
     """
-    return rc.core_api_metrics_events_get(announcement_type, start_date, end_date)
+    return rc.core_api_metrics_events_get(event_type, start_date, end_date)
 
 
 def core_api_metrics_events_people_uuid_get(uuid):  # noqa: E501

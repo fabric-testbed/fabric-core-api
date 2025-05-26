@@ -347,18 +347,19 @@ paths:
       description: Core API metrics events
       operationId: core_api_metrics_events_get
       parameters:
-      - name: announcement_type
+      - name: event_type
         in: query
-        description: announcement type
+        description: event type
         required: false
         style: form
         explode: true
         schema:
           type: string
-          default: project
+          default: all
           enum:
-          - project
-          - person
+          - all
+          - people
+          - projects
       - name: start_date
         in: query
         description: starting date to search from
@@ -5290,18 +5291,19 @@ components:
         type: string
         example: 2023-01-01 16:20:15 +00:00
     event_type:
-      name: announcement_type
+      name: event_type
       in: query
-      description: announcement type
+      description: event type
       required: false
       style: form
       explode: true
       schema:
         type: string
-        default: project
+        default: all
         enum:
-        - project
-        - person
+        - all
+        - people
+        - projects
     operation:
       name: operation
       in: query

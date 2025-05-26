@@ -24,7 +24,7 @@ class TestCoreApiMetricsController(BaseTestCase):
 
         Core API metrics events
         """
-        query_string = [('announcement_type', 'project'),
+        query_string = [('event_type', 'all'),
                         ('start_date', 'start_date_example'),
                         ('end_date', 'end_date_example')]
         response = self.client.open(

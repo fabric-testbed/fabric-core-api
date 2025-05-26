@@ -7,6 +7,7 @@ v1.8.0 --> v1.8.1 - database tables
 --------+---------------------------+-------+----------
  public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
+ public | core_api_events           | table | postgres  <-- core_api_events-v<VERSION>.json
  public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
@@ -38,10 +39,12 @@ v1.8.0 --> v1.8.1 - database tables
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
+(34 rows)
 
 Changes from v1.8.0 --> v1.8.1
 - update table: quotas, EnumResourceTypes changes
+- update existing projects data with new logic
+- backfill core_api_events data
 """
 
 import os
@@ -50,8 +53,11 @@ from uuid import uuid4
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
+from swagger_server.database.models.core_api_metrics import CoreApiEvents, EnumEvents, EnumEventTypes
+from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
+from swagger_server.response_code.core_api_utils import add_core_api_event
 
 # API version of data to restore from
 api_version = '1.8.0'
@@ -146,6 +152,137 @@ def projects_retire_after_365_days_expired():
         consoleLogger.error(exc)
 
 
+def backfill_core_api_projects():
+    """
+    Generate core api events for existing projects
+
+    add_core_api_event(event, event_date, event_triggered_by, event_type,
+                       people_uuid, project_is_public, project_uuid):
+    """
+    projects = FabricProjects.query.order_by(FabricProjects.created).all()
+    for fp in projects:
+        # event project_create
+        event = EnumEvents.project_create.name
+        event_date = fp.created
+        if len(fp.project_creators) > 0:
+            event_triggered_by = fp.project_creators[0].uuid
+        else:
+            event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+        event_type = EnumEventTypes.projects.name
+        people_uuid = event_triggered_by
+        project_is_public = fp.is_public
+        project_uuid = fp.uuid
+        add_core_api_event(
+            event=event,
+            event_date=event_date,
+            event_triggered_by=event_triggered_by,
+            event_type=event_type,
+            people_uuid=people_uuid,
+            project_uuid=project_uuid,
+            project_is_public=project_is_public
+        )
+        # check for project_retire
+        if fp.retired_date:
+            if not CoreApiEvents.query.filter(
+                    CoreApiEvents.project_uuid == project_uuid,
+                    CoreApiEvents.event == EnumEvents.project_retire.name
+            ).first():
+                event = EnumEvents.project_retire.name
+                event_date = fp.retired_date
+                people_uuid = event_triggered_by
+                event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+                add_core_api_event(
+                    event=event,
+                    event_date=event_date,
+                    event_triggered_by=event_triggered_by,
+                    event_type=event_type,
+                    people_uuid=people_uuid,
+                    project_uuid=project_uuid,
+                    project_is_public=project_is_public
+                )
+
+
+def backfill_core_api_people():
+    """
+    Generate core api events for existing people
+
+    add_core_api_event(event, event_date, event_triggered_by, event_type,
+                       people_uuid, project_is_public, project_uuid):
+    """
+    people = FabricPeople.query.order_by(FabricPeople.registered_on).all()
+    for fp in people:
+        # event people_create
+        event = EnumEvents.people_create.name
+        event_date = fp.registered_on
+        event_triggered_by = fp.uuid
+        event_type = EnumEventTypes.people.name
+        people_uuid = fp.uuid
+        project_is_public = None
+        project_uuid = None
+        add_core_api_event(
+            event=event,
+            event_date=event_date,
+            event_triggered_by=event_triggered_by,
+            event_type=event_type,
+            people_uuid=people_uuid,
+            project_uuid=project_uuid,
+            project_is_public=project_is_public
+        )
+        # check for people_retire
+        if not fp.active:
+            if not CoreApiEvents.query.filter(
+                    CoreApiEvents.people_uuid == people_uuid,
+                    CoreApiEvents.event == EnumEvents.people_retire.name
+            ).first():
+                event = EnumEvents.people_retire.name
+                event_date = datetime.now(timezone.utc)
+                event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+                add_core_api_event(
+                    event=event,
+                    event_date=event_date,
+                    event_triggered_by=event_triggered_by,
+                    event_type=event_type,
+                    people_uuid=people_uuid,
+                    project_uuid=project_uuid,
+                    project_is_public=project_is_public
+                )
+        # event project_creator/member/owner/tokenholder
+        for r in fp.roles:
+            role_suffix = r.name[-3:]
+            if role_suffix in ['-pc', '-pm', '-po', '-tk']:
+                project_uuid = r.name[:-3]
+                project = FabricProjects.query.filter_by(uuid=project_uuid).first()
+                if project:
+                    event = None
+                    if role_suffix == '-pc':
+                        event = EnumEvents.project_add_creator.name
+                    elif role_suffix == '-pm':
+                        event = EnumEvents.project_add_member.name
+                    elif role_suffix == '-po':
+                        event = EnumEvents.project_add_owner.name
+                    elif role_suffix == '-tk':
+                        event = EnumEvents.project_add_tokenholder.name
+                    if fp.registered_on > project.created:
+                        event_date = fp.registered_on
+                    else:
+                        event_date = project.created
+                    if len(project.project_creators) > 0:
+                        event_triggered_by = project.project_creators[0].uuid
+                    else:
+                        event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+                    people_uuid = fp.uuid
+                    project_is_public = project.is_public
+                    add_core_api_event(
+                        event=event,
+                        event_date=event_date,
+                        event_triggered_by=event_triggered_by,
+                        event_type=event_type,
+                        people_uuid=people_uuid,
+                        project_uuid=project_uuid,
+                        project_is_public=project_is_public
+                    )
+
+
 if __name__ == '__main__':
     app.app_context().push()
 
@@ -155,6 +292,14 @@ if __name__ == '__main__':
     consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
     projects_quota_placeholder_backfill()
 
-    # Projects: migrate projects that have expired for more than 180 days to retired status
-    consoleLogger.info('Projects: migrate projects that have expired for more than 180 days to retired status')
+    # Projects: migrate projects that have expired for more than 365 days to retired status
+    consoleLogger.info('Projects: migrate projects that have expired for more than 365 days to retired status')
     projects_retire_after_365_days_expired()
+
+    # Projects: backfill core-api projects with event data
+    consoleLogger.info('Projects: backfill core-api projects with event data')
+    backfill_core_api_projects()
+
+    # People: backfill core-api people with event data
+    consoleLogger.info('People: backfill core-api people with event data')
+    backfill_core_api_people()

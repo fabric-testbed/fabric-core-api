@@ -7,6 +7,7 @@ v1.8.0 - database tables
 --------+---------------------------+-------+----------
  public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
+ public | core_api_events           | table | postgres  <-- core_api_events-v<VERSION>.json
  public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
@@ -38,15 +39,9 @@ v1.8.0 - database tables
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
+(34 rows)
 
-- table: quotas
-- table: people - added: receive_promotional_email
-- TODO: table: projects_topics
-- table: *core_api_metrics
-- table: *projects_communities
-- table: *projects_funding
-- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
+- TODO: table: core_api_events (placeholder)
 """
 
 import json
@@ -64,13 +59,14 @@ from swagger_server.database.models.people import EmailAddresses, FabricGroups, 
 from swagger_server.database.models.preferences import FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesPeople, FabricProfilesProjects, ProfilesKeywords, \
     ProfilesOtherIdentities, ProfilesPersonalPages, ProfilesReferences
-from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, ProjectsTags, ProjectsTopics
+from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, ProjectsTags, \
+    ProjectsTopics
+from swagger_server.database.models.quotas import FabricQuotas
 from swagger_server.database.models.sshkeys import FabricSshKeys
 from swagger_server.database.models.storage import FabricStorage, StorageSites
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.database.models.testbed_info import FabricTestbedInfo
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
-from swagger_server.database.models.quotas import FabricQuotas
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -181,7 +177,37 @@ def dump_announcements_data():
         consoleLogger.error(exc)
 
 
-# export groups as JSON output file
+# export core-api-events as JSON output file
+def dump_core_api_events_data():
+    """
+    CoreApiEvents(BaseMixin, db.Model):
+    - event = db.Column(db.Enum(EnumEvents), default=EnumEvents.project_add_member.name, nullable=False)
+    - event_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    - event_triggered_by = db.Column(db.String, nullable=False)
+    - event_type = db.Column(db.Enum(EnumEventTypes), default=EnumEventTypes.projects.name, nullable=False)
+    - people_uuid = db.Column(db.String, nullable=False)
+    - project_is_public = db.Column(db.Boolean, nullable=True)
+    - project_uuid = db.Column(db.String, nullable=True)
+
+    Table "public.core_api_events"
+           Column       |           Type           | Collation | Nullable |                   Default
+    --------------------+--------------------------+-----------+----------+---------------------------------------------
+     event              | enumevents               |           | not null |
+     event_date         | timestamp with time zone |           | not null |
+     event_triggered_by | character varying        |           | not null |
+     event_type         | enumeventtypes           |           | not null |
+     people_uuid        | character varying        |           | not null |
+     project_is_public  | boolean                  |           |          |
+     project_uuid       | character varying        |           |          |
+     id                 | integer                  |           | not null | nextval('core_api_events_id_seq'::regclass)
+    Indexes:
+        "core_api_events_pkey" PRIMARY KEY, btree (id)
+        "idx_events_people_only" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NULL
+        "idx_events_people_projects" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NOT NULL
+    """
+
+
+# export core-api-metrics as JSON output file
 def dump_core_api_metrics_data():
     """
     CoreApiMetrics(BaseMixin, db.Model)
@@ -1235,14 +1261,16 @@ def dump_quotas_data():
         fab_quotas = FabricQuotas.query.order_by('id').all()
         for q in fab_quotas:
             data = {
-                'created_at': normalize_date_to_utc(date_str=str(q.created_at), return_type='str') if q.created_at else None,
+                'created_at': normalize_date_to_utc(date_str=str(q.created_at),
+                                                    return_type='str') if q.created_at else None,
                 'id': q.id,
                 'project_uuid': q.project_uuid,
                 'quota_limit': q.quota_limit,
                 'quota_used': q.quota_used,
-                'resource_type': { 'name': q.resource_type.name, 'value': q.resource_type.value },
+                'resource_type': {'name': q.resource_type.name, 'value': q.resource_type.value},
                 'resource_unit': q.resource_unit.value,
-                'updated_at': normalize_date_to_utc(date_str=str(q.updated_at), return_type='str') if q.updated_at else None,
+                'updated_at': normalize_date_to_utc(date_str=str(q.updated_at),
+                                                    return_type='str') if q.updated_at else None,
                 'uuid': q.uuid
             }
             quotas.append(data)

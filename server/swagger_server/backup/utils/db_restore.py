@@ -7,6 +7,7 @@ v1.8.0 --> v1.8.1 - database tables
 --------+---------------------------+-------+----------
  public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
+ public | core_api_events           | table | postgres  <-- core_api_events-v<VERSION>.json
  public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
@@ -38,19 +39,10 @@ v1.8.0 --> v1.8.1 - database tables
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(33 rows)
+(34 rows)
 
 Changes from v1.8.0 --> v1.8.1
-- table: projects - added: retired_date, review_required
-
-
-- table: quotas
-- table: people - added: receive_promotional_email
-- TODO: table: projects_topics
-- table: *core_api_metrics
-- table: *projects_communities
-- table: *projects_funding
-- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
+- TODO: table: core_api_events - new table - backfill from db_version_updates.py
 """
 
 import json
@@ -71,7 +63,7 @@ api_version = '1.8.0'
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 
 
-# export alembic_version as JSON output file
+# import alembic_version from JSON input file
 def restore_alembic_version_data():
     """
     alembic_version
@@ -98,7 +90,7 @@ def restore_alembic_version_data():
         consoleLogger.error(exc)
 
 
-# export announcements as JSON output file
+# import announcements from JSON input file
 def restore_announcements_data():
     """
     FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
@@ -178,7 +170,37 @@ def restore_announcements_data():
         consoleLogger.error(exc)
 
 
-# export core_api_metrics as JSON output file
+# import core_api_events from JSON input file
+def restore_core_api_events_data():
+    """
+    CoreApiEvents(BaseMixin, db.Model):
+    - event = db.Column(db.Enum(EnumEvents), default=EnumEvents.project_add_member.name, nullable=False)
+    - event_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    - event_triggered_by = db.Column(db.String, nullable=False)
+    - event_type = db.Column(db.Enum(EnumEventTypes), default=EnumEventTypes.projects.name, nullable=False)
+    - people_uuid = db.Column(db.String, nullable=False)
+    - project_is_public = db.Column(db.Boolean, nullable=True)
+    - project_uuid = db.Column(db.String, nullable=True)
+
+    Table "public.core_api_events"
+           Column       |           Type           | Collation | Nullable |                   Default
+    --------------------+--------------------------+-----------+----------+---------------------------------------------
+     event              | enumevents               |           | not null |
+     event_date         | timestamp with time zone |           | not null |
+     event_triggered_by | character varying        |           | not null |
+     event_type         | enumeventtypes           |           | not null |
+     people_uuid        | character varying        |           | not null |
+     project_is_public  | boolean                  |           |          |
+     project_uuid       | character varying        |           |          |
+     id                 | integer                  |           | not null | nextval('core_api_events_id_seq'::regclass)
+    Indexes:
+        "core_api_events_pkey" PRIMARY KEY, btree (id)
+        "idx_events_people_only" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NULL
+        "idx_events_people_projects" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NOT NULL
+    """
+
+
+# import core_api_metrics from JSON input file
 def restore_core_api_metrics_data():
     """
     CoreApiMetrics(BaseMixin, db.Model):
@@ -219,7 +241,7 @@ def restore_core_api_metrics_data():
         consoleLogger.error(exc)
 
 
-# export groups as JSON output file
+# import groups from JSON input file
 def restore_groups_data():
     """
     FabricGroups(BaseMixin, TimestampMixin, db.Model)
@@ -273,7 +295,7 @@ def restore_groups_data():
         consoleLogger.error(exc)
 
 
-# export people as JSON output file
+# import people from JSON input file
 def restore_people_data():
     """
     FabricPeople(BaseMixin, TimestampMixin, db.Model)
@@ -364,7 +386,8 @@ def restore_people_data():
                 # preferences=p.get('preferences'), <-- restore_preferences_data()
                 preferred_email=p.get('preferred_email'),
                 # profile=p.get('profile.id'), <-- restore_profiles_people_data()
-                receive_promotional_email=p.get('receive_promotional_email') if p.get('receive_promotional_email') else True,
+                receive_promotional_email=p.get('receive_promotional_email') if p.get(
+                    'receive_promotional_email') else True,
                 registered_on=normalize_date_to_utc(p.get('registered_on')) if p.get('registered_on') else None,
                 # roles=p.get('roles'), <-- restore_people_roles_data()
                 # sshkeys=p.get('sshkeys'), <-- restore_sshkeys_data()
@@ -378,7 +401,7 @@ def restore_people_data():
         consoleLogger.error(exc)
 
 
-# export people_email_addresses as JSON output file
+# import people_email_addresses from JSON input file
 def restore_people_email_addresses_data():
     """
     EmailAddresses(BaseMixin, db.Model)
@@ -411,7 +434,7 @@ def restore_people_email_addresses_data():
         consoleLogger.error(exc)
 
 
-# export people_organizations as JSON output file
+# import people_organizations from JSON input file
 def restore_people_organizations_data():
     """
     Organizations(BaseMixin, db.Model)
@@ -442,7 +465,7 @@ def restore_people_organizations_data():
         consoleLogger.error(exc)
 
 
-# export people_roles as JSON output file
+# import people_roles from JSON input file
 def restore_people_roles_data():
     """
     FabricRoles(BaseMixin, db.Model)
@@ -483,7 +506,7 @@ def restore_people_roles_data():
         consoleLogger.error(exc)
 
 
-# export preferences as JSON output file
+# import preferences from JSON input file
 def restore_preferences_data():
     """
     FabricPreferences(BaseMixin, TimestampMixin, db.Model)
@@ -526,7 +549,7 @@ def restore_preferences_data():
         consoleLogger.error(exc)
 
 
-# export profiles_keywords as JSON output file
+# import profiles_keywords from JSON input file
 def restore_profiles_keywords_data():
     """
     ProfilesKeywords(BaseMixin, db.Model)
@@ -555,7 +578,7 @@ def restore_profiles_keywords_data():
         consoleLogger.error(exc)
 
 
-# export profiles_other_identities as JSON output file
+# import profiles_other_identities from JSON input file
 def restore_profiles_other_identities_data():
     """
     ProfilesOtherIdentities(BaseMixin, db.Model)
@@ -586,7 +609,7 @@ def restore_profiles_other_identities_data():
         consoleLogger.error(exc)
 
 
-# export profiles_people as JSON output file
+# import profiles_people from JSON input file
 def restore_profiles_people_data():
     """
     FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
@@ -635,7 +658,7 @@ def restore_profiles_people_data():
         consoleLogger.error(exc)
 
 
-# export profiles_personal_pages as JSON output file
+# import profiles_personal_pages from JSON input file
 def restore_profiles_personal_pages_data():
     """
     ProfilesPersonalPages(BaseMixin, db.Model)
@@ -666,7 +689,7 @@ def restore_profiles_personal_pages_data():
         consoleLogger.error(exc)
 
 
-# export profiles_projects as JSON output file
+# import profiles_projects from JSON input file
 def restore_profiles_projects_data():
     """
     FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
@@ -713,7 +736,7 @@ def restore_profiles_projects_data():
         consoleLogger.error(exc)
 
 
-# export profiles_references as JSON output file
+# import profiles_references from JSON input file
 def restore_profiles_references_data():
     """
     ProfilesReferences(BaseMixin, db.Model)
@@ -744,7 +767,7 @@ def restore_profiles_references_data():
         consoleLogger.error(exc)
 
 
-# export projects as JSON output file
+# import projects from JSON input file
 def restore_projects_data():
     """
     FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model)
@@ -855,7 +878,7 @@ def restore_projects_data():
         consoleLogger.error(exc)
 
 
-# export projects_tags as JSON output file
+# import projects_tags from JSON input file
 def restore_projects_communities_data():
     """
     ProjectsCommunities(BaseMixin, db.Model)
@@ -884,7 +907,7 @@ def restore_projects_communities_data():
         consoleLogger.error(exc)
 
 
-# export projects_creators as JSON output file
+# import projects_creators from JSON input file
 def restore_projects_creators_data():
     """
     projects_creators
@@ -942,7 +965,7 @@ def restore_projects_funding_data():
         consoleLogger.error(exc)
 
 
-# export projects_members as JSON output file
+# import projects_members from JSON input file
 def restore_projects_members_data():
     """
     projects_members
@@ -964,7 +987,7 @@ def restore_projects_members_data():
         consoleLogger.error(exc)
 
 
-# export projects_owners as JSON output file
+# import projects_owners from JSON input file
 def restore_projects_owners_data():
     """
     projects_owners
@@ -986,7 +1009,7 @@ def restore_projects_owners_data():
         consoleLogger.error(exc)
 
 
-# export projects_owners as JSON output file
+# import projects_owners from JSON input file
 def restore_projects_storage_data():
     """
     projects_storage
@@ -1008,7 +1031,7 @@ def restore_projects_storage_data():
         consoleLogger.error(exc)
 
 
-# export projects_tags as JSON output file
+# import projects_tags from JSON input file
 def restore_projects_tags_data():
     """
     ProjectsTags(BaseMixin, db.Model)
@@ -1037,7 +1060,7 @@ def restore_projects_tags_data():
         consoleLogger.error(exc)
 
 
-# export projects_tags as JSON output file
+# import projects_tags from JSON input file
 def restore_projects_topics_data():
     """
     ProjectsTopics(BaseMixin, db.Model)
@@ -1066,7 +1089,7 @@ def restore_projects_topics_data():
         consoleLogger.error(exc)
 
 
-# export projects_tags as JSON output file
+# import projects_tags from JSON input file
 def restore_quotas_data():
     """
     FabricQuotas(db.Model)
@@ -1107,7 +1130,7 @@ def restore_quotas_data():
         consoleLogger.error(exc)
 
 
-# export sshkeys as JSON output file
+# import sshkeys from JSON input file
 def restore_sshkeys_data():
     """
     FabricSshKeys(BaseMixin, TimestampMixin, db.Model)
@@ -1275,7 +1298,7 @@ def restore_task_timeout_tracker_data():
         consoleLogger.error(exc)
 
 
-# export testbed_info as JSON output file
+# import testbed_info from JSON input file
 def restore_testbed_info_data():
     """
     FabricTestbedInfo(BaseMixin, TimestampMixin, TrackingMixin, db.Model)

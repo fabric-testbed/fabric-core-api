@@ -392,13 +392,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/status_500_internal_server_error"
       x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
-  /core-api-metrics/events/people/{uuid}:
+  /core-api-metrics/events/people-membership/{uuid}:
     get:
       tags:
       - core-api-metrics
-      summary: Core API metrics people event details by UUID
-      description: Core API metrics people event details by UUID
-      operationId: core_api_metrics_events_people_uuid_get
+      summary: Core API metrics people membership by UUID
+      description: Core API metrics people membership by UUID
+      operationId: core_api_metrics_events_people_membership_uuid_get
       parameters:
       - name: uuid
         in: path
@@ -422,13 +422,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/status_500_internal_server_error"
       x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
-  /core-api-metrics/events/projects/{uuid}:
+  /core-api-metrics/events/projects-membership/{uuid}:
     get:
       tags:
       - core-api-metrics
-      summary: Core API metrics projects event details by UUID
-      description: Core API metrics projects event details by UUID
-      operationId: core_api_metrics_events_projects_uuid_get
+      summary: Core API metrics projects membership by UUID
+      description: Core API metrics projects membership by UUID
+      operationId: core_api_metrics_events_projects_membership_uuid_get
       parameters:
       - name: uuid
         in: path
@@ -473,13 +473,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/status_500_internal_server_error"
       x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
-  /core-api-metrics/people/{uuid}:
+  /core-api-metrics/people-details/{uuid}:
     get:
       tags:
       - core-api-metrics
       summary: Core API metrics people details by UUID
       description: Core API metrics people details by UUID
-      operationId: core_api_metrics_people_uuid_get
+      operationId: core_api_metrics_people_details_uuid_get
       parameters:
       - name: uuid
         in: path
@@ -524,13 +524,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/status_500_internal_server_error"
       x-openapi-router-controller: swagger_server.controllers.core_api_metrics_controller
-  /core-api-metrics/projects/{uuid}:
+  /core-api-metrics/projects-details/{uuid}:
     get:
       tags:
       - core-api-metrics
       summary: Core API metrics projects details by UUID
       description: Core API metrics projects details by UUID
-      operationId: core_api_metrics_projects_uuid_get
+      operationId: core_api_metrics_projects_details_uuid_get
       parameters:
       - name: uuid
         in: path

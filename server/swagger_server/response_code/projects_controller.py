@@ -6,6 +6,7 @@ from sqlalchemy import func
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
+from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesProjects
@@ -34,7 +35,7 @@ from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING
                                           PROJECTS_FUNDING_DIRECTORATES, PROJECTS_PREFERENCES,
                                           PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS)
 from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
-from swagger_server.response_code.core_api_utils import normalize_date_to_utc
+from swagger_server.response_code.core_api_utils import add_core_api_event, normalize_date_to_utc
 from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
@@ -42,9 +43,9 @@ from swagger_server.response_code.preferences_utils import delete_projects_prefe
 from swagger_server.response_code.profiles_utils import delete_profile_projects, get_fabric_matrix, \
     get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, update_projects_communities, \
-    update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders, \
-    update_projects_topics, projects_set_active
+    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, projects_set_active, \
+    update_projects_communities, update_projects_personnel, update_projects_project_funding, update_projects_tags, \
+    update_projects_token_holders, update_projects_topics
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
@@ -491,6 +492,16 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         # NOTE: projects must be reviewed by a facility-operator prior to becoming active (v1.8.1)
         fab_project.active = False
         db.session.commit()
+        # add event project_create
+        add_core_api_event(event=EnumEvents.project_create.name,
+                           event_date=fab_project.created,
+                           event_triggered_by=api_user.uuid,
+                           event_type=EnumEventTypes.projects.name,
+                           people_uuid=api_user.uuid,
+                           project_is_public=fab_project.is_public,
+                           project_uuid=fab_project.uuid
+                           )
+        # TODO: notification email project_create
         return projects_uuid_get(uuid=str(fab_project.uuid))
     except Exception as exc:
         details = 'Oops! something went wrong with projects_post(): {0}'.format(exc)
@@ -684,7 +695,6 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
 
     :rtype: Status200OkNoContent
     """
-    # TODO: soft delete
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -710,6 +720,16 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             fab_project.review_required = False
             db.session.commit()
             details = "Project: '{0}' has been successfully retired".format(fab_project.name)
+            # add event project_retire
+            add_core_api_event(event=EnumEvents.project_retire.name,
+                               event_date=fab_project.retired_on,
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=api_user.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_retire
         else:
             # deleted - alpha projects can be hard deleted
             # details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
@@ -733,7 +753,8 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
             update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
                                       operation='batch')
             # remove project_token_holders
-            update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=[], operation='batch')
+            update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=[],
+                                          operation='batch')
             # remove project_storage allocations
             for s in fab_project.project_storage:
                 s.active = False

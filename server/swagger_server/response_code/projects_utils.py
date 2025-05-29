@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
+from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
 from swagger_server.database.models.projects import EnumProjectTypes, FabricProjects, ProjectsCommunities, \
     ProjectsFunding, ProjectsTags, ProjectsTopics
@@ -15,6 +16,7 @@ from swagger_server.models.quotas_one import QuotasOne
 from swagger_server.models.storage_one import StorageOne
 from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
     delete_comanage_role
+from swagger_server.response_code.core_api_utils import add_core_api_event
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
@@ -444,16 +446,46 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
             fab_project.project_creators.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_creator
+            add_core_api_event(event=EnumEvents.project_add_creator.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_creator
         elif personnel_type == 'members' and not p.is_project_member(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_members.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_member
+            add_core_api_event(event=EnumEvents.project_add_member.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_member
         elif personnel_type == 'owners' and not p.is_project_owner(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_owners.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_owner
+            add_core_api_event(event=EnumEvents.project_add_owner.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_owner
         else:
             consoleLogger.warning(
                 'AddProjectPersonnel: unable to add usr: {0} to project: {1} as creator/member/owner'.format(p.uuid,
@@ -486,16 +518,46 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_creator
+            add_core_api_event(event=EnumEvents.project_remove_creator.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_creator
         elif personnel_type == 'members' and p.is_project_member(project_uuid=fab_project.uuid):
             fab_project.project_members.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_member
+            add_core_api_event(event=EnumEvents.project_remove_member.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_member
         elif personnel_type == 'owners' and p.is_project_owner(project_uuid=fab_project.uuid):
             fab_project.project_owners.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_owner
+            add_core_api_event(event=EnumEvents.project_remove_owner.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_owner
         else:
             consoleLogger.warning(
                 'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(
@@ -731,6 +793,16 @@ def add_project_token_holders(api_user: FabricPeople, fab_project: FabricProject
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.token_holders.append(p)
             db.session.commit()
+            # add event project_add_tokenholder
+            add_core_api_event(event=EnumEvents.project_add_tokenholder.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_tokenholder
             # metrics log - Project token-holder added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-add token-holder usr:{1} by usr:{2}'.format(
@@ -760,6 +832,16 @@ def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProj
                 fab_project.token_holders.remove(p)
                 delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
                 db.session.commit()
+                # add event project_remove_tokenholder
+                add_core_api_event(event=EnumEvents.project_remove_tokenholder.name,
+                                   event_date=datetime.now(timezone.utc),
+                                   event_triggered_by=api_user.uuid,
+                                   event_type=EnumEventTypes.projects.name,
+                                   people_uuid=p.uuid,
+                                   project_is_public=fab_project.is_public,
+                                   project_uuid=fab_project.uuid
+                                   )
+                # TODO: notification email project_remove_tokenholder
                 # metrics log - Project token-holder removed:
                 # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
                 log_msg = 'Project event prj:{0} modify-remove token-holder usr:{1} by usr:{2}'.format(
@@ -782,7 +864,8 @@ def projects_set_active(fab_project: FabricProjects):
         fab_project.is_locked = True
         fab_project.review_required = False
     # check if project should be retired - auto retire after PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS
-    if fab_project.expires_on + timedelta(days=float(os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fab_project.retired_date:
+    if fab_project.expires_on + timedelta(
+            days=float(os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fab_project.retired_date:
         fab_project.is_locked = True
         fab_project.review_required = False
         fab_project.retired_date = now

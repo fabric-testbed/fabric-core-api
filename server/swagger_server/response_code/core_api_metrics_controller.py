@@ -1,28 +1,34 @@
 import os
+import re
 from datetime import datetime, timedelta, timezone
 
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.core_api_metrics import CoreApiMetrics as CoreApiMetricsModel, \
-    EnumCoreApiMetricsTypes
+    EnumCoreApiMetricsTypes, EnumEventTypes
 from swagger_server.database.models.people import FabricPeople, Organizations
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.models.core_api_metrics import CoreApiMetrics  # noqa: E501
-from swagger_server.response_code.cors_response import cors_200, cors_401, cors_404, cors_500
+from swagger_server.models.core_api_metrics_events import CoreApiMetricsEvents
+from swagger_server.response_code.core_api_utils import core_api_events_by_start_date, core_api_events_by_people, core_api_events_by_project
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_401, cors_404, cors_500
 from swagger_server.response_code.decorators import login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.vouch_utils import IdSourceEnum
 
+TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
+TZPYTHON = r"^.+\+[\d]{4}$"
+
 
 @login_or_token_required
-def core_api_metrics_events_get(announcement_type=None, start_date=None, end_date=None):  # noqa: E501
+def core_api_metrics_events_get(event_type=None, start_date=None, end_date=None):  # noqa: E501
     """Core API metrics events
 
     Core API metrics events # noqa: E501
 
-    :param announcement_type: announcement type
-    :type announcement_type: str
+    :param event_type: event type
+    :type event_type: str
     :param start_date: starting date to search from
     :type start_date: str
     :param end_date: end date to search to
@@ -44,17 +50,57 @@ def core_api_metrics_events_get(announcement_type=None, start_date=None, end_dat
     api_user, id_source = get_person_by_login_claims()
     if id_source is IdSourceEnum.SERVICES.value or api_user.is_facility_operator() or api_user.is_facility_viewer():
         try:
-            response = CoreApiMetrics()
-            events = {
-                "event": "project_add_owner",
-                "event_date": "2023-11-03 14:14:25.981367+00:00",
-                "event_triggered_by": "69f9b1a6-c3c3-4c53-8693-21c63e771c78",
-                "event_type": "project",
-                "people_uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
-                "project_is_public": True,
-                "project_uuid": "8b3a2eae-a0c0-475a-807b-e9af581ce4c0"
-            }
-            response.results = [events]
+            try:
+                # validate since_date
+                if start_date:
+                    start_date = str(start_date).strip()
+                    # with +00:00
+                    if re.match(TZISO, start_date) is not None:
+                        s_date = datetime.fromisoformat(start_date)
+                    # with +0000
+                    elif re.match(TZPYTHON, start_date) is not None:
+                        s_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S%z")
+                    # perhaps no TZ info? add as if UTC
+                    else:
+                        s_date = datetime.strptime(start_date + "+0000", "%Y-%m-%d %H:%M:%S%z")
+                    # convert to UTC
+                    s_date = s_date.astimezone(timezone.utc)
+                else:
+                    s_date = datetime.now(timezone.utc)
+                # validate until_date
+                if end_date is not None:
+                    end_date = str(end_date).strip()
+                    # with +00:00
+                    if re.match(TZISO, end_date) is not None:
+                        e_date = datetime.fromisoformat(end_date)
+                    # with +0000
+                    elif re.match(TZPYTHON, end_date) is not None:
+                        e_date = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S%z")
+                    # perhaps no TZ info? add as if UTC
+                    else:
+                        e_date = datetime.strptime(end_date + "+0000", "%Y-%m-%d %H:%M:%S%z")
+                    # convert to UTC
+                    e_date = e_date.astimezone(timezone.utc)
+                else:
+                    e_date = datetime.now(timezone.utc)
+                # ensure date range is 90 days or less
+                if s_date + timedelta(days=90) < e_date:
+                    details = 'Invalid Date Range: start_date --> end_date: range exceeds 90 days'
+                    consoleLogger.error(details)
+                    return cors_400(details=details)
+            except ValueError as exc:
+                details = 'Exception: start_date / end_date: {0}'.format(exc)
+                consoleLogger.error(details)
+                return cors_400(details=details)
+            # query for events
+            q_event_type = [EnumEventTypes.people.name, EnumEventTypes.projects.name]
+            if event_type == EnumEventTypes.people.name:
+                q_event_type = [EnumEventTypes.people.name]
+            elif event_type == EnumEventTypes.projects.name:
+                q_event_type = [EnumEventTypes.projects.name]
+            # generate response
+            response = CoreApiMetricsEvents()
+            response.results = core_api_events_by_start_date(s_date, e_date, q_event_type)
             response.size = len(response.results)
             response.status = 200
             response.type = 'core_api_metrics.events'
@@ -70,10 +116,10 @@ def core_api_metrics_events_get(announcement_type=None, start_date=None, end_dat
 
 
 @login_or_token_required
-def core_api_metrics_events_people_uuid_get(uuid):  # noqa: E501
-    """Core API metrics people event details by UUID
+def core_api_metrics_events_people_membership_uuid_get(uuid):  # noqa: E501
+    """Core API metrics people membership by UUID
 
-    Core API metrics people event details by UUID # noqa: E501
+    Core API metrics people membership by UUID # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -94,23 +140,14 @@ def core_api_metrics_events_people_uuid_get(uuid):  # noqa: E501
     api_user, id_source = get_person_by_login_claims()
     if id_source is IdSourceEnum.SERVICES.value or api_user.is_facility_operator() or api_user.is_facility_viewer():
         try:
-            response = CoreApiMetrics()
-            membership_events = {
-                "added_by": "69f9b1a6-c3c3-4c53-8693-21c63e771c78",
-                "added_date": "2023-11-03 14:14:25.981367+00:00",
-                "membership_type": "project_owner",
-                "people_uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
-                "project_uuid": "8b3a2eae-a0c0-475a-807b-e9af581ce4c0",
-                "removed_by": None,
-                "removed_date": None
-            }
-            response.results = [membership_events]
+            response = CoreApiMetricsEvents()
+            response.results = core_api_events_by_people(people_uuid=uuid)
             response.size = len(response.results)
             response.status = 200
             response.type = 'core_api_metrics.people_events_by_uuid'
             return cors_200(response_body=response)
         except Exception as exc:
-            details = 'Oops! something went wrong with core_api_metrics_events_get(): {0}'.format(exc)
+            details = 'Oops! something went wrong with core_api_metrics_events_people_uuid_get(): {0}'.format(exc)
             consoleLogger.error(details)
             return cors_500(details=details)
     else:
@@ -120,10 +157,10 @@ def core_api_metrics_events_people_uuid_get(uuid):  # noqa: E501
 
 
 @login_or_token_required
-def core_api_metrics_events_projects_uuid_get(uuid):  # noqa: E501
-    """Core API metrics projects event details by UUID
+def core_api_metrics_events_projects_membership_uuid_get(uuid):  # noqa: E501
+    """Core API metrics projects membership by UUID
 
-    Core API metrics projects event details by UUID # noqa: E501
+    Core API metrics projects membership by UUID # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -144,23 +181,14 @@ def core_api_metrics_events_projects_uuid_get(uuid):  # noqa: E501
     api_user, id_source = get_person_by_login_claims()
     if id_source is IdSourceEnum.SERVICES.value or api_user.is_facility_operator() or api_user.is_facility_viewer():
         try:
-            response = CoreApiMetrics()
-            membership_events = {
-                "added_by": "69f9b1a6-c3c3-4c53-8693-21c63e771c78",
-                "added_date": "2023-11-03 14:14:25.981367+00:00",
-                "membership_type": "project_owner",
-                "people_uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
-                "project_uuid": "8b3a2eae-a0c0-475a-807b-e9af581ce4c0",
-                "removed_by": None,
-                "removed_date": None
-            }
-            response.results = [membership_events]
+            response = CoreApiMetricsEvents()
+            response.results = core_api_events_by_project(project_uuid=uuid)
             response.size = len(response.results)
             response.status = 200
             response.type = 'core_api_metrics.project_events_by_uuid'
             return cors_200(response_body=response)
         except Exception as exc:
-            details = 'Oops! something went wrong with core_api_metrics_events_get(): {0}'.format(exc)
+            details = 'Oops! something went wrong with core_api_metrics_events_projects_uuid_get(): {0}'.format(exc)
             consoleLogger.error(details)
             return cors_500(details=details)
     else:
@@ -344,7 +372,7 @@ def core_api_metrics_people_get():  # noqa: E501
 
 
 @login_or_token_required
-def core_api_metrics_people_uuid_get(uuid):  # noqa: E501
+def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
     """Core API metrics people details by UUID
 
     Core API metrics people details by UUID # noqa: E501
@@ -405,7 +433,7 @@ def core_api_metrics_people_uuid_get(uuid):  # noqa: E501
             person = {
                 'active': bool(fabric_person.active),
                 'affiliation': Organizations.query.filter_by(
-                id=fabric_person.org_affiliation).one_or_none().organization,
+                    id=fabric_person.org_affiliation).one_or_none().organization,
                 'email': fabric_person.preferred_email,
                 'google_scholar': google_scholar,
                 'last_updated': str(fabric_person.modified),
@@ -487,7 +515,7 @@ def core_api_metrics_projects_get():  # noqa: E501
 
 
 @login_or_token_required
-def core_api_metrics_projects_uuid_get(uuid):  # noqa: E501
+def core_api_metrics_projects_details_uuid_get(uuid):  # noqa: E501
     """Core API metrics projects details by UUID
 
     Core API metrics projects details by UUID # noqa: E501

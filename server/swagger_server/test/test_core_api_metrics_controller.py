@@ -34,24 +34,24 @@ class TestCoreApiMetricsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_core_api_metrics_events_people_uuid_get(self):
-        """Test case for core_api_metrics_events_people_uuid_get
+    def test_core_api_metrics_events_people_membership_uuid_get(self):
+        """Test case for core_api_metrics_events_people_membership_uuid_get
 
-        Core API metrics people event details by UUID
+        Core API metrics people membership by UUID
         """
         response = self.client.open(
-            '/core-api-metrics/events/people/{uuid}'.format(uuid='uuid_example'),
+            '/core-api-metrics/events/people-membership/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_core_api_metrics_events_projects_uuid_get(self):
-        """Test case for core_api_metrics_events_projects_uuid_get
+    def test_core_api_metrics_events_projects_membership_uuid_get(self):
+        """Test case for core_api_metrics_events_projects_membership_uuid_get
 
-        Core API metrics projects event details by UUID
+        Core API metrics projects membership by UUID
         """
         response = self.client.open(
-            '/core-api-metrics/events/projects/{uuid}'.format(uuid='uuid_example'),
+            '/core-api-metrics/events/projects-membership/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
@@ -67,6 +67,17 @@ class TestCoreApiMetricsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_core_api_metrics_people_details_uuid_get(self):
+        """Test case for core_api_metrics_people_details_uuid_get
+
+        Core API metrics people details by UUID
+        """
+        response = self.client.open(
+            '/core-api-metrics/people-details/{uuid}'.format(uuid='uuid_example'),
+            method='GET')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_core_api_metrics_people_get(self):
         """Test case for core_api_metrics_people_get
 
@@ -78,13 +89,13 @@ class TestCoreApiMetricsController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
-    def test_core_api_metrics_people_uuid_get(self):
-        """Test case for core_api_metrics_people_uuid_get
+    def test_core_api_metrics_projects_details_uuid_get(self):
+        """Test case for core_api_metrics_projects_details_uuid_get
 
-        Core API metrics people details by UUID
+        Core API metrics projects details by UUID
         """
         response = self.client.open(
-            '/core-api-metrics/people/{uuid}'.format(uuid='uuid_example'),
+            '/core-api-metrics/projects-details/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
@@ -96,17 +107,6 @@ class TestCoreApiMetricsController(BaseTestCase):
         """
         response = self.client.open(
             '/core-api-metrics/projects',
-            method='GET')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_core_api_metrics_projects_uuid_get(self):
-        """Test case for core_api_metrics_projects_uuid_get
-
-        Core API metrics projects details by UUID
-        """
-        response = self.client.open(
-            '/core-api-metrics/projects/{uuid}'.format(uuid='uuid_example'),
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

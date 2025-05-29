@@ -247,6 +247,7 @@ def backfill_core_api_people():
                     project_is_public=project_is_public
                 )
         # event project_creator/member/owner/tokenholder
+        event_type = EnumEventTypes.projects.name
         for r in fp.roles:
             role_suffix = r.name[-3:]
             if role_suffix in ['-pc', '-pm', '-po', '-tk']:

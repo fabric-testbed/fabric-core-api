@@ -1,16 +1,17 @@
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
+from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles, UserSubjectIdentifiers
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.comanage_utils import api, create_comanage_role, delete_comanage_role, \
     is_fabric_active_user, update_email_addresses, update_org_affiliation, update_people_identifiers, \
     update_people_roles, update_user_org_affiliations, update_user_subject_identities
-from swagger_server.response_code.core_api_utils import is_valid_uuid
+from swagger_server.response_code.core_api_utils import add_core_api_event, is_valid_uuid
 from swagger_server.response_code.preferences_utils import create_people_preferences
 from swagger_server.response_code.profiles_utils import create_profile_people
 from swagger_server.response_code.projects_utils import remove_project_token_holders
@@ -131,6 +132,16 @@ def create_fabric_person_from_login(claims: dict = None) -> FabricPeople:
                 db.session.commit()
                 # update user
                 update_fabric_person(fab_person=fab_person)
+                # add event people_create
+                add_core_api_event(event=EnumEvents.people_create.name,
+                                   event_date=fab_person.registered_on,
+                                   event_triggered_by=fab_person.uuid,
+                                   event_type=EnumEventTypes.people.name,
+                                   people_uuid=fab_person.uuid,
+                                   project_is_public=None,
+                                   project_uuid=None
+                                   )
+                # TODO: notification email people_create
     except Exception as exc:
         details = 'Oops! something went wrong with create_fabric_person_from_login(): {0}'.format(exc)
         consoleLogger.error(details)

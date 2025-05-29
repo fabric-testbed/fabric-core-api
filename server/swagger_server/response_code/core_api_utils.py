@@ -11,6 +11,8 @@ from swagger_server.database.models.core_api_metrics import CoreApiEvents, EnumE
 
 def normalize_date_to_utc(date_str: str, return_type: str = None) -> Union[None, str, datetime]:
     try:
+        # format: 2022-08-07T22:32:31+0000 - ignore partial seconds
+        date_str = date_str[:19] + '+0000'
         date_parsed = parser.parse(date_str) + timedelta(milliseconds=100)
         date_parsed = date_parsed - timedelta(milliseconds=100)
         date_parsed = date_parsed.astimezone(timezone.utc)

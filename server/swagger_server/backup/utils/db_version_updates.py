@@ -123,31 +123,42 @@ def projects_retire_after_365_days_expired():
     Migrate projects that have expired for more than 180 days to retired status
     """
     try:
-        fab_projects = FabricProjects.query.all()
+        fab_projects = FabricProjects.query.order_by(FabricProjects.created).all()
+        now = datetime.now(timezone.utc)
+        retire_check_date = now - timedelta(days=int(os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS')))
         for fp in fab_projects:
-            consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
-            now = datetime.now(timezone.utc)
-            # check if project is expired, but not retired
-            if fp.expires_on < now and not fp.retired_date:
+            consoleLogger.info('Project: id {0}, uuid {1} created: {2}'.format(fp.id, fp.uuid, fp.created))
+            # Retired projects
+            if fp.expires_on < retire_check_date:
+                if not fp.retired_date:
+                    fp.retired_date = now
+                fp.active = False
+                fp.is_locked = True
+                fp.review_required = False
+                console_output = ' - Retired on date: {0}'.format(fp.retired_date)
+            # Expired projects
+            elif retire_check_date < fp.expires_on < now:
+                fp.active = False
+                fp.is_locked = False
+                fp.retired_date = None
                 fp.review_required = True
-                consoleLogger.info(' - Expired: date {0}'.format(fp.expires_on))
-            # check if project retired
-            if fp.retired_date and fp.retired_date < now and not fp.is_locked:
-                fp.is_locked = True
-                fp.review_required = False
-            # check if project should be retired - auto retire after PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS
-            if fp.expires_on + timedelta(days=float(
-                    os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fp.retired_date:
-                fp.is_locked = True
-                fp.review_required = False
-                fp.retired_date = now
-                consoleLogger.info(' - Retired: date {0}'.format(fp.expires_on + timedelta(days=float())))
-            # determine if project is active
-            if not fp.review_required and not fp.is_locked and not fp.retired_date:
+                console_output = ' - Expired on date: {0}'.format(fp.expires_on)
+            # Active projects
+            elif fp.expires_on > now:
                 fp.active = True
+                fp.is_locked = False
+                fp.retired_date = None
+                fp.review_required = False
+                console_output = ' - Active until date: {0}'.format(fp.expires_on)
+            # Should not get here
             else:
                 fp.active = False
+                fp.is_locked = True
+                fp.retired_date = None
+                fp.review_required = True
+                console_output = ' - Unknown status date: {0}'.format(fp.expires_on)
             db.session.commit()
+            consoleLogger.info(console_output)
     except Exception as exc:
         consoleLogger.error(exc)
 

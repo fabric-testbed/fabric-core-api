@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+from typing import Any, Optional
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
@@ -875,3 +876,31 @@ def projects_set_active(fab_project: FabricProjects):
     else:
         fab_project.active = False
     db.session.commit()
+
+
+def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: FabricPeople) -> tuple[bool | Any, Any | None]:
+    """
+    Determine whether project is editable by API user
+    - facility-operator - always True
+    - pc or po - True when project is not retired
+    - others - False
+    """
+    message = None
+    # facility-operator can always edit a project
+    if api_user.is_facility_operator():
+        can_edit = True
+        consoleLogger.info('FACILITY_OPERATOR: {0} editing project {1}'.format(api_user.uuid, fab_project.uuid))
+        return can_edit, message
+    # project_creator and project_owner can edit active non-retired projects
+    elif api_user.is_project_creator(project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid)):
+        can_edit = True
+        # check if project has been retired
+        if fab_project.retired_date:
+            can_edit = False
+            message = 'Project: {0} was retired on {1}'.format(str(fab_project.uuid),str(fab_project.retired_date))
+    # deny all others
+    else:
+        can_edit = False
+        message = 'User: {0} lacks sufficient authorization to modify this project'.format(str(api_user.uuid))
+    return can_edit, message
+

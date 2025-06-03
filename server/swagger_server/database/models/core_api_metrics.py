@@ -75,6 +75,7 @@ class CoreApiEvents(BaseMixin, db.Model):
             "event_date",
             "event",
             "people_uuid",
+            "project_uuid",
             unique=True,
             postgresql_where=project_uuid.isnot(None)
         ),

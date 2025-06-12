@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import uuid4
-from typing import Any, Optional
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
@@ -18,6 +18,7 @@ from swagger_server.models.storage_one import StorageOne
 from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
     delete_comanage_role
 from swagger_server.response_code.core_api_utils import add_core_api_event
+from swagger_server.response_code.email_utils import send_fabric_email
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
@@ -116,6 +117,17 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     update_projects_personnel(api_user=project_creator, fab_project=fab_project,
                               personnel=[fab_project.created_by_uuid],
                               personnel_type='creators', operation="add")
+    # send email - project_create
+    to_email = project_creator.preferred_email
+    email_type = 'project_create'
+    people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+    project_uuid = str(fab_project.uuid)
+    send_fabric_email(
+        email_type=email_type,
+        to_email=to_email,
+        project_uuid=project_uuid,
+        people_uuid=people_uuid
+    )
     # check for project_members
     try:
         if len(body.project_members) == 0:
@@ -457,6 +469,17 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_add_creator
+            # send email - project_add_creator
+            to_email = p.preferred_email
+            email_type = 'project_add_creator'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'members' and not p.is_project_member(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_members.append(p)
@@ -472,6 +495,17 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_add_member
+            # send email - project_add_member
+            to_email = p.preferred_email
+            email_type = 'project_add_member'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'owners' and not p.is_project_owner(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_owners.append(p)
@@ -487,6 +521,17 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_add_owner
+            # send email - project_add_owner
+            to_email = p.preferred_email
+            email_type = 'project_add_owner'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         else:
             consoleLogger.warning(
                 'AddProjectPersonnel: unable to add usr: {0} to project: {1} as creator/member/owner'.format(p.uuid,
@@ -529,6 +574,17 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_remove_creator
+            # send email - project_remove_creator
+            to_email = p.preferred_email
+            email_type = 'project_remove_creator'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'members' and p.is_project_member(project_uuid=fab_project.uuid):
             fab_project.project_members.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
@@ -544,6 +600,17 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_remove_member
+            # send email - project_remove_member
+            to_email = p.preferred_email
+            email_type = 'project_remove_member'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'owners' and p.is_project_owner(project_uuid=fab_project.uuid):
             fab_project.project_owners.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
@@ -559,6 +626,17 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_remove_owner
+            # send email - project_remove_owner
+            to_email = p.preferred_email
+            email_type = 'project_remove_owner'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         else:
             consoleLogger.warning(
                 'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(
@@ -804,6 +882,17 @@ def add_project_token_holders(api_user: FabricPeople, fab_project: FabricProject
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_add_tokenholder
+            # send email - project_add_tokenholder
+            to_email = p.preferred_email
+            email_type = 'project_add_tokenholder'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
             # metrics log - Project token-holder added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-add token-holder usr:{1} by usr:{2}'.format(
@@ -843,6 +932,17 @@ def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProj
                                    project_uuid=fab_project.uuid
                                    )
                 # TODO: notification email project_remove_tokenholder
+                # send email - project_remove_tokenholder
+                to_email = p.preferred_email
+                email_type = 'project_remove_tokenholder'
+                people_uuid = str(api_user.uuid)
+                project_uuid = str(fab_project.uuid)
+                send_fabric_email(
+                    email_type=email_type,
+                    to_email=to_email,
+                    project_uuid=project_uuid,
+                    people_uuid=people_uuid
+                )
                 # metrics log - Project token-holder removed:
                 # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
                 log_msg = 'Project event prj:{0} modify-remove token-holder usr:{1} by usr:{2}'.format(
@@ -878,7 +978,8 @@ def projects_set_active(fab_project: FabricProjects):
     db.session.commit()
 
 
-def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: FabricPeople) -> tuple[bool | Any, Any | None]:
+def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: FabricPeople) -> tuple[
+    bool | Any, Any | None]:
     """
     Determine whether project is editable by API user
     - facility-operator - always True
@@ -892,15 +993,15 @@ def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: Fabri
         consoleLogger.info('FACILITY_OPERATOR: {0} editing project {1}'.format(api_user.uuid, fab_project.uuid))
         return can_edit, message
     # project_creator and project_owner can edit active non-retired projects
-    elif api_user.is_project_creator(project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid)):
+    elif api_user.is_project_creator(project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(
+            project_uuid=str(fab_project.uuid)):
         can_edit = True
         # check if project has been retired
         if fab_project.retired_date:
             can_edit = False
-            message = 'Project: {0} was retired on {1}'.format(str(fab_project.uuid),str(fab_project.retired_date))
+            message = 'Project: {0} was retired on {1}'.format(str(fab_project.uuid), str(fab_project.retired_date))
     # deny all others
     else:
         can_edit = False
         message = 'User: {0} lacks sufficient authorization to modify this project'.format(str(api_user.uuid))
     return can_edit, message
-

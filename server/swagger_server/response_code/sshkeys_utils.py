@@ -317,11 +317,15 @@ def garbage_collect_expired_keys():
 
 def ssh_key_expiry_check():
     now = datetime.now(timezone.utc)
+    print("Checking SSH key expiry... {}".format(str(now)))
     # people_sshkey_expiry_30_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_30_day')
     ssh_keys = FabricSshKeys.query.filter(
-        now + timedelta(days=30) < FabricSshKeys.expires_on < now + timedelta(days=31)
+        FabricSshKeys.expires_on > now + timedelta(days=30),
+        FabricSshKeys.expires_on < now + timedelta(days=31),
     ).order_by('uuid').all()
     for k in ssh_keys:
+        print(k.uuid, k.expires_on)
         # send email - people_sshkey_expiry_30_day
         p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
         if p:
@@ -336,10 +340,13 @@ def ssh_key_expiry_check():
                 people_uuid=people_uuid
             )
     # people_sshkey_expiry_7_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_7_day')
     ssh_keys = FabricSshKeys.query.filter(
-        now + timedelta(days=7) < FabricSshKeys.expires_on < now + timedelta(days=8)
+        FabricSshKeys.expires_on > now + timedelta(days=7),
+        FabricSshKeys.expires_on < now + timedelta(days=8),
     ).order_by('uuid').all()
     for k in ssh_keys:
+        print(k.uuid, k.expires_on)
         # send email - people_sshkey_expiry_7_day
         p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
         if p:
@@ -354,10 +361,13 @@ def ssh_key_expiry_check():
                 people_uuid=people_uuid
             )
     # people_sshkey_expiry_1_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_1_day')
     ssh_keys = FabricSshKeys.query.filter(
-        now + timedelta(days=1) < FabricSshKeys.expires_on < now + timedelta(days=2)
+        FabricSshKeys.expires_on > now + timedelta(days=1),
+        FabricSshKeys.expires_on < now + timedelta(days=2),
     ).order_by('uuid').all()
     for k in ssh_keys:
+        print(k.uuid, k.expires_on)
         # send email - people_sshkey_expiry_1_day
         p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
         if p:

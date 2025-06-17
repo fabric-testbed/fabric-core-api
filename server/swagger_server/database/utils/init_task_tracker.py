@@ -63,28 +63,6 @@ def init_task_timeout_tracker():
             psk.name = os.getenv('PSK_NAME')
             psk.timeout_in_seconds = os.getenv('PSK_TIMEOUT_IN_SECONDS')
             db.session.commit()
-        # ssh_key_expiry
-        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).one_or_none()
-        print(ske)
-        if not ske:
-            stmt = insert(db.Table('task_timeout_tracker')).values(
-                description=os.getenv('SKE_DESCRIPTION'),
-                id=2,
-                last_updated=(now - timedelta(seconds=(int(os.getenv('SKE_TIMEOUT_IN_SECONDS')) + 1))),
-                name=os.getenv('SKE_NAME'),
-                timeout_in_seconds=int(os.getenv('SKE_TIMEOUT_IN_SECONDS')),
-                uuid=str(uuid4()),
-                value=None,
-            ).on_conflict_do_nothing()
-            db.session.execute(stmt)
-            db.session.commit()
-            consoleLogger.info(
-                "CREATE: entry in 'task_timeout_tracker' table for name: {0}".format(os.getenv('SKE_NAME')))
-        else:
-            ske.description = os.getenv('SKE_DESCRIPTION')
-            ske.name = os.getenv('SKE_NAME')
-            ske.timeout_in_seconds = os.getenv('SKE_TIMEOUT_IN_SECONDS')
-            db.session.commit()
         # token_revocation_list
         trl = TaskTimeoutTracker.query.filter_by(name=os.getenv('TRL_NAME')).one_or_none()
         print(trl)
@@ -107,7 +85,29 @@ def init_task_timeout_tracker():
             trl.name = os.getenv('TRL_NAME')
             trl.timeout_in_seconds = os.getenv('TRL_TIMEOUT_IN_SECONDS')
             db.session.commit()
-        reset_serial_sequence(db_table='task_timeout_tracker', seq_value=3)
+        # ssh_key_expiry
+        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).one_or_none()
+        print(ske)
+        if not ske:
+            stmt = insert(db.Table('task_timeout_tracker')).values(
+                description=os.getenv('SKE_DESCRIPTION'),
+                id=4,
+                last_updated=(now - timedelta(seconds=(int(os.getenv('SKE_TIMEOUT_IN_SECONDS')) + 1))),
+                name=os.getenv('SKE_NAME'),
+                timeout_in_seconds=int(os.getenv('SKE_TIMEOUT_IN_SECONDS')),
+                uuid=str(uuid4()),
+                value=None,
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+            db.session.commit()
+            consoleLogger.info(
+                "CREATE: entry in 'task_timeout_tracker' table for name: {0}".format(os.getenv('SKE_NAME')))
+        else:
+            ske.description = os.getenv('SKE_DESCRIPTION')
+            ske.name = os.getenv('SKE_NAME')
+            ske.timeout_in_seconds = os.getenv('SKE_TIMEOUT_IN_SECONDS')
+            db.session.commit()
+        reset_serial_sequence(db_table='task_timeout_tracker', seq_value=4)
     except Exception as exc:
         consoleLogger.error(exc)
 

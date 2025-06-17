@@ -6,6 +6,8 @@
 #    python -m flask db upgrade
 # NOTE: load / verify database against COmanage or restore from backup
 #    python -m server.swagger_server.backup.utils.db_restore
+#    python -m server.swagger_server.backup.utils.db_version_updates
+#    python -m server.swagger_server.database.utils.init_task_tracker
 
 if [[ "$1" == 'run_server' ]]; then
     # setup virtual environment

@@ -58,15 +58,15 @@ EMAIL_TEMPLATES = {
     },
     'people_sshkey_expiry_30_day': {
         'subject': '[FABRIC] SSH Key Expiry 30 days notice - {2}',
-        'body': '{1} has alerted you to SSH key expiry in 30 days: {2}',
+        'body': '{1} has alerted you to SSH key expiry in 30 days: {2}\r\n\r\nLog into portal to manage your SSH keys',
     },
     'people_sshkey_expiry_7_day': {
-        'subject': '[FABRIC] SSH Key Expiry 7 days notice - {0}',
-        'body': '{1} has alerted you to SSH key expiry in 7 days: {0}',
+        'subject': '[FABRIC] SSH Key Expiry 7 days notice - {2}',
+        'body': '{1} has alerted you to SSH key expiry in 7 days: {2}\r\n\r\nLog into portal to manage your SSH keys',
     },
     'people_sshkey_expiry_1_day': {
-        'subject': '[FABRIC] SSH Key Expiry 1 day notice - {0}',
-        'body': '{1} has alerted you to SSH key expiry in 1 day: {0}',
+        'subject': '[FABRIC] SSH Key Expiry 1 day notice - {2}',
+        'body': '{1} has alerted you to SSH key expiry in 1 day: {2}\r\n\r\nLog into portal to manage your SSH keys',
     },
 }
 
@@ -122,7 +122,8 @@ def send_fabric_email(email_type: str = None, *args, **kwargs):
                     people_uuid)
         sshkey_info = None
         if sshkey_uuid:
-            sshkey_info = FabricSshKeys.query.filter_by(uuid=sshkey_uuid).first().fabric_key_type + ' ({})'.format(
+            sshkey = FabricSshKeys.query.filter_by(uuid=sshkey_uuid).first()
+            sshkey_info = str(sshkey.fabric_key_type.name) + ' key - ' + str(sshkey.comment) + ' ({})'.format(
                 sshkey_uuid)
         project_info = None
         if project_uuid:

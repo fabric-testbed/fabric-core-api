@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import atexit
 import os
 import threading
+from time import sleep
 
 import connexion
 from connexion.exceptions import BadRequestProblem, Forbidden, Unauthorized, ValidationError
@@ -34,14 +34,6 @@ from swagger_server.database.models.quotas import FabricQuotas
 END: Imports needed for alembic and flask using multiple model definition files
 -------------------------------------------------------------------------------
 """
-INTERVAL = 5  # Seconds
-
-# Shared data structures accessible to both threads and Flask routes
-shared_data = {}
-data_lock = threading.Lock()
-
-# Timer handler
-timer_task = threading.Timer(0, lambda x: None, ())
 
 
 def flask_bad_request(exception):
@@ -83,39 +75,58 @@ def main():
     logger = app.logger
     logger.info("Starting FABRIC Core API")
 
-    def terminate_timer():
-        global timer_task
-        timer_task.cancel()
-
-    def background_process():
-        global shared_data
-        global timer_task
-        with data_lock:
-            check_sshkey_expiry_and_email(app=app)
-
-        # Schedule the next execution
-        timer_task = threading.Timer(10, background_process)
-        timer_task.start()
-
-    def initialize_task():
-        global timer_task
-        timer_task = threading.Timer(10, background_process)
-        timer_task.daemon = True
-        timer_task.start()
-
-    # Start the background process
-    initialize_task()
-    atexit.register(terminate_timer)
-
     return app
 
 
 app = main()
 
+thread_event = threading.Event()
+
+
+def ske_task_monitor(app, cooldown: int = 86400):
+    while thread_event.is_set():
+        # check SSH key expiry and send emails as needed
+        check_sshkey_expiry_and_email(app)
+        print(' - Sleeping for {} seconds...'.format(str(cooldown)))
+        sleep(int(cooldown))
+
 
 @app.before_first_request
 def create_tables():
     db.create_all()
+
+
+@app.route("/start", methods=["GET"])
+def start_task_monitor():
+    try:
+        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
+        if str(ske.value).casefold() != 'running':
+            thread_event.set()
+            thread = threading.Thread(target=ske_task_monitor, args=(app, ske.timeout_in_seconds))
+            thread.start()
+            ske.value = 'running'
+            db.session.commit()
+            return "Task Monitor Started"
+        else:
+            return "Task Monitor Already Running"
+    except Exception as error:
+        return str(error)
+
+
+# TODO: remove /stop on production deployment
+@app.route("/stop", methods=["GET"])
+def stop_task_monitor():
+    try:
+        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
+        if str(ske.value).casefold() == 'running':
+            thread_event.clear()
+            ske.value = None
+            db.session.commit()
+            return "Task Monitor Stopped"
+        else:
+            return "Task Monitor Already Stopped"
+    except Exception as error:
+        return str(error)
 
 
 if __name__ == '__main__':

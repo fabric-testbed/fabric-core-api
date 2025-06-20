@@ -34,20 +34,19 @@ from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLin
 from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING_AGENCIES,
                                           PROJECTS_FUNDING_DIRECTORATES, PROJECTS_PREFERENCES,
                                           PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS)
-from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
+from swagger_server.response_code.comanage_utils import update_comanage_group
 from swagger_server.response_code.core_api_utils import add_core_api_event, normalize_date_to_utc
-from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.email_utils import send_fabric_email
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.preferences_utils import delete_projects_preferences
-from swagger_server.response_code.profiles_utils import delete_profile_projects, get_fabric_matrix, \
+from swagger_server.response_code.profiles_utils import get_fabric_matrix, \
     get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, projects_set_active, \
-    update_projects_communities, update_projects_personnel, update_projects_project_funding, update_projects_tags, \
-    update_projects_token_holders, update_projects_topics
+    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, \
+    project_is_editable_by_api_user, projects_set_active, update_projects_communities, update_projects_personnel, \
+    update_projects_project_funding, update_projects_tags, update_projects_token_holders, update_projects_topics
 from swagger_server.response_code.response_utils import is_valid_url
-from swagger_server.response_code.projects_utils import project_is_editable_by_api_user
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
@@ -699,7 +698,7 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
         if not can_edit:
             return cors_403(details=message)
-        if os.getenv('CORE_API_DEPLOYMENT_TIER') in ['beta', 'production']:
+        if os.getenv('CORE_API_DEPLOYMENT_TIER') in ['alpha', 'beta', 'production']:
             # retired - do not allow beta or production projects to be hard deleted
             now = datetime.now(timezone.utc)
             fab_project.active = False
@@ -721,50 +720,61 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
                                project_uuid=fab_project.uuid
                                )
             # TODO: notification email project_retire
-        else:
-            # deleted - alpha projects can be hard deleted
-            # details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-            # consoleLogger.error(details)
-            # return cors_500(details=details)
-            # delete Tags
-            update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
-            # delete Preferences
-            delete_projects_preferences(fab_project=fab_project)
-            # delete Profile
-            delete_profile_projects(api_user=api_user, fab_project=fab_project)
-            # remove project_creators
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
-                                      personnel_type='creators',
-                                      operation='batch')
-            # remove project_members
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
-                                      personnel_type='members',
-                                      operation='batch')
-            # remove project_owners
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
-                                      operation='batch')
-            # remove project_token_holders
-            update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=[],
-                                          operation='batch')
-            # remove project_storage allocations
-            for s in fab_project.project_storage:
-                s.active = False
-                fab_project.project_storage.remove(s)
-                db.session.commit()
-            # remove communities
-            update_projects_communities(fab_project=fab_project, communities=[])
-            # remove project funding
-            update_projects_project_funding(fab_project=fab_project, project_funding=[])
-            # delete COUs -pc, -pm, -po, -tk
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
-            # delete FabricProject
-            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-            consoleLogger.info(details)
-            db.session.delete(fab_project)
-            db.session.commit()
+            # send email - project_retire
+            to_email = fab_project.project_creators[0].preferred_email
+            email_type = 'project_retire'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
+        # else:
+        #     # deleted - alpha projects can be hard deleted
+        #     # details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        #     # consoleLogger.error(details)
+        #     # return cors_500(details=details)
+        #     # delete Tags
+        #     update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
+        #     # delete Preferences
+        #     delete_projects_preferences(fab_project=fab_project)
+        #     # delete Profile
+        #     delete_profile_projects(api_user=api_user, fab_project=fab_project)
+        #     # remove project_creators
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+        #                               personnel_type='creators',
+        #                               operation='batch')
+        #     # remove project_members
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+        #                               personnel_type='members',
+        #                               operation='batch')
+        #     # remove project_owners
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
+        #                               operation='batch')
+        #     # remove project_token_holders
+        #     update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=[],
+        #                                   operation='batch')
+        #     # remove project_storage allocations
+        #     for s in fab_project.project_storage:
+        #         s.active = False
+        #         fab_project.project_storage.remove(s)
+        #         db.session.commit()
+        #     # remove communities
+        #     update_projects_communities(fab_project=fab_project, communities=[])
+        #     # remove project funding
+        #     update_projects_project_funding(fab_project=fab_project, project_funding=[])
+        #     # delete COUs -pc, -pm, -po, -tk
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
+        #     # delete FabricProject
+        #     details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        #     consoleLogger.info(details)
+        #     db.session.delete(fab_project)
+        #     db.session.commit()
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = details

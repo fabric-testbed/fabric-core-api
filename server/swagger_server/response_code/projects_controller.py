@@ -409,6 +409,7 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     project.memberships = get_project_membership(fab_project=item, fab_person=api_user)
                 else:
                     project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
+                project.project_lead = get_projects_personnel(fab_project=item, personnel_type='lead')[0]
                 project.name = item.name
                 project.retired_date = str(item.retired_date) if item.retired_date else None
                 project.review_required = bool(item.review_required)
@@ -479,7 +480,6 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         ]
     }
     """
-    # TODO: allow any user to create a project once new project approval workflow is deployed
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -488,6 +488,11 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PROJECT_LEADS')))
+        # verify project_lead is a FABRIC user
+        project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
+        if not project_lead:
+            return cors_400(
+                details='InvalidProjectLead: User with uuid={0} not found'.format(body.project_lead))
         # create Project
         fab_project = create_fabric_project_from_api(body=body, project_creator=api_user)
         # NOTE: projects must be reviewed by a facility-operator prior to becoming active (v1.8.1)
@@ -731,6 +736,7 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
                 project_uuid=project_uuid,
                 people_uuid=people_uuid
             )
+        # TODO: projects are no longer deleted, but retired as a soft delete
         # else:
         #     # deleted - alpha projects can be hard deleted
         #     # details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
@@ -932,6 +938,106 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
         return cors_500(details=details)
 
 
+def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
+    """Update Project Lead as Facility Operator
+
+    Update Project Lead as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Lead as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    # NOTE: Facility Operator only
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active facility-operators role
+        if not api_user.active or not api_user.is_facility_operator():
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
+                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+        # check for project_lead
+        try:
+            # validate project_lead
+            project_lead = None
+            try:
+                project_lead_uuid = str(body.project_lead)
+                project_lead = FabricPeople.query.filter(
+                    FabricPeople.uuid == project_lead_uuid
+                ).first()
+                if project_lead:
+                    is_owner = project_lead.is_project_owner(project_uuid=str(fab_project.uuid))
+                    if not is_owner:
+                        return cors_400(
+                            details='NotProjectOwner: User with uuid={0} must be a project owner before being assigned project lead'.format(
+                                project_lead_uuid))
+                else:
+                    return cors_400(
+                        details='InvalidUserID: User with uuid={0} not found'.format(project_lead_uuid))
+                # update project project_lead if new lead is different from prior lead
+                project_lead_orig = fab_project.project_lead
+                if project_lead_orig.uuid != project_lead.uuid:
+                    # send email - project_remove_lead
+                    to_email = project_lead_orig.preferred_email
+                    email_type = 'project_remove_lead'
+                    people_uuid = str(api_user.uuid)
+                    project_uuid = str(fab_project.uuid)
+                    send_fabric_email(
+                        email_type=email_type,
+                        to_email=to_email,
+                        project_uuid=project_uuid,
+                        people_uuid=people_uuid
+                    )
+                    fab_project.project_lead = project_lead
+                    db.session.commit()
+                    # send email - project_add_lead
+                    to_email = project_lead.preferred_email
+                    email_type = 'project_add_lead'
+                    people_uuid = str(api_user.uuid)
+                    project_uuid = str(fab_project.uuid)
+                    send_fabric_email(
+                        email_type=email_type,
+                        to_email=to_email,
+                        project_uuid=project_uuid,
+                        people_uuid=people_uuid
+                    )
+                    # metrics log - Project project_lead was modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify expires_on by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify \'project_lead={1}\' by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        str(project_lead),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
+            except ValueError as exc:
+                details = 'Exception: project_lead: {0}'.format(exc)
+                consoleLogger.error(details)
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_lead_patch(): 'expires_on' - {0}".format(exc))
+        # update project active status
+        projects_set_active(fab_project=fab_project)
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_lead_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
 # @login_or_token_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
@@ -981,6 +1087,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
+            project_one.project_lead = get_projects_personnel(fab_project=fab_project, personnel_type='lead')[0]
             project_one.project_type = fab_project.project_type.name
             project_one.retired_date = str(fab_project.retired_date) if fab_project.retired_date else None
             project_one.review_required = bool(fab_project.review_required)
@@ -1688,15 +1795,15 @@ def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
             # update project review_required
             fab_project.review_required = bool(body.review_required)
             db.session.commit()
-            # metrics log - Project expires_on was modified:
-            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify expires_on by usr:dead-beef-dead-beef
-            log_msg = 'Project event prj:{0} modify \'expires_on={1}\' by usr:{2}'.format(
+            # metrics log - Project review_required was modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify review_required by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify \'review_required={1}\' by usr:{2}'.format(
                 str(fab_project.uuid),
-                str(fab_project.expires_on),
+                str(fab_project.review_required),
                 str(api_user.uuid))
             metricsLogger.info(log_msg)
         except Exception as exc:
-            consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'expires_on' - {0}".format(exc))
+            consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'review_required' - {0}".format(exc))
         # update project active status
         projects_set_active(fab_project=fab_project)
         # create response
@@ -1710,7 +1817,7 @@ def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
         return cors_200(response_body=response)
 
     except Exception as exc:
-        details = 'Oops! something went wrong with projects_uuid_expires_on_patch(): {0}'.format(exc)
+        details = 'Oops! something went wrong with projects_uuid_review_required_patch(): {0}'.format(exc)
         consoleLogger.error(details)
         return cors_500(details=details)
 
@@ -1865,7 +1972,8 @@ def projects_uuid_topics_patch(uuid: str,
             return cors_403(details=message)
         # check for topics
         try:
-            topics = [str(t.replace(" ", "-")).casefold() for t in body.topics]
+            topics = [str(t.strip()) for t in body.topics]
+            topics = [str(t.replace(" ", "-")).casefold() for t in topics]
             update_projects_topics(api_user=api_user, fab_project=fab_project,
                                    topics=topics)
             consoleLogger.info('UPDATE: FabricProjects: uuid={0}, topics={1}'.format(

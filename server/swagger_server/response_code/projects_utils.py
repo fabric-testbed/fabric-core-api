@@ -48,6 +48,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     - preferences - array of preference booleans
     - profile - foreignkey link to profile_projects
     - project_creators - one-to-many people (initially one person)
+    - project_lead - lead project member - initial project owner
     - project_members - one-to-many people
     - project_owners - one-to-many people
     - projects_storage - one-to-many storage
@@ -63,12 +64,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         "description": "string",
         "is_public": true,
         "name": "string",
-        "project_members": [
-            "string"
-        ],
-        "project_owners": [
-            "string"
-        ]
+        "project_lead": "string",
+        "project_type": "research"
     }
     """
     # create Project
@@ -82,6 +79,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
     fab_project.is_locked = False
     fab_project.is_public = body.is_public
+    fab_project.project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
     fab_project.modified = now
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
@@ -128,31 +126,22 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         project_uuid=project_uuid,
         people_uuid=people_uuid
     )
-    # check for project_members
-    try:
-        if len(body.project_members) == 0:
-            print('NO MEMBERS')
-    except Exception as exc:
-        body.project_members = []
-        consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
-    # add project_members
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members,
-                              personnel_type='members', operation="add")
-    # check for project_owners
-    try:
-        if len(body.project_owners) == 0:
-            print('NO OWNERS')
-            body.project_owners.append(str(project_creator.uuid))
-        else:
-            print('SOME OWNERS')
-            body.project_owners.append(str(project_creator.uuid))
-    except Exception as exc:
-        body.project_owners = [str(project_creator.uuid)]
-        consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
     # add project_owners
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners,
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project,
+                              personnel=[fab_project.project_lead.uuid],
                               personnel_type='owners', operation="add")
     db.session.commit()
+    # send email - project_add_lead
+    to_email = fab_project.project_lead.preferred_email
+    email_type = 'project_add_lead'
+    people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+    project_uuid = str(fab_project.uuid)
+    send_fabric_email(
+        email_type=email_type,
+        to_email=to_email,
+        project_uuid=project_uuid,
+        people_uuid=people_uuid
+    )
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
     log_msg = 'Project event prj:{0} create by usr:{1}'.format(str(fab_project.uuid), str(project_creator.uuid))
@@ -310,6 +299,7 @@ def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople
     membership = ProjectMembership()
     person_roles = [r.name for r in fab_person.roles]
     membership.is_creator = str(fab_project.uuid) + '-pc' in person_roles
+    membership.is_lead = str(fab_project.project_lead.uuid) == str(fab_person.uuid)
     membership.is_member = str(fab_project.uuid) + '-pm' in person_roles
     membership.is_owner = str(fab_project.uuid) + '-po' in person_roles
     membership.is_token_holder = str(fab_project.uuid) + '-tk' in person_roles
@@ -340,6 +330,8 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel = fab_project.project_members
     elif personnel_type == 'tokens':
         personnel = fab_project.token_holders
+    elif personnel_type == 'lead':
+        personnel = [fab_project.project_lead]
     personnel_data = []
     for p in personnel:
         # get preferences (show_email)

@@ -18,6 +18,7 @@ from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # n
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_project_lead_patch import ProjectsProjectLeadPatch  # noqa: E501
 from swagger_server.models.projects_review_required_patch import ProjectsReviewRequiredPatch  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
@@ -276,6 +277,20 @@ class TestProjectsController(BaseTestCase):
         body = ProjectsFundingPatch()
         response = self.client.open(
             '/projects/{uuid}/project-funding'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_projects_uuid_project_lead_patch(self):
+        """Test case for projects_uuid_project_lead_patch
+
+        Update Project Lead as Facility Operator
+        """
+        body = ProjectsProjectLeadPatch()
+        response = self.client.open(
+            '/projects/{uuid}/project-lead'.format(uuid='uuid_example'),
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')

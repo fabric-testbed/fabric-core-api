@@ -6,6 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
+from swagger_server.models.person import Person  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
 from swagger_server import util
 
@@ -15,7 +16,7 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, project_type: str=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, project_lead: Person=None, project_type: str=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """Project - a model defined in Swagger
 
         :param active: The active of this Project.  # noqa: E501
@@ -36,6 +37,8 @@ class Project(Model):
         :type memberships: ProjectMembership
         :param name: The name of this Project.  # noqa: E501
         :type name: str
+        :param project_lead: The project_lead of this Project.  # noqa: E501
+        :type project_lead: Person
         :param project_type: The project_type of this Project.  # noqa: E501
         :type project_type: str
         :param retired_date: The retired_date of this Project.  # noqa: E501
@@ -59,6 +62,7 @@ class Project(Model):
             'is_public': bool,
             'memberships': ProjectMembership,
             'name': str,
+            'project_lead': Person,
             'project_type': str,
             'retired_date': str,
             'review_required': bool,
@@ -77,6 +81,7 @@ class Project(Model):
             'is_public': 'is_public',
             'memberships': 'memberships',
             'name': 'name',
+            'project_lead': 'project_lead',
             'project_type': 'project_type',
             'retired_date': 'retired_date',
             'review_required': 'review_required',
@@ -93,6 +98,7 @@ class Project(Model):
         self._is_public = is_public
         self._memberships = memberships
         self._name = name
+        self._project_lead = project_lead
         self._project_type = project_type
         self._retired_date = retired_date
         self._review_required = review_required
@@ -311,6 +317,27 @@ class Project(Model):
             raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
+
+    @property
+    def project_lead(self) -> Person:
+        """Gets the project_lead of this Project.
+
+
+        :return: The project_lead of this Project.
+        :rtype: Person
+        """
+        return self._project_lead
+
+    @project_lead.setter
+    def project_lead(self, project_lead: Person):
+        """Sets the project_lead of this Project.
+
+
+        :param project_lead: The project_lead of this Project.
+        :type project_lead: Person
+        """
+
+        self._project_lead = project_lead
 
     @property
     def project_type(self) -> str:

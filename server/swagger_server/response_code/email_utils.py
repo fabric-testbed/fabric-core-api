@@ -32,6 +32,14 @@ EMAIL_TEMPLATES = {
         'subject': '[FABRIC] Project Retired - {0}',
         'body': '{1} has retired project: {0}',
     },
+    'project_add_lead': {
+        'subject': '[FABRIC] Project Add Lead - {0}',
+        'body': '{1} has added you as the project lead for project: {0}',
+    },
+    'project_remove_lead': {
+        'subject': '[FABRIC] Project Remove Lead - {0}',
+        'body': '{1} has removed you as the project lead for project: {0}',
+    },
     'project_add_member': {
         'subject': '[FABRIC] Project Add Member - {0}',
         'body': '{1} has added you as a member of project: {0}',
@@ -107,7 +115,7 @@ def core_api_send_email(*, smtp_config: dict, to_email: str, subject: str, body:
 def send_fabric_email(email_type: str = None, *args, **kwargs):
     email_type = email_type.lower() if email_type else None
     if email_type not in EMAIL_TEMPLATES:
-        consoleLogger.error("Invalid email type")
+        consoleLogger.error("Invalid email type - {0}".format(email_type))
     else:
         to_email = kwargs.get('to_email')
         people_uuid = kwargs.get('people_uuid', None)

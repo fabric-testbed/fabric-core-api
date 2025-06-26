@@ -22,7 +22,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, quotas: List[QuotasOne]=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_lead: Person=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, quotas: List[QuotasOne]=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -57,6 +57,8 @@ class ProjectsOne(Model):
         :type project_creators: List[Person]
         :param project_funding: The project_funding of this ProjectsOne.  # noqa: E501
         :type project_funding: List[ProjectFunding]
+        :param project_lead: The project_lead of this ProjectsOne.  # noqa: E501
+        :type project_lead: Person
         :param project_members: The project_members of this ProjectsOne.  # noqa: E501
         :type project_members: List[Person]
         :param project_owners: The project_owners of this ProjectsOne.  # noqa: E501
@@ -97,6 +99,7 @@ class ProjectsOne(Model):
             'profile': ProfileProjects,
             'project_creators': List[Person],
             'project_funding': List[ProjectFunding],
+            'project_lead': Person,
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
@@ -127,6 +130,7 @@ class ProjectsOne(Model):
             'profile': 'profile',
             'project_creators': 'project_creators',
             'project_funding': 'project_funding',
+            'project_lead': 'project_lead',
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
@@ -155,6 +159,7 @@ class ProjectsOne(Model):
         self._profile = profile
         self._project_creators = project_creators
         self._project_funding = project_funding
+        self._project_lead = project_lead
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
@@ -525,6 +530,27 @@ class ProjectsOne(Model):
         """
 
         self._project_funding = project_funding
+
+    @property
+    def project_lead(self) -> Person:
+        """Gets the project_lead of this ProjectsOne.
+
+
+        :return: The project_lead of this ProjectsOne.
+        :rtype: Person
+        """
+        return self._project_lead
+
+    @project_lead.setter
+    def project_lead(self, project_lead: Person):
+        """Sets the project_lead of this ProjectsOne.
+
+
+        :param project_lead: The project_lead of this ProjectsOne.
+        :type project_lead: Person
+        """
+
+        self._project_lead = project_lead
 
     @property
     def project_members(self) -> List[Person]:

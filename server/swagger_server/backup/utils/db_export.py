@@ -1,5 +1,5 @@
 """
-REV: v1.8.1
+REV: v1.9.0
 v1.8.0 - database tables
 
                    List of relations
@@ -42,6 +42,7 @@ v1.8.0 - database tables
 (34 rows)
 
 - TODO: table: core_api_events (placeholder)
+- TODO: table: projects - project_lead
 """
 
 import json

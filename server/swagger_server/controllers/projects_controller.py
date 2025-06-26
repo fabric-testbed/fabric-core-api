@@ -14,6 +14,7 @@ from swagger_server.models.projects_owners_patch import ProjectsOwnersPatch  # n
 from swagger_server.models.projects_patch import ProjectsPatch  # noqa: E501
 from swagger_server.models.projects_personnel_patch import ProjectsPersonnelPatch  # noqa: E501
 from swagger_server.models.projects_post import ProjectsPost  # noqa: E501
+from swagger_server.models.projects_project_lead_patch import ProjectsProjectLeadPatch  # noqa: E501
 from swagger_server.models.projects_review_required_patch import ProjectsReviewRequiredPatch  # noqa: E501
 from swagger_server.models.projects_tags_patch import ProjectsTagsPatch  # noqa: E501
 from swagger_server.models.projects_token_holders_patch import ProjectsTokenHoldersPatch  # noqa: E501
@@ -307,6 +308,23 @@ def projects_uuid_project_funding_patch(uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProjectsFundingPatch.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.projects_uuid_project_funding_patch(uuid, body)
+
+
+def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
+    """Update Project Lead as Facility Operator
+
+    Update Project Lead as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Lead as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = ProjectsProjectLeadPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.projects_uuid_project_lead_patch(uuid, body)
 
 
 def projects_uuid_project_members_patch(operation, uuid, body=None):  # noqa: E501

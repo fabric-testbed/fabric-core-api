@@ -8,11 +8,11 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/mit-license.html
-  version: 1.8.1
+  version: 1.9.0
 servers:
 - url: https://127.0.0.1:8443
   description: local development server (nginx)
-- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.8.1
+- url: https://virtserver.swaggerhub.com/MICHAELJSTEALEY/fabric-core-api/1.9.0
   description: SwaggerHub API Auto Mocking
 tags:
 - name: announcements
@@ -1789,6 +1789,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/status_423_locked"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+      x-openapi-router-controller: swagger_server.controllers.projects_controller
+  /projects/{uuid}/project-lead:
+    patch:
+      tags:
+      - projects
+      summary: Update Project Lead as Facility Operator
+      description: Update Project Lead as Facility Operator
+      operationId: projects_uuid_project_lead_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: "#/components/requestBodies/payload_project_lead_patch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_200_ok_no_content"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_404_not_found"
         "500":
           description: Internal Server Error
           content:
@@ -3868,6 +3924,8 @@ components:
           $ref: "#/components/schemas/project_membership"
         name:
           type: string
+        project_lead:
+          $ref: "#/components/schemas/person"
         project_type:
           type: string
         retired_date:
@@ -3959,6 +4017,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/project_funding"
+        project_lead:
+          $ref: "#/components/schemas/person"
         project_members:
           type: array
           items:
@@ -4000,6 +4060,9 @@ components:
       type: object
       properties:
         is_creator:
+          type: boolean
+          default: false
+        is_lead:
           type: boolean
           default: false
         is_member:
@@ -4337,6 +4400,7 @@ components:
       - description
       - is_public
       - name
+      - project_lead
       type: object
       properties:
         description:
@@ -4346,14 +4410,8 @@ components:
           default: true
         name:
           type: string
-        project_members:
-          type: array
-          items:
-            type: string
-        project_owners:
-          type: array
-          items:
-            type: string
+        project_lead:
+          type: string
         project_type:
           type: string
           default: research
@@ -4462,6 +4520,11 @@ components:
         review_required:
           type: boolean
           example: true
+    projects_project_lead_patch:
+      type: object
+      properties:
+        project_lead:
+          type: string
     quotas_post:
       required:
       - project_uuid
@@ -5496,6 +5559,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/projects_review_required_patch"
+    payload_project_lead_patch:
+      description: Update Project Lead as Facility Operator
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/projects_project_lead_patch"
     payload_quotas_post:
       description: Create a new Resource Quota
       content:

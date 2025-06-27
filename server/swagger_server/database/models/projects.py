@@ -94,6 +94,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     project_creators = db.relationship('FabricPeople', secondary=projects_creators, lazy='subquery',
                                        backref=db.backref('project_creators', lazy=True))
     project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
+    project_lead_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=True)
+    project_lead = db.relationship('FabricPeople', backref='people', uselist=False)
     project_members = db.relationship('FabricPeople', secondary=projects_members, lazy='subquery',
                                       backref=db.backref('project_members', lazy=True))
     project_owners = db.relationship('FabricPeople', secondary=projects_owners, lazy='subquery',
@@ -108,6 +110,12 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
                                     backref=db.backref('token_holders', lazy=True))
     topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    def is_active(self) -> bool:
+        return self.active
+
+    def is_project_lead(self, people_uuid: str = None) -> bool:
+        return people_uuid == str(self.project_lead.uuid)
 
 
 class ProjectsTags(BaseMixin, db.Model):

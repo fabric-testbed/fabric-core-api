@@ -14,7 +14,7 @@ class ProjectsPost(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, description: str=None, is_public: bool=True, name: str=None, project_members: List[str]=None, project_owners: List[str]=None, project_type: str='research'):  # noqa: E501
+    def __init__(self, description: str=None, is_public: bool=True, name: str=None, project_lead: str=None, project_type: str='research'):  # noqa: E501
         """ProjectsPost - a model defined in Swagger
 
         :param description: The description of this ProjectsPost.  # noqa: E501
@@ -23,10 +23,8 @@ class ProjectsPost(Model):
         :type is_public: bool
         :param name: The name of this ProjectsPost.  # noqa: E501
         :type name: str
-        :param project_members: The project_members of this ProjectsPost.  # noqa: E501
-        :type project_members: List[str]
-        :param project_owners: The project_owners of this ProjectsPost.  # noqa: E501
-        :type project_owners: List[str]
+        :param project_lead: The project_lead of this ProjectsPost.  # noqa: E501
+        :type project_lead: str
         :param project_type: The project_type of this ProjectsPost.  # noqa: E501
         :type project_type: str
         """
@@ -34,8 +32,7 @@ class ProjectsPost(Model):
             'description': str,
             'is_public': bool,
             'name': str,
-            'project_members': List[str],
-            'project_owners': List[str],
+            'project_lead': str,
             'project_type': str
         }
 
@@ -43,15 +40,13 @@ class ProjectsPost(Model):
             'description': 'description',
             'is_public': 'is_public',
             'name': 'name',
-            'project_members': 'project_members',
-            'project_owners': 'project_owners',
+            'project_lead': 'project_lead',
             'project_type': 'project_type'
         }
         self._description = description
         self._is_public = is_public
         self._name = name
-        self._project_members = project_members
-        self._project_owners = project_owners
+        self._project_lead = project_lead
         self._project_type = project_type
 
     @classmethod
@@ -135,46 +130,27 @@ class ProjectsPost(Model):
         self._name = name
 
     @property
-    def project_members(self) -> List[str]:
-        """Gets the project_members of this ProjectsPost.
+    def project_lead(self) -> str:
+        """Gets the project_lead of this ProjectsPost.
 
 
-        :return: The project_members of this ProjectsPost.
-        :rtype: List[str]
+        :return: The project_lead of this ProjectsPost.
+        :rtype: str
         """
-        return self._project_members
+        return self._project_lead
 
-    @project_members.setter
-    def project_members(self, project_members: List[str]):
-        """Sets the project_members of this ProjectsPost.
+    @project_lead.setter
+    def project_lead(self, project_lead: str):
+        """Sets the project_lead of this ProjectsPost.
 
 
-        :param project_members: The project_members of this ProjectsPost.
-        :type project_members: List[str]
+        :param project_lead: The project_lead of this ProjectsPost.
+        :type project_lead: str
         """
+        if project_lead is None:
+            raise ValueError("Invalid value for `project_lead`, must not be `None`")  # noqa: E501
 
-        self._project_members = project_members
-
-    @property
-    def project_owners(self) -> List[str]:
-        """Gets the project_owners of this ProjectsPost.
-
-
-        :return: The project_owners of this ProjectsPost.
-        :rtype: List[str]
-        """
-        return self._project_owners
-
-    @project_owners.setter
-    def project_owners(self, project_owners: List[str]):
-        """Sets the project_owners of this ProjectsPost.
-
-
-        :param project_owners: The project_owners of this ProjectsPost.
-        :type project_owners: List[str]
-        """
-
-        self._project_owners = project_owners
+        self._project_lead = project_lead
 
     @property
     def project_type(self) -> str:

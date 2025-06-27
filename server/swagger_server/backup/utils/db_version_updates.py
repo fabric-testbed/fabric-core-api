@@ -1,6 +1,6 @@
 """
-REV: v1.8.1
-v1.8.0 --> v1.8.1 - database tables
+REV: v1.9.0
+v1.8.0 --> v1.9.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -41,7 +41,7 @@ v1.8.0 --> v1.8.1 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (34 rows)
 
-Changes from v1.8.0 --> v1.8.1
+Changes from v1.8.0 --> v1.9.0
 - update table: quotas, EnumResourceTypes changes
 - update existing projects data with new logic
 - backfill core_api_events data
@@ -64,6 +64,36 @@ api_version = '1.8.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
+
+
+def projects_project_lead_backfill():
+    """
+    Backfill projects project_lead information
+    - make first project owner the project lead
+    - if no project owner exists, make the project creator the project lead
+    """
+    default_pl = FabricPeople.query.filter(
+        FabricPeople.uuid == '593dd0d3-cedb-4bc6-9522-a945da0a8a8e'
+    ).first()
+    try:
+        fab_projects = FabricProjects.query.all()
+        for fp in fab_projects:
+            consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
+            po_list = fp.project_owners
+            print(' - ', po_list)
+            if len(po_list) > 0:
+                proj_lead = po_list[0]
+            elif len(fp.project_creators) > 0:
+                proj_lead = fp.project_creators[0]
+            else:
+                proj_lead = default_pl
+            print(' - ', proj_lead)
+            fp.project_lead = proj_lead
+            db.session.commit()
+
+    except Exception as exc:
+        consoleLogger.error(exc)
+        db.session.rollback()
 
 
 def projects_quota_placeholder_backfill():
@@ -300,18 +330,22 @@ if __name__ == '__main__':
 
     consoleLogger.info('Update data from API version {0}'.format(api_version))
 
-    # Projects: backfill quota information for existing projects that don't already have it
-    consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
-    projects_quota_placeholder_backfill()
-
-    # Projects: migrate projects that have expired for more than 365 days to retired status
-    consoleLogger.info('Projects: migrate projects that have expired for more than 365 days to retired status')
-    projects_retire_after_365_days_expired()
-
-    # Projects: backfill core-api projects with event data
-    consoleLogger.info('Projects: backfill core-api projects with event data')
-    backfill_core_api_projects()
-
-    # People: backfill core-api people with event data
-    consoleLogger.info('People: backfill core-api people with event data')
-    backfill_core_api_people()
+    # Projects: backfill project_lead information for existing projects that don't already have it
+    consoleLogger.info('Projects: backfill project_lead information for existing projects that don\'t already have it')
+    projects_project_lead_backfill()
+    #
+    # # Projects: backfill quota information for existing projects that don't already have it
+    # consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
+    # projects_quota_placeholder_backfill()
+    #
+    # # Projects: migrate projects that have expired for more than 365 days to retired status
+    # consoleLogger.info('Projects: migrate projects that have expired for more than 365 days to retired status')
+    # projects_retire_after_365_days_expired()
+    #
+    # # Projects: backfill core-api projects with event data
+    # consoleLogger.info('Projects: backfill core-api projects with event data')
+    # backfill_core_api_projects()
+    #
+    # # People: backfill core-api people with event data
+    # consoleLogger.info('People: backfill core-api people with event data')
+    # backfill_core_api_people()

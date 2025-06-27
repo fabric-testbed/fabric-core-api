@@ -305,22 +305,7 @@ def update_fabric_person(fab_person: FabricPeople = None):
         # commit changes
         db.session.commit()
         # set Jupyterhub role
-        fab_group = FabricGroups.query.filter_by(name=os.getenv('COU_NAME_JUPYTERHUB')).one_or_none()
-        roles = [r.name for r in fab_person.roles]
-        in_a_project = any([is_valid_uuid(r[:-3]) for r in roles])
-        in_jupyterhub = os.getenv('COU_NAME_JUPYTERHUB') in roles
-        if in_a_project and not in_jupyterhub:
-            create_comanage_role(fab_person=fab_person, fab_group=fab_group)
-        elif not in_a_project and in_jupyterhub:
-            jupyter_role = FabricRoles.query.filter(
-                FabricRoles.name == os.getenv('COU_NAME_JUPYTERHUB'),
-                FabricRoles.people_id == fab_person.id
-            ).one_or_none()
-            if jupyter_role:
-                delete_comanage_role(co_person_role_id=jupyter_role.co_person_role_id)
-            else:
-                details = 'Unable to remove Jupyterhub role for user: {0}'.format(fab_person.uuid)
-                consoleLogger.error(details)
+        set_jupyterhub_role(fab_person=fab_person)
     except Exception as exc:
         details = 'Oops! something went wrong with update_fabric_person(): {0}'.format(exc)
         consoleLogger.error(details)
@@ -414,3 +399,31 @@ def verify_token_holder_membership(fab_person: FabricPeople):
                 if fab_project and fab_group:
                     remove_project_token_holders(api_user=fab_person, fab_project=fab_project, fab_group=fab_group,
                                                  token_holders=[str(fab_person.uuid)])
+
+
+def set_jupyterhub_role(fab_person: FabricPeople):
+    # set Jupyterhub role
+    jhub_group = FabricGroups.query.filter_by(name=os.getenv('COU_NAME_JUPYTERHUB')).one_or_none()
+    roles = [r.name for r in fab_person.roles]
+    in_jupyterhub = os.getenv('COU_NAME_JUPYTERHUB') in roles
+    project_uuid_list = [r[:-3] for r in roles if is_valid_uuid(r[:-3])]
+    project_uuid_list = set(project_uuid_list)
+    in_a_project = False
+    for project_uuid in project_uuid_list:
+        fp = FabricProjects.query.filter_by(uuid=project_uuid).one_or_none()
+        if fp and fp.is_active():
+            in_a_project = True
+            break
+    # in_a_project = any([is_valid_uuid(r[:-3]) for r in roles])
+    if in_a_project and not in_jupyterhub:
+        create_comanage_role(fab_person=fab_person, fab_group=jhub_group)
+    elif not in_a_project and in_jupyterhub:
+        jupyter_role = FabricRoles.query.filter(
+            FabricRoles.name == os.getenv('COU_NAME_JUPYTERHUB'),
+            FabricRoles.people_id == fab_person.id
+        ).one_or_none()
+        if jupyter_role:
+            delete_comanage_role(co_person_role_id=jupyter_role.co_person_role_id)
+        else:
+            details = 'Unable to remove Jupyterhub role for user: {0}'.format(fab_person.uuid)
+            consoleLogger.error(details)

@@ -1,6 +1,6 @@
 """
-REV: v1.8.1
-v1.8.0 --> v1.8.1 - database tables
+REV: v1.9.0
+v1.8.0 --> v1.9.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -41,7 +41,7 @@ v1.8.0 --> v1.8.1 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (34 rows)
 
-Changes from v1.8.0 --> v1.8.1
+Changes from v1.8.0 --> v1.9.0
 - update table: quotas, EnumResourceTypes changes
 - update existing projects data with new logic
 - backfill core_api_events data

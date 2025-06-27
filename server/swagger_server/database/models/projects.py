@@ -111,6 +111,9 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
+    def is_active(self) -> bool:
+        return self.active
+
     def is_project_lead(self, people_uuid: str = None) -> bool:
         return people_uuid == str(self.project_lead.uuid)
 

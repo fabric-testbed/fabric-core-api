@@ -35,7 +35,6 @@
     "Net.FacilityPort.NRP-UCSD": "NRP UCSD FP",
     "Net.FacilityPort.SmartInternetLab-BRIST": "Smart Internet Lab Bristol",
     "Net.FacilityPort.ResearchNet-400G-LOSA": "Research Network 400G LOSA",
-    "Net.FacilityPort.PWLOSA-2-LOSA": "PW LOSA to LOSA",
     "Net.FacilityPort.ESnet-LOSA": "ESnet LOSA",
     "Net.FacilityPort.COSMOS-RUTG": "COSMOS RUTG",
     "Net.FacilityPort.ESnet-400G-NEWY": "ESnet NEWY 400G",

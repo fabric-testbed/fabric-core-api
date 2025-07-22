@@ -102,6 +102,17 @@
     "Net.FacilityPort.CESNET-AMST": "CESNET-AMST",
     "Net.FacilityPort.OCT-MGHPCC-400G": "OCT-MGHPCC-400G",
     "Net.FacilityPort.SENSE-MGHPCC": "SENSE-MGHPCC",
-    "Net.FacilityPort.SLU-KANS": "SLU-KANS"
+    "Net.FacilityPort.SLU-KANS": "SLU-KANS",
+    "Net.FacilityPort.AMST-HU0-wk2-pci3-p1": "AMST-HU0-wk2-pci3-p1",
+    "Net.FacilityPort.AMST-HU2-wk2-pci3-p2": "AMST-HU2-wk2-pci3-p2",
+    "Net.FacilityPort.AMST-HU4-wk2-pci6-p1": "AMST-HU4-wk2-pci6-p1",
+    "Net.FacilityPort.AMST-HU6-wk2-pci6-p2": "AMST-HU6-wk2-pci6-p2",
+    "Net.FacilityPort.BEN-RENCI-WASH": "BEN-RENCI-WASH",
+    "Net.FacilityPort.NCAR-NWSC-STAR": "NCAR-NWSC-STAR",
+    "Net.FacilityPort.PWLOSA-1-LOSA": "PWLOSA-1-LOSA",
+    "Net.FacilityPort.STAR-HU0-wk3-pci3-p1": "STAR-HU0-wk3-pci3-p1",
+    "Net.FacilityPort.STAR-HU2-wk3-pci3-p2": "STAR-HU2-wk3-pci3-p2",
+    "Net.FacilityPort.STAR-HU4-wk3-pci6-p1": "STAR-HU4-wk3-pci6-p1",
+    "Net.FacilityPort.STAR-HU6-wk3-pci6-p2": "STAR-HU6-wk3-pci6-p2"
   }
 }

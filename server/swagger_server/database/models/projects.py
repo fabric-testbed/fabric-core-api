@@ -67,6 +67,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     - projects_storage - one-to-many storage
     - project_topics - array of topics as string
     - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
     - tags - array of tag strings
     - token_holders - one-to-many people
     - uuid - unique universal identifier
@@ -92,6 +94,8 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     project_creators = db.relationship('FabricPeople', secondary=projects_creators, lazy='subquery',
                                        backref=db.backref('project_creators', lazy=True))
     project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
+    project_lead_id = db.Column(db.Integer, db.ForeignKey('people.id'), nullable=True)
+    project_lead = db.relationship('FabricPeople', backref='people', uselist=False)
     project_members = db.relationship('FabricPeople', secondary=projects_members, lazy='subquery',
                                       backref=db.backref('project_members', lazy=True))
     project_owners = db.relationship('FabricPeople', secondary=projects_owners, lazy='subquery',
@@ -99,11 +103,19 @@ class FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
     project_storage = db.relationship('FabricStorage', secondary=projects_storage, lazy='subquery',
                                       backref=db.backref('projects_storage', lazy=True))
     project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
+    retired_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    review_required = db.Column(db.Boolean, default=True, nullable=False)
     tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     token_holders = db.relationship('FabricPeople', secondary=token_holders, lazy='subquery',
                                     backref=db.backref('token_holders', lazy=True))
     topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     uuid = db.Column(db.String(), primary_key=False, nullable=False)
+
+    def is_active(self) -> bool:
+        return self.active
+
+    def is_project_lead(self, people_uuid: str = None) -> bool:
+        return people_uuid == str(self.project_lead.uuid)
 
 
 class ProjectsTags(BaseMixin, db.Model):

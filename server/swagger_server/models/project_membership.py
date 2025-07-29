@@ -14,11 +14,13 @@ class ProjectMembership(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, is_creator: bool=False, is_member: bool=False, is_owner: bool=False, is_token_holder: bool=False):  # noqa: E501
+    def __init__(self, is_creator: bool=False, is_lead: bool=False, is_member: bool=False, is_owner: bool=False, is_token_holder: bool=False):  # noqa: E501
         """ProjectMembership - a model defined in Swagger
 
         :param is_creator: The is_creator of this ProjectMembership.  # noqa: E501
         :type is_creator: bool
+        :param is_lead: The is_lead of this ProjectMembership.  # noqa: E501
+        :type is_lead: bool
         :param is_member: The is_member of this ProjectMembership.  # noqa: E501
         :type is_member: bool
         :param is_owner: The is_owner of this ProjectMembership.  # noqa: E501
@@ -28,6 +30,7 @@ class ProjectMembership(Model):
         """
         self.swagger_types = {
             'is_creator': bool,
+            'is_lead': bool,
             'is_member': bool,
             'is_owner': bool,
             'is_token_holder': bool
@@ -35,11 +38,13 @@ class ProjectMembership(Model):
 
         self.attribute_map = {
             'is_creator': 'is_creator',
+            'is_lead': 'is_lead',
             'is_member': 'is_member',
             'is_owner': 'is_owner',
             'is_token_holder': 'is_token_holder'
         }
         self._is_creator = is_creator
+        self._is_lead = is_lead
         self._is_member = is_member
         self._is_owner = is_owner
         self._is_token_holder = is_token_holder
@@ -75,6 +80,27 @@ class ProjectMembership(Model):
         """
 
         self._is_creator = is_creator
+
+    @property
+    def is_lead(self) -> bool:
+        """Gets the is_lead of this ProjectMembership.
+
+
+        :return: The is_lead of this ProjectMembership.
+        :rtype: bool
+        """
+        return self._is_lead
+
+    @is_lead.setter
+    def is_lead(self, is_lead: bool):
+        """Sets the is_lead of this ProjectMembership.
+
+
+        :param is_lead: The is_lead of this ProjectMembership.
+        :type is_lead: bool
+        """
+
+        self._is_lead = is_lead
 
     @property
     def is_member(self) -> bool:

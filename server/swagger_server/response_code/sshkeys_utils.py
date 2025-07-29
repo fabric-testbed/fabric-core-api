@@ -14,6 +14,7 @@ from swagger_server.models.sshkeys_one import SshkeysOne
 from swagger_server.models.sshkeys_post import SshkeysPost
 from swagger_server.models.sshkeys_put import SshkeysPut
 from swagger_server.response_code.cors_response import cors_400, cors_500
+from swagger_server.response_code.email_utils import send_fabric_email
 
 # constants
 TZISO = r"^.+\+[\d]{2}:[\d]{2}$"
@@ -312,3 +313,71 @@ def garbage_collect_expired_keys():
             db.session.commit()
         except Exception as exc:
             consoleLogger.error('sshkeys_utils.garbage_collect_expired_keys: {0}'.format(exc))
+
+
+def ssh_key_expiry_check():
+    now = datetime.now(timezone.utc)
+    print("Checking SSH key expiry... {}".format(str(now)))
+    # people_sshkey_expiry_30_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_30_day')
+    ssh_keys = FabricSshKeys.query.filter(
+        FabricSshKeys.expires_on > now + timedelta(days=30),
+        FabricSshKeys.expires_on < now + timedelta(days=31),
+    ).order_by('uuid').all()
+    for k in ssh_keys:
+        print(k.uuid, k.expires_on)
+        # send email - people_sshkey_expiry_30_day
+        p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
+        if p:
+            to_email = p.preferred_email
+            email_type = 'people_sshkey_expiry_30_day'
+            people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+            sshkey_uuid = str(k.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                sshkey_uuid=sshkey_uuid,
+                people_uuid=people_uuid
+            )
+    # people_sshkey_expiry_7_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_7_day')
+    ssh_keys = FabricSshKeys.query.filter(
+        FabricSshKeys.expires_on > now + timedelta(days=7),
+        FabricSshKeys.expires_on < now + timedelta(days=8),
+    ).order_by('uuid').all()
+    for k in ssh_keys:
+        print(k.uuid, k.expires_on)
+        # send email - people_sshkey_expiry_7_day
+        p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
+        if p:
+            to_email = p.preferred_email
+            email_type = 'people_sshkey_expiry_7_day'
+            people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+            sshkey_uuid = str(k.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                sshkey_uuid=sshkey_uuid,
+                people_uuid=people_uuid
+            )
+    # people_sshkey_expiry_1_day
+    consoleLogger.info('ssh_key_expiry_check: people_sshkey_expiry_1_day')
+    ssh_keys = FabricSshKeys.query.filter(
+        FabricSshKeys.expires_on > now + timedelta(days=1),
+        FabricSshKeys.expires_on < now + timedelta(days=2),
+    ).order_by('uuid').all()
+    for k in ssh_keys:
+        print(k.uuid, k.expires_on)
+        # send email - people_sshkey_expiry_1_day
+        p = FabricPeople.query.filter(FabricPeople.id == k.people_id).one_or_none()
+        if p:
+            to_email = p.preferred_email
+            email_type = 'people_sshkey_expiry_1_day'
+            people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+            sshkey_uuid = str(k.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                sshkey_uuid=sshkey_uuid,
+                people_uuid=people_uuid
+            )

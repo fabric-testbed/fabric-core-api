@@ -10,6 +10,7 @@ from swagger_server.models.api_options import ApiOptions
 from swagger_server.models.bastionkeys import Bastionkeys
 from swagger_server.models.check_cookie import CheckCookie
 from swagger_server.models.core_api_metrics import CoreApiMetrics
+from swagger_server.models.core_api_metrics_events import CoreApiMetricsEvents
 from swagger_server.models.people import People
 from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.projects import Projects
@@ -77,7 +78,7 @@ def cors_response(req: request, status_code: int = 200, body: object = None, x_e
 
 
 def cors_200(response_body: Union[
-    ApiOptions, Bastionkeys, CheckCookie, CoreApiMetrics, People, PeopleDetails, Projects, ProjectsDetails,
+    ApiOptions, Bastionkeys, CheckCookie, CoreApiMetrics, CoreApiMetricsEvents, People, PeopleDetails, Projects, ProjectsDetails,
     ServiceAuthDetails, SshkeyPair, Sshkeys, Status200OkNoContent, Announcements, Version, Whoami,
     AnnouncementsDetails, TestbedInfo, StorageMany, Storage, Quotas, QuotasDetails
 ] = None) -> cors_response:
@@ -87,7 +88,8 @@ def cors_200(response_body: Union[
     return cors_response(
         req=request,
         status_code=200,
-        body=json.dumps(delete_none(response_body.to_dict()), indent=_INDENT, sort_keys=True)
+        # body=json.dumps(delete_none(response_body.to_dict()), indent=_INDENT, sort_keys=True)
+        body=json.dumps(response_body.to_dict(), indent=_INDENT, sort_keys=True)
         if _INDENT != 0 else json.dumps(delete_none(response_body.to_dict()), sort_keys=True)
     )
 

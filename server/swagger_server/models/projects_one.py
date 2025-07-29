@@ -22,7 +22,7 @@ class ProjectsOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, quotas: List[QuotasOne]=None, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: datetime=None, description: str=None, expires_on: str=None, fabric_matrix: Reference=None, facility: str=None, is_locked: bool=False, is_public: bool=True, memberships: ProjectMembership=None, modified: datetime=None, name: str=None, preferences: Preferences=None, profile: ProfileProjects=None, project_creators: List[Person]=None, project_funding: List[ProjectFunding]=None, project_lead: Person=None, project_members: List[Person]=None, project_owners: List[Person]=None, project_storage: List[StorageOne]=None, project_type: str=None, quotas: List[QuotasOne]=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, token_holders: List[Person]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """ProjectsOne - a model defined in Swagger
 
         :param active: The active of this ProjectsOne.  # noqa: E501
@@ -57,6 +57,8 @@ class ProjectsOne(Model):
         :type project_creators: List[Person]
         :param project_funding: The project_funding of this ProjectsOne.  # noqa: E501
         :type project_funding: List[ProjectFunding]
+        :param project_lead: The project_lead of this ProjectsOne.  # noqa: E501
+        :type project_lead: Person
         :param project_members: The project_members of this ProjectsOne.  # noqa: E501
         :type project_members: List[Person]
         :param project_owners: The project_owners of this ProjectsOne.  # noqa: E501
@@ -67,6 +69,10 @@ class ProjectsOne(Model):
         :type project_type: str
         :param quotas: The quotas of this ProjectsOne.  # noqa: E501
         :type quotas: List[QuotasOne]
+        :param retired_date: The retired_date of this ProjectsOne.  # noqa: E501
+        :type retired_date: str
+        :param review_required: The review_required of this ProjectsOne.  # noqa: E501
+        :type review_required: bool
         :param tags: The tags of this ProjectsOne.  # noqa: E501
         :type tags: List[str]
         :param token_holders: The token_holders of this ProjectsOne.  # noqa: E501
@@ -93,11 +99,14 @@ class ProjectsOne(Model):
             'profile': ProfileProjects,
             'project_creators': List[Person],
             'project_funding': List[ProjectFunding],
+            'project_lead': Person,
             'project_members': List[Person],
             'project_owners': List[Person],
             'project_storage': List[StorageOne],
             'project_type': str,
             'quotas': List[QuotasOne],
+            'retired_date': str,
+            'review_required': bool,
             'tags': List[str],
             'token_holders': List[Person],
             'topics': List[str],
@@ -121,11 +130,14 @@ class ProjectsOne(Model):
             'profile': 'profile',
             'project_creators': 'project_creators',
             'project_funding': 'project_funding',
+            'project_lead': 'project_lead',
             'project_members': 'project_members',
             'project_owners': 'project_owners',
             'project_storage': 'project_storage',
             'project_type': 'project_type',
             'quotas': 'quotas',
+            'retired_date': 'retired_date',
+            'review_required': 'review_required',
             'tags': 'tags',
             'token_holders': 'token_holders',
             'topics': 'topics',
@@ -147,11 +159,14 @@ class ProjectsOne(Model):
         self._profile = profile
         self._project_creators = project_creators
         self._project_funding = project_funding
+        self._project_lead = project_lead
         self._project_members = project_members
         self._project_owners = project_owners
         self._project_storage = project_storage
         self._project_type = project_type
         self._quotas = quotas
+        self._retired_date = retired_date
+        self._review_required = review_required
         self._tags = tags
         self._token_holders = token_holders
         self._topics = topics
@@ -517,6 +532,27 @@ class ProjectsOne(Model):
         self._project_funding = project_funding
 
     @property
+    def project_lead(self) -> Person:
+        """Gets the project_lead of this ProjectsOne.
+
+
+        :return: The project_lead of this ProjectsOne.
+        :rtype: Person
+        """
+        return self._project_lead
+
+    @project_lead.setter
+    def project_lead(self, project_lead: Person):
+        """Sets the project_lead of this ProjectsOne.
+
+
+        :param project_lead: The project_lead of this ProjectsOne.
+        :type project_lead: Person
+        """
+
+        self._project_lead = project_lead
+
+    @property
     def project_members(self) -> List[Person]:
         """Gets the project_members of this ProjectsOne.
 
@@ -620,6 +656,48 @@ class ProjectsOne(Model):
         """
 
         self._quotas = quotas
+
+    @property
+    def retired_date(self) -> str:
+        """Gets the retired_date of this ProjectsOne.
+
+
+        :return: The retired_date of this ProjectsOne.
+        :rtype: str
+        """
+        return self._retired_date
+
+    @retired_date.setter
+    def retired_date(self, retired_date: str):
+        """Sets the retired_date of this ProjectsOne.
+
+
+        :param retired_date: The retired_date of this ProjectsOne.
+        :type retired_date: str
+        """
+
+        self._retired_date = retired_date
+
+    @property
+    def review_required(self) -> bool:
+        """Gets the review_required of this ProjectsOne.
+
+
+        :return: The review_required of this ProjectsOne.
+        :rtype: bool
+        """
+        return self._review_required
+
+    @review_required.setter
+    def review_required(self, review_required: bool):
+        """Sets the review_required of this ProjectsOne.
+
+
+        :param review_required: The review_required of this ProjectsOne.
+        :type review_required: bool
+        """
+
+        self._review_required = review_required
 
     @property
     def tags(self) -> List[str]:

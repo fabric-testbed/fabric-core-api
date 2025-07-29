@@ -1,13 +1,12 @@
 """
-REV: v1.9.0
-v1.8.0 --> v1.9.0 - database tables
+REV: v1.8.0
+v1.7.0 --> v1.8.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
 --------+---------------------------+-------+----------
  public | alembic_version           | table | postgres  <-- alembic_version-v<VERSION>.json
  public | announcements             | table | postgres  <-- announcements-v<VERSION>.json
- public | core_api_events           | table | postgres  <-- core_api_events-v<VERSION>.json
  public | core_api_metrics          | table | postgres  <-- core_api_metrics-v<VERSION>.json
  public | groups                    | table | postgres  <-- groups-v<VERSION>.json
  public | people                    | table | postgres  <-- people-v<VERSION>.json
@@ -39,11 +38,16 @@ v1.8.0 --> v1.9.0 - database tables
  public | token_holders             | table | postgres  <-- token_holders-v<VERSION>.json
  public | user_org_affiliations     | table | postgres  <-- user_org_affiliations-v<VERSION>.json
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
-(34 rows)
+(33 rows)
 
-Changes from v1.8.0 --> v1.9.0
-- TODO: table: core_api_events - new table - backfill from db_version_updates.py
-- TODO: table: projects - project_lead
+Changes from v1.7.0 --> v1.8.0
+- table: quotas
+- table: people - added: receive_promotional_email
+- TODO: table: projects_topics
+- table: *core_api_metrics
+- table: *projects_communities
+- table: *projects_funding
+- TODO: table: projects - added: *communities, *projects_funding, project_type, project_topics
 """
 
 import json
@@ -58,24 +62,17 @@ from swagger_server.api_logger import consoleLogger
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.8.0'
+api_version = '1.7.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 
 
-# import alembic_version from JSON input file
+# export alembic_version as JSON output file
 def restore_alembic_version_data():
     """
     alembic_version
     - version_num = String
-
-    Table "public.alembic_version"
-       Column    |         Type          | Collation | Nullable | Default
-    -------------+-----------------------+-----------+----------+---------
-     version_num | character varying(32) |           | not null |
-    Indexes:
-        "alembic_version_pkc" PRIMARY KEY, btree (version_num)
     """
     try:
         with open(BACKUP_DATA_DIR + '/alembic_version-v{0}.json'.format(api_version), 'r') as infile:
@@ -91,7 +88,7 @@ def restore_alembic_version_data():
         consoleLogger.error(exc)
 
 
-# import announcements from JSON input file
+# export announcements as JSON output file
 def restore_announcements_data():
     """
     FabricAnnouncements(BaseMixin, TimestampMixin, TrackingMixin, db.Model):
@@ -112,29 +109,6 @@ def restore_announcements_data():
     - start_date = db.Column(db.DateTime(timezone=True), nullable=False)
     - title = db.Column(db.String(), nullable=False)
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.announcements"
-            Column        |           Type           | Collation | Nullable |                  Default
-    ----------------------+--------------------------+-----------+----------+-------------------------------------------
-     announcement_type    | enumannouncementtypes    |           | not null |
-     background_image_url | character varying        |           |          |
-     button               | character varying        |           |          |
-     content              | character varying        |           | not null |
-     display_date         | timestamp with time zone |           |          |
-     end_date             | timestamp with time zone |           |          |
-     is_active            | boolean                  |           | not null |
-     link                 | character varying        |           |          |
-     sequence             | integer                  |           |          |
-     start_date           | timestamp with time zone |           |          |
-     title                | character varying        |           | not null |
-     uuid                 | character varying        |           | not null |
-     id                   | integer                  |           | not null | nextval('announcements_id_seq'::regclass)
-     created              | timestamp with time zone |           | not null |
-     modified             | timestamp with time zone |           |          |
-     created_by_uuid      | character varying        |           |          |
-     modified_by_uuid     | character varying        |           |          |
-    Indexes:
-        "announcements_pkey" PRIMARY KEY, btree (id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/announcements-v{0}.json'.format(api_version), 'r') as infile:
@@ -171,37 +145,7 @@ def restore_announcements_data():
         consoleLogger.error(exc)
 
 
-# import core_api_events from JSON input file
-def restore_core_api_events_data():
-    """
-    CoreApiEvents(BaseMixin, db.Model):
-    - event = db.Column(db.Enum(EnumEvents), default=EnumEvents.project_add_member.name, nullable=False)
-    - event_date = db.Column(db.DateTime(timezone=True), nullable=False)
-    - event_triggered_by = db.Column(db.String, nullable=False)
-    - event_type = db.Column(db.Enum(EnumEventTypes), default=EnumEventTypes.projects.name, nullable=False)
-    - people_uuid = db.Column(db.String, nullable=False)
-    - project_is_public = db.Column(db.Boolean, nullable=True)
-    - project_uuid = db.Column(db.String, nullable=True)
-
-    Table "public.core_api_events"
-           Column       |           Type           | Collation | Nullable |                   Default
-    --------------------+--------------------------+-----------+----------+---------------------------------------------
-     event              | enumevents               |           | not null |
-     event_date         | timestamp with time zone |           | not null |
-     event_triggered_by | character varying        |           | not null |
-     event_type         | enumeventtypes           |           | not null |
-     people_uuid        | character varying        |           | not null |
-     project_is_public  | boolean                  |           |          |
-     project_uuid       | character varying        |           |          |
-     id                 | integer                  |           | not null | nextval('core_api_events_id_seq'::regclass)
-    Indexes:
-        "core_api_events_pkey" PRIMARY KEY, btree (id)
-        "idx_events_people_only" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NULL
-        "idx_events_people_projects" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NOT NULL
-    """
-
-
-# import core_api_metrics from JSON input file
+# export testbed_info as JSON output file
 def restore_core_api_metrics_data():
     """
     CoreApiMetrics(BaseMixin, db.Model):
@@ -209,16 +153,6 @@ def restore_core_api_metrics_data():
     - json_data = db.Column(JSONB, nullable=False)
     - last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - metrics_type = db.Column(db.Enum(EnumCoreApiMetricsTypes), ...)
-
-    Table "public.core_api_metrics"
-        Column    |           Type           | Collation | Nullable |                   Default
-    --------------+--------------------------+-----------+----------+----------------------------------------------
-     json_data    | jsonb                    |           | not null |
-     last_updated | timestamp with time zone |           | not null |
-     metrics_type | enumcoreapimetricstypes  |           | not null |
-     id           | integer                  |           | not null | nextval('core_api_metrics_id_seq'::regclass)
-    Indexes:
-        "core_api_metrics_pkey" PRIMARY KEY, btree (id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/core_api_metrics-v{0}.json'.format(api_version), 'r') as infile:
@@ -242,7 +176,7 @@ def restore_core_api_metrics_data():
         consoleLogger.error(exc)
 
 
-# import groups from JSON input file
+# export groups as JSON output file
 def restore_groups_data():
     """
     FabricGroups(BaseMixin, TimestampMixin, db.Model)
@@ -254,21 +188,6 @@ def restore_groups_data():
     - id = db.Column(db.Integer, nullable=False, primary_key=True)
     - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
     - name = db.Column(db.String(), nullable=False)
-
-    Table "public.groups"
-          Column      |           Type           | Collation | Nullable |              Default
-    ------------------+--------------------------+-----------+----------+------------------------------------
-     co_cou_id        | integer                  |           | not null |
-     co_parent_cou_id | integer                  |           |          |
-     deleted          | boolean                  |           | not null |
-     description      | text                     |           |          |
-     name             | character varying        |           | not null |
-     id               | integer                  |           | not null | nextval('groups_id_seq'::regclass)
-     created          | timestamp with time zone |           | not null |
-     modified         | timestamp with time zone |           |          |
-    Indexes:
-        "groups_pkey" PRIMARY KEY, btree (id)
-        "constraint_fabric_groups" UNIQUE CONSTRAINT, btree (co_cou_id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/groups-v{0}.json'.format(api_version), 'r') as infile:
@@ -296,7 +215,7 @@ def restore_groups_data():
         consoleLogger.error(exc)
 
 
-# import people from JSON input file
+# export people as JSON output file
 def restore_people_data():
     """
     FabricPeople(BaseMixin, TimestampMixin, db.Model)
@@ -327,35 +246,6 @@ def restore_people_data():
     - sshkeys = db.relationship('FabricSshKeys', backref='people', lazy=True)
     - * updated = db.Column(db.DateTime(timezone=True), nullable=False)
     - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.people"
-              Column           |           Type           | Collation | Nullable |              Default
-    ---------------------------+--------------------------+-----------+----------+------------------------------------
-     active                    | boolean                  |           | not null |
-     bastion_login             | character varying        |           |          |
-     co_person_id              | integer                  |           |          |
-     display_name              | character varying        |           | not null |
-     eppn                      | character varying        |           |          |
-     fabric_id                 | character varying        |           |          |
-     gecos                     | character varying        |           |          |
-     oidc_claim_email          | character varying        |           |          |
-     oidc_claim_family_name    | character varying        |           |          |
-     oidc_claim_given_name     | character varying        |           |          |
-     oidc_claim_name           | character varying        |           |          |
-     oidc_claim_sub            | character varying        |           |          |
-     org_affiliation           | integer                  |           |          |
-     preferred_email           | character varying        |           | not null |
-     receive_promotional_email | boolean                  |           | not null |
-     registered_on             | timestamp with time zone |           | not null |
-     updated                   | timestamp with time zone |           | not null |
-     uuid                      | character varying        |           | not null |
-     id                        | integer                  |           | not null | nextval('people_id_seq'::regclass)
-     created                   | timestamp with time zone |           | not null |
-     modified                  | timestamp with time zone |           |          |
-    Indexes:
-        "people_pkey" PRIMARY KEY, btree (id)
-        "constraint_fabric_people" UNIQUE CONSTRAINT, btree (co_person_id)
-        "idx_people" btree (uuid, co_person_id, id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/people-v{0}.json'.format(api_version), 'r') as infile:
@@ -387,8 +277,7 @@ def restore_people_data():
                 # preferences=p.get('preferences'), <-- restore_preferences_data()
                 preferred_email=p.get('preferred_email'),
                 # profile=p.get('profile.id'), <-- restore_profiles_people_data()
-                receive_promotional_email=p.get('receive_promotional_email') if p.get(
-                    'receive_promotional_email') else True,
+                receive_promotional_email=p.get('receive_promotional_email') if p.get('receive_promotional_email') else True,
                 registered_on=normalize_date_to_utc(p.get('registered_on')) if p.get('registered_on') else None,
                 # roles=p.get('roles'), <-- restore_people_roles_data()
                 # sshkeys=p.get('sshkeys'), <-- restore_sshkeys_data()
@@ -402,7 +291,7 @@ def restore_people_data():
         consoleLogger.error(exc)
 
 
-# import people_email_addresses from JSON input file
+# export people_email_addresses as JSON output file
 def restore_people_email_addresses_data():
     """
     EmailAddresses(BaseMixin, db.Model)
@@ -435,7 +324,7 @@ def restore_people_email_addresses_data():
         consoleLogger.error(exc)
 
 
-# import people_organizations from JSON input file
+# export people_organizations as JSON output file
 def restore_people_organizations_data():
     """
     Organizations(BaseMixin, db.Model)
@@ -466,7 +355,7 @@ def restore_people_organizations_data():
         consoleLogger.error(exc)
 
 
-# import people_roles from JSON input file
+# export people_roles as JSON output file
 def restore_people_roles_data():
     """
     FabricRoles(BaseMixin, db.Model)
@@ -507,7 +396,7 @@ def restore_people_roles_data():
         consoleLogger.error(exc)
 
 
-# import preferences from JSON input file
+# export preferences as JSON output file
 def restore_preferences_data():
     """
     FabricPreferences(BaseMixin, TimestampMixin, db.Model)
@@ -550,7 +439,7 @@ def restore_preferences_data():
         consoleLogger.error(exc)
 
 
-# import profiles_keywords from JSON input file
+# export profiles_keywords as JSON output file
 def restore_profiles_keywords_data():
     """
     ProfilesKeywords(BaseMixin, db.Model)
@@ -579,7 +468,7 @@ def restore_profiles_keywords_data():
         consoleLogger.error(exc)
 
 
-# import profiles_other_identities from JSON input file
+# export profiles_other_identities as JSON output file
 def restore_profiles_other_identities_data():
     """
     ProfilesOtherIdentities(BaseMixin, db.Model)
@@ -610,7 +499,7 @@ def restore_profiles_other_identities_data():
         consoleLogger.error(exc)
 
 
-# import profiles_people from JSON input file
+# export profiles_people as JSON output file
 def restore_profiles_people_data():
     """
     FabricProfilesPeople(BaseMixin, TimestampMixin, db.Model):
@@ -659,7 +548,7 @@ def restore_profiles_people_data():
         consoleLogger.error(exc)
 
 
-# import profiles_personal_pages from JSON input file
+# export profiles_personal_pages as JSON output file
 def restore_profiles_personal_pages_data():
     """
     ProfilesPersonalPages(BaseMixin, db.Model)
@@ -690,7 +579,7 @@ def restore_profiles_personal_pages_data():
         consoleLogger.error(exc)
 
 
-# import profiles_projects from JSON input file
+# export profiles_projects as JSON output file
 def restore_profiles_projects_data():
     """
     FabricProfilesProjects(BaseMixin, TimestampMixin, db.Model):
@@ -737,7 +626,7 @@ def restore_profiles_projects_data():
         consoleLogger.error(exc)
 
 
-# import profiles_references from JSON input file
+# export profiles_references as JSON output file
 def restore_profiles_references_data():
     """
     ProfilesReferences(BaseMixin, db.Model)
@@ -768,67 +657,39 @@ def restore_profiles_references_data():
         consoleLogger.error(exc)
 
 
-# import projects from JSON input file
+# export projects as JSON output file
 def restore_projects_data():
     """
     FabricProjects(BaseMixin, TimestampMixin, TrackingMixin, db.Model)
-    - active = db.Column(db.Boolean, default=True, nullable=False)
-    - co_cou_id_pc = db.Column(db.Integer, nullable=True)
-    - co_cou_id_pm = db.Column(db.Integer, nullable=True)
-    - co_cou_id_po = db.Column(db.Integer, nullable=True)
-    - co_cou_id_tk = db.Column(db.Integer, nullable=True)
+    - * active = db.Column(db.Boolean, default=True, nullable=False)
+    - * co_cou_id_pc = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_pm = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_po = db.Column(db.Integer, nullable=True)
+    - * co_cou_id_tk = db.Column(db.Integer, nullable=True)
     - communities = db.relationship('ProjectsCommunities', backref='projects', lazy=True)
-    - created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
-    - created_by_uuid = db.Column(db.String(), nullable=True)
-    - description = db.Column(db.Text, nullable=False)
-    - expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
-    - facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
-    - id = db.Column(db.Integer, nullable=False, primary_key=True)
-    - is_locked = db.Column(db.Boolean, default=False, nullable=False)
-    - is_public = db.Column(db.Boolean, default=True, nullable=False)
-    - modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
-    - modified_by_uuid = db.Column(db.String(), nullable=True)
-    - name = db.Column(db.String(), nullable=False)
-    - preferences = db.relationship('FabricPreferences', backref='projects')
-    - profile = db.relationship('FabricProfilesProjects', backref='projects')
+    - * created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    - * created_by_uuid = db.Column(db.String(), nullable=True)
+    - * description = db.Column(db.Text, nullable=False)
+    - * expires_on = db.Column(db.DateTime(timezone=True), nullable=True)
+    - * facility = db.Column(db.String(), default=os.getenv('CORE_API_DEFAULT_FACILITY'), nullable=False)
+    - * id = db.Column(db.Integer, nullable=False, primary_key=True)
+    - * is_locked = db.Column(db.Boolean, default=False, nullable=False)
+    - * is_public = db.Column(db.Boolean, default=True, nullable=False)
+    - * modified = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=datetime.now(timezone.utc))
+    - * modified_by_uuid = db.Column(db.String(), nullable=True)
+    - * name = db.Column(db.String(), nullable=False)
+    - preferences = db.relationship('FabricPreferences', backref='projects', lazy=True)
+    - profile = db.relationship('FabricProfilesProjects', backref='projects', uselist=False, lazy=True)
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
     - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
+    - project_topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
     - project_type = db.Column(db.Enum(EnumProjectTypes), default=EnumProjectTypes.research, nullable=False)
-    - retired_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    - review_required = db.Column(db.Boolean, default=True, nullable=False)
     - tags = db.relationship('ProjectsTags', backref='projects', lazy=True)
     - token_holders = db.relationship('FabricPeople', secondary=token_holders)
-    - topics = db.relationship('ProjectsTopics', backref='projects', lazy=True)
-    - uuid = db.Column(db.String(), primary_key=False, nullable=False)
-
-    Table "public.projects"
-          Column      |           Type           | Collation | Nullable |               Default
-    ------------------+--------------------------+-----------+----------+--------------------------------------
-     active           | boolean                  |           | not null |
-     co_cou_id_pc     | integer                  |           |          |
-     co_cou_id_pm     | integer                  |           |          |
-     co_cou_id_po     | integer                  |           |          |
-     co_cou_id_tk     | integer                  |           |          |
-     description      | text                     |           | not null |
-     expires_on       | timestamp with time zone |           |          |
-     facility         | character varying        |           | not null |
-     is_locked        | boolean                  |           | not null |
-     is_public        | boolean                  |           | not null |
-     name             | character varying        |           | not null |
-     project_type     | enumprojecttypes         |           | not null |
-     retired_date     | timestamp with time zone |           |          |
-     review_required  | boolean                  |           | not null |
-     uuid             | character varying        |           | not null |
-     id               | integer                  |           | not null | nextval('projects_id_seq'::regclass)
-     created          | timestamp with time zone |           | not null |
-     modified         | timestamp with time zone |           |          |
-     created_by_uuid  | character varying        |           |          |
-     modified_by_uuid | character varying        |           |          |
-    Indexes:
-        "projects_pkey" PRIMARY KEY, btree (id)
+    - * uuid = db.Column(db.String(), primary_key=False, nullable=False)
     """
     try:
         with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(api_version), 'r') as infile:
@@ -866,8 +727,6 @@ def restore_projects_data():
                 # project_storage=p.get('projects_storage'), <-- restore_projects_storage_data()
                 # project_topics=p.get('projects_topics'), <-- restore_projects_topics_data()
                 project_type=p.get('project_type') if p.get('project_type') else 'research',
-                retired_date=normalize_date_to_utc(p.get('retired_date')) if p.get('retired_date') else None,
-                review_required=p.get('review_required') if p.get('review_required') else False,
                 # tags=p.get('tags'), <-- restore_projects_tags_data()
                 # token_holders=p.get('token_holders'), <-- restore_token_holders_data()
                 uuid=p.get('uuid')
@@ -879,7 +738,7 @@ def restore_projects_data():
         consoleLogger.error(exc)
 
 
-# import projects_tags from JSON input file
+# export projects_tags as JSON output file
 def restore_projects_communities_data():
     """
     ProjectsCommunities(BaseMixin, db.Model)
@@ -908,7 +767,7 @@ def restore_projects_communities_data():
         consoleLogger.error(exc)
 
 
-# import projects_creators from JSON input file
+# export projects_creators as JSON output file
 def restore_projects_creators_data():
     """
     projects_creators
@@ -966,7 +825,7 @@ def restore_projects_funding_data():
         consoleLogger.error(exc)
 
 
-# import projects_members from JSON input file
+# export projects_members as JSON output file
 def restore_projects_members_data():
     """
     projects_members
@@ -988,7 +847,7 @@ def restore_projects_members_data():
         consoleLogger.error(exc)
 
 
-# import projects_owners from JSON input file
+# export projects_owners as JSON output file
 def restore_projects_owners_data():
     """
     projects_owners
@@ -1010,7 +869,7 @@ def restore_projects_owners_data():
         consoleLogger.error(exc)
 
 
-# import projects_owners from JSON input file
+# export projects_owners as JSON output file
 def restore_projects_storage_data():
     """
     projects_storage
@@ -1032,7 +891,7 @@ def restore_projects_storage_data():
         consoleLogger.error(exc)
 
 
-# import projects_tags from JSON input file
+# export projects_tags as JSON output file
 def restore_projects_tags_data():
     """
     ProjectsTags(BaseMixin, db.Model)
@@ -1061,7 +920,7 @@ def restore_projects_tags_data():
         consoleLogger.error(exc)
 
 
-# import projects_tags from JSON input file
+# export projects_tags as JSON output file
 def restore_projects_topics_data():
     """
     ProjectsTopics(BaseMixin, db.Model)
@@ -1090,7 +949,7 @@ def restore_projects_topics_data():
         consoleLogger.error(exc)
 
 
-# import projects_tags from JSON input file
+# export projects_tags as JSON output file
 def restore_quotas_data():
     """
     FabricQuotas(db.Model)
@@ -1131,7 +990,7 @@ def restore_quotas_data():
         consoleLogger.error(exc)
 
 
-# import sshkeys from JSON input file
+# export sshkeys as JSON output file
 def restore_sshkeys_data():
     """
     FabricSshKeys(BaseMixin, TimestampMixin, db.Model)
@@ -1299,7 +1158,7 @@ def restore_task_timeout_tracker_data():
         consoleLogger.error(exc)
 
 
-# import testbed_info from JSON input file
+# export testbed_info as JSON output file
 def restore_testbed_info_data():
     """
     FabricTestbedInfo(BaseMixin, TimestampMixin, TrackingMixin, db.Model)

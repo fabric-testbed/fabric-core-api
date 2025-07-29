@@ -1,23 +1,27 @@
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import uuid4
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
+from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
-from swagger_server.database.models.projects import FabricProjects, ProjectsCommunities, ProjectsFunding, \
-    ProjectsTags, ProjectsTopics, EnumProjectTypes
+from swagger_server.database.models.projects import EnumProjectTypes, FabricProjects, ProjectsCommunities, \
+    ProjectsFunding, ProjectsTags, ProjectsTopics
+from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 from swagger_server.models.person import Person
 from swagger_server.models.project_membership import ProjectMembership
 from swagger_server.models.projects_post import ProjectsPost
+from swagger_server.models.quotas_one import QuotasOne
 from swagger_server.models.storage_one import StorageOne
 from swagger_server.response_code.comanage_utils import create_comanage_group, create_comanage_role, \
     delete_comanage_role
+from swagger_server.response_code.core_api_utils import add_core_api_event
+from swagger_server.response_code.email_utils import send_fabric_email
 from swagger_server.response_code.preferences_utils import create_projects_preferences
 from swagger_server.response_code.profiles_utils import create_profile_projects
 from swagger_server.response_code.response_utils import array_difference
-from swagger_server.models.quotas_one import QuotasOne
-from swagger_server.database.models.quotas import FabricQuotas
 
 
 def project_funding_to_array(n):
@@ -27,33 +31,41 @@ def project_funding_to_array(n):
 
 def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPeople) -> FabricProjects:
     """
-    * Denotes required fields
-    - *active
-    - co_cou_id_pc
-    - co_cou_id_pm
-    - co_cou_id_po
-    - *description
-    - *facility
-    - *is_public
-    - *name
-    - preferences
-    - profile
-    - project_creators
-    - project_members
-    - project_owners
-    - tags
-    - *uuid
+    FabricProject object
+    - active - project status
+    - communities - array of community strings
+    - created - timestamp created (TimestampMixin)
+    - created_by_uuid - uuid of person created_by (TrackingMixin)
+    - description - project description
+    - expires_on - project expiry date - petition to add extension
+    - facility - project facility (default = FABRIC)
+    - id - primary key (BaseMixin)
+    - is_locked - lock project from PUT/PATCH while being updated (default: False)
+    - is_public - show/hide project in all public interfaces (default: True)
+    - modified - timestamp modified (TimestampMixin)
+    - modified_by_uuid - uuid of person modified_by (TrackingMixin)
+    - name - project name
+    - preferences - array of preference booleans
+    - profile - foreignkey link to profile_projects
+    - project_creators - one-to-many people (initially one person)
+    - project_lead - lead project member - initial project owner
+    - project_members - one-to-many people
+    - project_owners - one-to-many people
+    - projects_storage - one-to-many storage
+    - project_topics - array of topics as string
+    - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
+    - tags - array of tag strings
+    - token_holders - one-to-many people
+    - uuid - unique universal identifier
 
     {
         "description": "string",
         "is_public": true,
         "name": "string",
-        "project_members": [
-            "string"
-        ],
-        "project_owners": [
-            "string"
-        ]
+        "project_lead": "string",
+        "project_type": "research"
     }
     """
     # create Project
@@ -67,10 +79,13 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
     fab_project.is_locked = False
     fab_project.is_public = body.is_public
+    fab_project.project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
     fab_project.modified = now
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
     fab_project.project_type = EnumProjectTypes.research
+    fab_project.retired_date = None
+    fab_project.review_required = True
     fab_project.uuid = uuid4()
     db.session.add(fab_project)
     db.session.commit()
@@ -100,31 +115,33 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     update_projects_personnel(api_user=project_creator, fab_project=fab_project,
                               personnel=[fab_project.created_by_uuid],
                               personnel_type='creators', operation="add")
-    # check for project_members
-    try:
-        if len(body.project_members) == 0:
-            print('NO MEMBERS')
-    except Exception as exc:
-        body.project_members = []
-        consoleLogger.info("NOP: projects_post(): 'project_members' - {0}".format(exc))
-    # add project_members
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_members,
-                              personnel_type='members', operation="add")
-    # check for project_owners
-    try:
-        if len(body.project_owners) == 0:
-            print('NO OWNERS')
-            body.project_owners.append(str(project_creator.uuid))
-        else:
-            print('SOME OWNERS')
-            body.project_owners.append(str(project_creator.uuid))
-    except Exception as exc:
-        body.project_owners = [str(project_creator.uuid)]
-        consoleLogger.info("NOP: projects_post(): 'project_owners' - {0}".format(exc))
+    # send email - project_create
+    to_email = project_creator.preferred_email
+    email_type = 'project_create'
+    people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+    project_uuid = str(fab_project.uuid)
+    send_fabric_email(
+        email_type=email_type,
+        to_email=to_email,
+        project_uuid=project_uuid,
+        people_uuid=people_uuid
+    )
     # add project_owners
-    update_projects_personnel(api_user=project_creator, fab_project=fab_project, personnel=body.project_owners,
+    update_projects_personnel(api_user=project_creator, fab_project=fab_project,
+                              personnel=[fab_project.project_lead.uuid],
                               personnel_type='owners', operation="add")
     db.session.commit()
+    # send email - project_add_lead
+    to_email = fab_project.project_lead.preferred_email
+    email_type = 'project_add_lead'
+    people_uuid = os.getenv('SERVICE_ACCOUNT_UUID')
+    project_uuid = str(fab_project.uuid)
+    send_fabric_email(
+        email_type=email_type,
+        to_email=to_email,
+        project_uuid=project_uuid,
+        people_uuid=people_uuid
+    )
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
     log_msg = 'Project event prj:{0} create by usr:{1}'.format(str(fab_project.uuid), str(project_creator.uuid))
@@ -145,29 +162,62 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
             log_msg = 'Project event prj:{0} modify-add tag \'{1}\' by usr:{2}'.format(str(fab_project.uuid), tag,
                                                                                        str(project_creator.uuid))
             metricsLogger.info(log_msg)
+    # add quota placeholders
+    resource_types = [r.name for r in EnumResourceTypes]
+    for rt in resource_types:
+        # create Quota
+        fab_quota = FabricQuotas()
+        fab_quota.created_at = now
+        fab_quota.project_uuid = fab_project.uuid
+        fab_quota.quota_limit = 0.0
+        fab_quota.quota_used = 0.0
+        fab_quota.resource_type = rt
+        fab_quota.resource_unit = EnumResourceUnits.hours.name
+        fab_quota.updated_at = now
+        fab_quota.uuid = str(uuid4())
+        try:
+            db.session.add(fab_quota)
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            details = 'Oops! something went wrong with create_fabric_project_from_api() / Quota: {0}'.format(
+                exc)
+            consoleLogger.error(details)
 
     return fab_project
 
 
 def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
     """
-    * Denotes required fields
-    - *active
-    - co_cou_id_pc
-    - co_cou_id_pm
-    - co_cou_id_po
-    - *description
-    - *facility
-    - *is_public
-    - *name
-    - preferences
-    - profile
-    - project_creators
-    - project_members
-    - project_owners
-    - tags
-    - *uuid
+    FabricProject object
+    - active - project status
+    - communities - array of community strings
+    - created - timestamp created (TimestampMixin)
+    - created_by_uuid - uuid of person created_by (TrackingMixin)
+    - description - project description
+    - expires_on - project expiry date - petition to add extension
+    - facility - project facility (default = FABRIC)
+    - id - primary key (BaseMixin)
+    - is_locked - lock project from PUT/PATCH while being updated (default: False)
+    - is_public - show/hide project in all public interfaces (default: True)
+    - modified - timestamp modified (TimestampMixin)
+    - modified_by_uuid - uuid of person modified_by (TrackingMixin)
+    - name - project name
+    - preferences - array of preference booleans
+    - profile - foreignkey link to profile_projects
+    - project_creators - one-to-many people (initially one person)
+    - project_members - one-to-many people
+    - project_owners - one-to-many people
+    - projects_storage - one-to-many storage
+    - project_topics - array of topics as string
+    - project_type - project type as string from EnumProjectTypes
+    - retired_date - timestamp retired
+    - review_required - boolean
+    - tags - array of tag strings
+    - token_holders - one-to-many people
+    - uuid - unique universal identifier
     """
+    # TODO: review to ensure creation by UUID is compliant with v1.8.1
     fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
     if not fab_project:
         fab_project = FabricProjects()
@@ -215,6 +265,27 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
                 if po:
                     fab_project.project_owners.append(po)
             db.session.commit()
+            # add quota placeholders
+            resource_types = [r.name for r in EnumResourceTypes]
+            for rt in resource_types:
+                # create Quota
+                fab_quota = FabricQuotas()
+                fab_quota.created_at = now
+                fab_quota.project_uuid = fab_project.uuid
+                fab_quota.quota_limit = 0.0
+                fab_quota.quota_used = 0.0
+                fab_quota.resource_type = rt
+                fab_quota.resource_unit = EnumResourceUnits.hours.name
+                fab_quota.updated_at = now
+                fab_quota.uuid = str(uuid4())
+                try:
+                    db.session.add(fab_quota)
+                    db.session.commit()
+                except Exception as exc:
+                    db.session.rollback()
+                    details = 'Oops! something went wrong with create_fabric_project_from_uuid() / Quota: {0}'.format(
+                        exc)
+                    consoleLogger.error(details)
         else:
             consoleLogger.warning(
                 "NOT FOUND: create_fabric_project_from_uuid(): Unable to find cou with uuid: '{0}'".format(uuid))
@@ -228,6 +299,7 @@ def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople
     membership = ProjectMembership()
     person_roles = [r.name for r in fab_person.roles]
     membership.is_creator = str(fab_project.uuid) + '-pc' in person_roles
+    membership.is_lead = str(fab_project.project_lead.uuid) == str(fab_person.uuid)
     membership.is_member = str(fab_project.uuid) + '-pm' in person_roles
     membership.is_owner = str(fab_project.uuid) + '-po' in person_roles
     membership.is_token_holder = str(fab_project.uuid) + '-tk' in person_roles
@@ -258,6 +330,8 @@ def get_projects_personnel(fab_project: FabricProjects = None, personnel_type: s
         personnel = fab_project.project_members
     elif personnel_type == 'tokens':
         personnel = fab_project.token_holders
+    elif personnel_type == 'lead':
+        personnel = [fab_project.project_lead]
     personnel_data = []
     for p in personnel:
         # get preferences (show_email)
@@ -338,7 +412,7 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
     # add
     if operation == 'add':
         if fab_group:
-            # add token holders
+            # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     # batch
     elif operation == 'batch':
@@ -354,14 +428,14 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
         p_add = array_difference(personnel, p_orig)
         p_remove = array_difference(p_orig, personnel)
         if fab_group:
-            # add token holders
+            # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, p_add, personnel_type)
-            # remove token holders
+            # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, p_remove, personnel_type)
     # remove
     elif operation == 'remove':
         if fab_group:
-            # remove token-holders
+            # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     else:
         consoleLogger.error('Invalid operation provided')
@@ -377,16 +451,79 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
             fab_project.project_creators.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_creator
+            add_core_api_event(event=EnumEvents.project_add_creator.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_creator
+            # send email - project_add_creator
+            to_email = p.preferred_email
+            email_type = 'project_add_creator'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'members' and not p.is_project_member(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_members.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_member
+            add_core_api_event(event=EnumEvents.project_add_member.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_member
+            # send email - project_add_member
+            to_email = p.preferred_email
+            email_type = 'project_add_member'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'owners' and not p.is_project_owner(project_uuid=fab_project.uuid):
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.project_owners.append(p)
             db.session.commit()
             p_added = True
+            # add event project_add_owner
+            add_core_api_event(event=EnumEvents.project_add_owner.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_owner
+            # send email - project_add_owner
+            to_email = p.preferred_email
+            email_type = 'project_add_owner'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         else:
             consoleLogger.warning(
                 'AddProjectPersonnel: unable to add usr: {0} to project: {1} as creator/member/owner'.format(p.uuid,
@@ -419,16 +556,79 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_creator
+            add_core_api_event(event=EnumEvents.project_remove_creator.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_creator
+            # send email - project_remove_creator
+            to_email = p.preferred_email
+            email_type = 'project_remove_creator'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'members' and p.is_project_member(project_uuid=fab_project.uuid):
             fab_project.project_members.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_member
+            add_core_api_event(event=EnumEvents.project_remove_member.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_member
+            # send email - project_remove_member
+            to_email = p.preferred_email
+            email_type = 'project_remove_member'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         elif personnel_type == 'owners' and p.is_project_owner(project_uuid=fab_project.uuid):
             fab_project.project_owners.remove(p)
             delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
+            # add event project_remove_owner
+            add_core_api_event(event=EnumEvents.project_remove_owner.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_remove_owner
+            # send email - project_remove_owner
+            to_email = p.preferred_email
+            email_type = 'project_remove_owner'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
         else:
             consoleLogger.warning(
                 'RemoveProjectPersonnel: unable to remove usr: {0} from project: {1} as creator/member/owner'.format(
@@ -664,6 +864,27 @@ def add_project_token_holders(api_user: FabricPeople, fab_project: FabricProject
             create_comanage_role(fab_person=p, fab_group=fab_group)
             fab_project.token_holders.append(p)
             db.session.commit()
+            # add event project_add_tokenholder
+            add_core_api_event(event=EnumEvents.project_add_tokenholder.name,
+                               event_date=datetime.now(timezone.utc),
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=p.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_add_tokenholder
+            # send email - project_add_tokenholder
+            to_email = p.preferred_email
+            email_type = 'project_add_tokenholder'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
             # metrics log - Project token-holder added:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-add token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
             log_msg = 'Project event prj:{0} modify-add token-holder usr:{1} by usr:{2}'.format(
@@ -693,6 +914,27 @@ def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProj
                 fab_project.token_holders.remove(p)
                 delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
                 db.session.commit()
+                # add event project_remove_tokenholder
+                add_core_api_event(event=EnumEvents.project_remove_tokenholder.name,
+                                   event_date=datetime.now(timezone.utc),
+                                   event_triggered_by=api_user.uuid,
+                                   event_type=EnumEventTypes.projects.name,
+                                   people_uuid=p.uuid,
+                                   project_is_public=fab_project.is_public,
+                                   project_uuid=fab_project.uuid
+                                   )
+                # TODO: notification email project_remove_tokenholder
+                # send email - project_remove_tokenholder
+                to_email = p.preferred_email
+                email_type = 'project_remove_tokenholder'
+                people_uuid = str(api_user.uuid)
+                project_uuid = str(fab_project.uuid)
+                send_fabric_email(
+                    email_type=email_type,
+                    to_email=to_email,
+                    project_uuid=project_uuid,
+                    people_uuid=people_uuid
+                )
                 # metrics log - Project token-holder removed:
                 # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify-remove token-holder usr:deaf-bead-deaf-bead: by usr:fead-beaf-fead-beaf
                 log_msg = 'Project event prj:{0} modify-remove token-holder usr:{1} by usr:{2}'.format(
@@ -700,3 +942,58 @@ def remove_project_token_holders(api_user: FabricPeople, fab_project: FabricProj
                     str(p.uuid),
                     str(api_user.uuid))
                 metricsLogger.info(log_msg)
+
+
+def projects_set_active(fab_project: FabricProjects):
+    """
+    Evaluate whether project is active
+    """
+    now = datetime.now(timezone.utc)
+    # check if project is expired, but not retired
+    if fab_project.expires_on < now and not fab_project.retired_date:
+        fab_project.review_required = True
+    # check if project retired
+    if fab_project.retired_date and fab_project.retired_date < now and not fab_project.is_locked:
+        fab_project.is_locked = True
+        fab_project.review_required = False
+    # check if project should be retired - auto retire after PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS
+    if fab_project.expires_on + timedelta(
+            days=float(os.getenv('PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS'))) < now and not fab_project.retired_date:
+        fab_project.is_locked = True
+        fab_project.review_required = False
+        fab_project.retired_date = now
+    # determine if project is active
+    if not fab_project.review_required and not fab_project.is_locked and not fab_project.retired_date:
+        fab_project.active = True
+    else:
+        fab_project.active = False
+    db.session.commit()
+
+
+def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: FabricPeople) -> tuple[
+    bool | Any, Any | None]:
+    """
+    Determine whether project is editable by API user
+    - facility-operator - always True
+    - pc or po - True when project is not retired
+    - others - False
+    """
+    message = None
+    # facility-operator can always edit a project
+    if api_user.is_facility_operator():
+        can_edit = True
+        consoleLogger.info('FACILITY_OPERATOR: {0} editing project {1}'.format(api_user.uuid, fab_project.uuid))
+        return can_edit, message
+    # project_creator and project_owner can edit active non-retired projects
+    elif api_user.is_project_creator(project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(
+            project_uuid=str(fab_project.uuid)):
+        can_edit = True
+        # check if project has been retired
+        if fab_project.retired_date:
+            can_edit = False
+            message = 'Project: {0} was retired on {1}'.format(str(fab_project.uuid), str(fab_project.retired_date))
+    # deny all others
+    else:
+        can_edit = False
+        message = 'User: {0} lacks sufficient authorization to modify this project'.format(str(api_user.uuid))
+    return can_edit, message

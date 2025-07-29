@@ -6,6 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
+from swagger_server.models.person import Person  # noqa: F401,E501
 from swagger_server.models.project_membership import ProjectMembership  # noqa: F401,E501
 from swagger_server import util
 
@@ -15,9 +16,11 @@ class Project(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, communities: List[str]=None, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, tags: List[str]=None, project_type: str=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=True, communities: List[str]=None, created: str=None, description: str=None, expires_on: str=None, facility: str=None, is_public: bool=True, memberships: ProjectMembership=None, name: str=None, project_lead: Person=None, project_type: str=None, retired_date: str=None, review_required: bool=True, tags: List[str]=None, topics: List[str]=None, uuid: str=None):  # noqa: E501
         """Project - a model defined in Swagger
 
+        :param active: The active of this Project.  # noqa: E501
+        :type active: bool
         :param communities: The communities of this Project.  # noqa: E501
         :type communities: List[str]
         :param created: The created of this Project.  # noqa: E501
@@ -34,16 +37,23 @@ class Project(Model):
         :type memberships: ProjectMembership
         :param name: The name of this Project.  # noqa: E501
         :type name: str
-        :param tags: The tags of this Project.  # noqa: E501
-        :type tags: List[str]
+        :param project_lead: The project_lead of this Project.  # noqa: E501
+        :type project_lead: Person
         :param project_type: The project_type of this Project.  # noqa: E501
         :type project_type: str
+        :param retired_date: The retired_date of this Project.  # noqa: E501
+        :type retired_date: str
+        :param review_required: The review_required of this Project.  # noqa: E501
+        :type review_required: bool
+        :param tags: The tags of this Project.  # noqa: E501
+        :type tags: List[str]
         :param topics: The topics of this Project.  # noqa: E501
         :type topics: List[str]
         :param uuid: The uuid of this Project.  # noqa: E501
         :type uuid: str
         """
         self.swagger_types = {
+            'active': bool,
             'communities': List[str],
             'created': str,
             'description': str,
@@ -52,13 +62,17 @@ class Project(Model):
             'is_public': bool,
             'memberships': ProjectMembership,
             'name': str,
-            'tags': List[str],
+            'project_lead': Person,
             'project_type': str,
+            'retired_date': str,
+            'review_required': bool,
+            'tags': List[str],
             'topics': List[str],
             'uuid': str
         }
 
         self.attribute_map = {
+            'active': 'active',
             'communities': 'communities',
             'created': 'created',
             'description': 'description',
@@ -67,11 +81,15 @@ class Project(Model):
             'is_public': 'is_public',
             'memberships': 'memberships',
             'name': 'name',
-            'tags': 'tags',
+            'project_lead': 'project_lead',
             'project_type': 'project_type',
+            'retired_date': 'retired_date',
+            'review_required': 'review_required',
+            'tags': 'tags',
             'topics': 'topics',
             'uuid': 'uuid'
         }
+        self._active = active
         self._communities = communities
         self._created = created
         self._description = description
@@ -80,8 +98,11 @@ class Project(Model):
         self._is_public = is_public
         self._memberships = memberships
         self._name = name
-        self._tags = tags
+        self._project_lead = project_lead
         self._project_type = project_type
+        self._retired_date = retired_date
+        self._review_required = review_required
+        self._tags = tags
         self._topics = topics
         self._uuid = uuid
 
@@ -95,6 +116,27 @@ class Project(Model):
         :rtype: Project
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def active(self) -> bool:
+        """Gets the active of this Project.
+
+
+        :return: The active of this Project.
+        :rtype: bool
+        """
+        return self._active
+
+    @active.setter
+    def active(self, active: bool):
+        """Sets the active of this Project.
+
+
+        :param active: The active of this Project.
+        :type active: bool
+        """
+
+        self._active = active
 
     @property
     def communities(self) -> List[str]:
@@ -277,25 +319,25 @@ class Project(Model):
         self._name = name
 
     @property
-    def tags(self) -> List[str]:
-        """Gets the tags of this Project.
+    def project_lead(self) -> Person:
+        """Gets the project_lead of this Project.
 
 
-        :return: The tags of this Project.
-        :rtype: List[str]
+        :return: The project_lead of this Project.
+        :rtype: Person
         """
-        return self._tags
+        return self._project_lead
 
-    @tags.setter
-    def tags(self, tags: List[str]):
-        """Sets the tags of this Project.
+    @project_lead.setter
+    def project_lead(self, project_lead: Person):
+        """Sets the project_lead of this Project.
 
 
-        :param tags: The tags of this Project.
-        :type tags: List[str]
+        :param project_lead: The project_lead of this Project.
+        :type project_lead: Person
         """
 
-        self._tags = tags
+        self._project_lead = project_lead
 
     @property
     def project_type(self) -> str:
@@ -317,6 +359,69 @@ class Project(Model):
         """
 
         self._project_type = project_type
+
+    @property
+    def retired_date(self) -> str:
+        """Gets the retired_date of this Project.
+
+
+        :return: The retired_date of this Project.
+        :rtype: str
+        """
+        return self._retired_date
+
+    @retired_date.setter
+    def retired_date(self, retired_date: str):
+        """Sets the retired_date of this Project.
+
+
+        :param retired_date: The retired_date of this Project.
+        :type retired_date: str
+        """
+
+        self._retired_date = retired_date
+
+    @property
+    def review_required(self) -> bool:
+        """Gets the review_required of this Project.
+
+
+        :return: The review_required of this Project.
+        :rtype: bool
+        """
+        return self._review_required
+
+    @review_required.setter
+    def review_required(self, review_required: bool):
+        """Sets the review_required of this Project.
+
+
+        :param review_required: The review_required of this Project.
+        :type review_required: bool
+        """
+
+        self._review_required = review_required
+
+    @property
+    def tags(self) -> List[str]:
+        """Gets the tags of this Project.
+
+
+        :return: The tags of this Project.
+        :rtype: List[str]
+        """
+        return self._tags
+
+    @tags.setter
+    def tags(self, tags: List[str]):
+        """Sets the tags of this Project.
+
+
+        :param tags: The tags of this Project.
+        :type tags: List[str]
+        """
+
+        self._tags = tags
 
     @property
     def topics(self) -> List[str]:

@@ -14,7 +14,7 @@ class QuotasPost(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, project_uuid: str=None, quota_limit: float=None, quota_used: float=0, resource_type: str=None, resource_unit: str=None):  # noqa: E501
+    def __init__(self, project_uuid: str=None, quota_limit: float=None, quota_used: float=0.0, resource_type: str=None, resource_unit: str=None):  # noqa: E501
         """QuotasPost - a model defined in Swagger
 
         :param project_uuid: The project_uuid of this QuotasPost.  # noqa: E501

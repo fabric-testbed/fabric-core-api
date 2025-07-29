@@ -6,6 +6,7 @@ from sqlalchemy import func
 
 from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
+from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.preferences import EnumPreferenceTypes, FabricPreferences
 from swagger_server.database.models.profiles import FabricProfilesProjects
@@ -33,18 +34,18 @@ from swagger_server.models.status200_ok_paginated import Status200OkPaginatedLin
 from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING_AGENCIES,
                                           PROJECTS_FUNDING_DIRECTORATES, PROJECTS_PREFERENCES,
                                           PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS)
-from swagger_server.response_code.comanage_utils import delete_comanage_group, update_comanage_group
-from swagger_server.response_code.core_api_utils import normalize_date_to_utc
-from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_423, cors_500
+from swagger_server.response_code.comanage_utils import update_comanage_group
+from swagger_server.response_code.core_api_utils import add_core_api_event, normalize_date_to_utc
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
+from swagger_server.response_code.email_utils import send_fabric_email
 from swagger_server.response_code.people_utils import get_person_by_login_claims
-from swagger_server.response_code.preferences_utils import delete_projects_preferences
-from swagger_server.response_code.profiles_utils import delete_profile_projects, get_fabric_matrix, \
+from swagger_server.response_code.profiles_utils import get_fabric_matrix, \
     get_profile_projects, update_profiles_projects_keywords, update_profiles_projects_references
 from swagger_server.response_code.projects_utils import create_fabric_project_from_api, get_project_membership, \
-    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, update_projects_communities, \
-    update_projects_personnel, update_projects_project_funding, update_projects_tags, update_projects_token_holders, \
-    update_projects_topics
+    get_project_tags, get_projects_personnel, get_projects_quotas, get_projects_storage, \
+    project_is_editable_by_api_user, projects_set_active, update_projects_communities, update_projects_personnel, \
+    update_projects_project_funding, update_projects_tags, update_projects_token_holders, update_projects_topics
 from swagger_server.response_code.response_utils import is_valid_url
 
 # Constants
@@ -253,11 +254,19 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
         # search by search_set
         if not search and not person_uuid:
             base = '{0}/projects?{1}'.format(_SERVER_URL, _sort_order_path)
-            results_page = FabricProjects.query.filter(
-                is_public_check &
-                FabricProjects.active.is_(True)
-            ).order_by(_sort_order_query).paginate(
-                page=_page, per_page=limit, error_out=False)
+            # anonymous users only get active projects
+            if is_anonymous:
+                results_page = FabricProjects.query.filter(
+                    is_public_check &
+                    FabricProjects.active.is_(True)
+                ).order_by(_sort_order_query).paginate(
+                    page=_page, per_page=limit, error_out=False)
+            # authenticated users get active / retired projects
+            else:
+                results_page = FabricProjects.query.filter(
+                    is_public_check
+                ).order_by(_sort_order_query).paginate(
+                    page=_page, per_page=limit, error_out=False)
         elif search and not person_uuid:
             base = '{0}/projects?search={1}&{2}'.format(_SERVER_URL, search, _sort_order_path)
             # search_set
@@ -307,11 +316,19 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                                   (func.lower(FabricProjects.description) == search_term) |
                                   (func.lower(FabricProjects.uuid) == search_term))
             try:
-                results_page = FabricProjects.query.filter(
-                    is_public_check &
-                    (FabricProjects.active.is_(True)) &
-                    projects_query
-                ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+                # anonymous users only get active projects
+                if is_anonymous:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        (FabricProjects.active.is_(True)) &
+                        projects_query
+                    ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
+                # authenticated users get active / retired projects
+                else:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        projects_query
+                    ).order_by(_sort_order_query).paginate(page=_page, per_page=limit, error_out=False)
             except Exception as exc:
                 details = 'Oops! something went wrong with projects_get(): {0}'.format(exc)
                 consoleLogger.error(details)
@@ -326,13 +343,21 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
-                results_page = FabricProjects.query.filter(
-                    is_public_check &
-                    FabricProjects.active.is_(True) &
-                    FabricProjects.is_public.is_(True) &
-                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
-                ).order_by(_sort_order_query).paginate(
-                    page=_page, per_page=limit, error_out=False)
+                if is_anonymous:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        FabricProjects.active.is_(True) &
+                        FabricProjects.is_public.is_(True) &
+                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
+                    ).order_by(_sort_order_query).paginate(
+                        page=_page, per_page=limit, error_out=False)
+                else:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        FabricProjects.is_public.is_(True) &
+                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
+                    ).order_by(_sort_order_query).paginate(
+                        page=_page, per_page=limit, error_out=False)
         else:
             base = '{0}/projects?search={1}&person_uuid={2}&{3}'.format(_SERVER_URL, search, person_uuid,
                                                                         _sort_order_path)
@@ -347,15 +372,25 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
-                results_page = FabricProjects.query.filter(
-                    is_public_check &
-                    FabricProjects.active.is_(True) &
-                    FabricProjects.is_public.is_(True) &
-                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
-                    (FabricProjects.name.ilike("%" + search + "%") |
-                     FabricProjects.description.ilike("%" + search + "%"))
-                ).order_by(_sort_order_query).paginate(
-                    page=_page, per_page=limit, error_out=False)
+                if is_anonymous:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        FabricProjects.active.is_(True) &
+                        FabricProjects.is_public.is_(True) &
+                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
+                        (FabricProjects.name.ilike("%" + search + "%") |
+                         FabricProjects.description.ilike("%" + search + "%"))
+                    ).order_by(_sort_order_query).paginate(
+                        page=_page, per_page=limit, error_out=False)
+                else:
+                    results_page = FabricProjects.query.filter(
+                        is_public_check &
+                        FabricProjects.is_public.is_(True) &
+                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
+                        (FabricProjects.name.ilike("%" + search + "%") |
+                         FabricProjects.description.ilike("%" + search + "%"))
+                    ).order_by(_sort_order_query).paginate(
+                        page=_page, per_page=limit, error_out=False)
         # set projects response
         response = Projects()
         response.results = []
@@ -363,6 +398,7 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
             project = Project()
             # set project attributes
             if not is_anonymous:
+                project.active = bool(item.active)
                 project.created = str(item.created)
                 project.communities = [c.community for c in item.communities]
                 project.description = item.description
@@ -373,7 +409,10 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     project.memberships = get_project_membership(fab_project=item, fab_person=api_user)
                 else:
                     project.memberships = get_project_membership(fab_project=item, fab_person=fab_person)
+                project.project_lead = get_projects_personnel(fab_project=item, personnel_type='lead')[0]
                 project.name = item.name
+                project.retired_date = str(item.retired_date) if item.retired_date else None
+                project.review_required = bool(item.review_required)
                 project.project_type = item.project_type.name
                 if api_user.is_facility_operator() or api_user.is_facility_viewer():
                     project.tags = get_project_tags(fab_project=item, fab_person=api_user)
@@ -386,6 +425,7 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                 project.uuid = item.uuid
             else:
                 # anonymous user project list
+                project.active = bool(item.active)
                 project.communities = [c.community for c in item.communities]
                 project.description = item.description
                 project.name = item.name
@@ -448,10 +488,26 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_PROJECT_LEADS')))
+        # verify project_lead is a FABRIC user
+        project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
+        if not project_lead:
+            return cors_400(
+                details='InvalidProjectLead: User with uuid={0} not found'.format(body.project_lead))
         # create Project
         fab_project = create_fabric_project_from_api(body=body, project_creator=api_user)
-        fab_project.active = True
+        # NOTE: projects must be reviewed by a facility-operator prior to becoming active (v1.8.1)
+        fab_project.active = False
         db.session.commit()
+        # add event project_create
+        add_core_api_event(event=EnumEvents.project_create.name,
+                           event_date=fab_project.created,
+                           event_triggered_by=api_user.uuid,
+                           event_type=EnumEventTypes.projects.name,
+                           people_uuid=api_user.uuid,
+                           project_is_public=fab_project.is_public,
+                           project_uuid=fab_project.uuid
+                           )
+        # TODO: notification email project_create
         return projects_uuid_get(uuid=str(fab_project.uuid))
     except Exception as exc:
         details = 'Oops! something went wrong with projects_post(): {0}'.format(exc)
@@ -588,19 +644,10 @@ def projects_uuid_communities_patch(uuid: str,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_facility_viewer() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for communities
         try:
             if len(body.communities) == 0:
@@ -652,58 +699,88 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not the creator of the project".format(api_user.display_name))
-        if os.getenv('CORE_API_DEPLOYMENT_TIER') in ['beta', 'production']:
-            # do not allow projects to be hard deleted, instead lock and make inactive
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
+        if os.getenv('CORE_API_DEPLOYMENT_TIER') in ['alpha', 'beta', 'production']:
+            # retired - do not allow beta or production projects to be hard deleted
+            now = datetime.now(timezone.utc)
             fab_project.active = False
+            fab_project.expires_on = now if fab_project.expires_on > now else fab_project.expires_on
             fab_project.is_locked = True
+            fab_project.modified = now
+            fab_project.modified_by = api_user
+            fab_project.retired_on = now
+            fab_project.review_required = False
             db.session.commit()
-            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-        else:
-            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-            consoleLogger.error(details)
-            return cors_500(details=details)
-            # delete Tags
-            update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
-            # delete Preferences
-            delete_projects_preferences(fab_project=fab_project)
-            # delete Profile
-            delete_profile_projects(api_user=api_user, fab_project=fab_project)
-            # remove project_creators
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
-                                      personnel_type='creators',
-                                      operation='batch')
-            # remove project_members
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
-                                      personnel_type='members',
-                                      operation='batch')
-            # remove project_owners
-            update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
-                                      operation='batch')
-            # remove project_storage allocations
-            for s in fab_project.project_storage:
-                s.active = False
-                fab_project.project_storage.remove(s)
-                db.session.commit()
-            # remove communities
-            update_projects_communities(fab_project=fab_project, communities=[])
-            # remove project funding
-            update_projects_project_funding(fab_project=fab_project, project_funding=[])
-            # delete COUs -pc, -pm, -po, -tk
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
-            delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
-            # delete FabricProject
-            details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
-            consoleLogger.info(details)
-            db.session.delete(fab_project)
-            db.session.commit()
+            details = "Project: '{0}' has been successfully retired".format(fab_project.name)
+            # add event project_retire
+            add_core_api_event(event=EnumEvents.project_retire.name,
+                               event_date=fab_project.retired_on,
+                               event_triggered_by=api_user.uuid,
+                               event_type=EnumEventTypes.projects.name,
+                               people_uuid=api_user.uuid,
+                               project_is_public=fab_project.is_public,
+                               project_uuid=fab_project.uuid
+                               )
+            # TODO: notification email project_retire
+            # send email - project_retire
+            to_email = fab_project.project_creators[0].preferred_email
+            email_type = 'project_retire'
+            people_uuid = str(api_user.uuid)
+            project_uuid = str(fab_project.uuid)
+            send_fabric_email(
+                email_type=email_type,
+                to_email=to_email,
+                project_uuid=project_uuid,
+                people_uuid=people_uuid
+            )
+        # TODO: projects are no longer deleted, but retired as a soft delete
+        # else:
+        #     # deleted - alpha projects can be hard deleted
+        #     # details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        #     # consoleLogger.error(details)
+        #     # return cors_500(details=details)
+        #     # delete Tags
+        #     update_projects_tags(api_user=api_user, fab_project=fab_project, tags=[])
+        #     # delete Preferences
+        #     delete_projects_preferences(fab_project=fab_project)
+        #     # delete Profile
+        #     delete_profile_projects(api_user=api_user, fab_project=fab_project)
+        #     # remove project_creators
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+        #                               personnel_type='creators',
+        #                               operation='batch')
+        #     # remove project_members
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[],
+        #                               personnel_type='members',
+        #                               operation='batch')
+        #     # remove project_owners
+        #     update_projects_personnel(api_user=api_user, fab_project=fab_project, personnel=[], personnel_type='owners',
+        #                               operation='batch')
+        #     # remove project_token_holders
+        #     update_projects_token_holders(api_user=api_user, fab_project=fab_project, token_holders=[],
+        #                                   operation='batch')
+        #     # remove project_storage allocations
+        #     for s in fab_project.project_storage:
+        #         s.active = False
+        #         fab_project.project_storage.remove(s)
+        #         db.session.commit()
+        #     # remove communities
+        #     update_projects_communities(fab_project=fab_project, communities=[])
+        #     # remove project funding
+        #     update_projects_project_funding(fab_project=fab_project, project_funding=[])
+        #     # delete COUs -pc, -pm, -po, -tk
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_pc)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_pm)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_po)
+        #     delete_comanage_group(co_cou_id=fab_project.co_cou_id_tk)
+        #     # delete FabricProject
+        #     details = "Project: '{0}' has been successfully deleted".format(fab_project.name)
+        #     consoleLogger.info(details)
+        #     db.session.delete(fab_project)
+        #     db.session.commit()
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = details
@@ -740,6 +817,7 @@ def projects_uuid_expires_on_patch(uuid: str,
 
     :rtype: Status200OkNoContent
     """
+    # NOTE: Facility Operator only
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -777,6 +855,8 @@ def projects_uuid_expires_on_patch(uuid: str,
             metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'expires_on' - {0}".format(exc))
+        # update project active status
+        projects_set_active(fab_project=fab_project)
         # create response
         patch_info = Status200OkNoContentResults()
         patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
@@ -813,18 +893,10 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for project funding
         try:
             if len(body.project_funding) == 0:
@@ -866,6 +938,106 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
         return cors_500(details=details)
 
 
+def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
+    """Update Project Lead as Facility Operator
+
+    Update Project Lead as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Lead as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    # NOTE: Facility Operator only
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active facility-operators role
+        if not api_user.active or not api_user.is_facility_operator():
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
+                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+        # check for project_lead
+        try:
+            # validate project_lead
+            project_lead = None
+            try:
+                project_lead_uuid = str(body.project_lead)
+                project_lead = FabricPeople.query.filter(
+                    FabricPeople.uuid == project_lead_uuid
+                ).first()
+                if project_lead:
+                    is_owner = project_lead.is_project_owner(project_uuid=str(fab_project.uuid))
+                    if not is_owner:
+                        return cors_400(
+                            details='NotProjectOwner: User with uuid={0} must be a project owner before being assigned project lead'.format(
+                                project_lead_uuid))
+                else:
+                    return cors_400(
+                        details='InvalidUserID: User with uuid={0} not found'.format(project_lead_uuid))
+                # update project project_lead if new lead is different from prior lead
+                project_lead_orig = fab_project.project_lead
+                if project_lead_orig.uuid != project_lead.uuid:
+                    # send email - project_remove_lead
+                    to_email = project_lead_orig.preferred_email
+                    email_type = 'project_remove_lead'
+                    people_uuid = str(api_user.uuid)
+                    project_uuid = str(fab_project.uuid)
+                    send_fabric_email(
+                        email_type=email_type,
+                        to_email=to_email,
+                        project_uuid=project_uuid,
+                        people_uuid=people_uuid
+                    )
+                    fab_project.project_lead = project_lead
+                    db.session.commit()
+                    # send email - project_add_lead
+                    to_email = project_lead.preferred_email
+                    email_type = 'project_add_lead'
+                    people_uuid = str(api_user.uuid)
+                    project_uuid = str(fab_project.uuid)
+                    send_fabric_email(
+                        email_type=email_type,
+                        to_email=to_email,
+                        project_uuid=project_uuid,
+                        people_uuid=people_uuid
+                    )
+                    # metrics log - Project project_lead was modified:
+                    # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify expires_on by usr:dead-beef-dead-beef
+                    log_msg = 'Project event prj:{0} modify \'project_lead={1}\' by usr:{2}'.format(
+                        str(fab_project.uuid),
+                        str(project_lead),
+                        str(api_user.uuid))
+                    metricsLogger.info(log_msg)
+            except ValueError as exc:
+                details = 'Exception: project_lead: {0}'.format(exc)
+                consoleLogger.error(details)
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_project_lead_patch(): 'expires_on' - {0}".format(exc))
+        # update project active status
+        projects_set_active(fab_project=fab_project)
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_project_lead_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
 # @login_or_token_required
 def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
     """Project details by UUID
@@ -877,6 +1049,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
 
     :rtype: ProjectsDetails
     """
+    # TODO: active, retired_date, review_required
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -893,14 +1066,13 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check if the project has exceeded expiry date
-        if fab_project.expires_on < datetime.now(timezone.utc):
-            fab_project.is_locked = True
-            db.session.commit()
+        # update active status as needed
+        projects_set_active(fab_project=fab_project)
         # set ProjectsOne object
         project_one = ProjectsOne()
         if not is_anonymous:
             # set required attributes for any uuid
+            project_one.active = bool(fab_project.active)
             project_one.communities = [c.community for c in fab_project.communities]
             project_one.created = str(fab_project.created)
             project_one.description = fab_project.description
@@ -915,8 +1087,11 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 {"agency": pf.agency, "agency_other": pf.agency_other, "award_amount": pf.award_amount,
                  "award_number": pf.award_number, "directorate": pf.directorate}
                 for pf in fab_project.project_funding]
-            project_one.topics = [t.topic for t in fab_project.topics]
+            project_one.project_lead = get_projects_personnel(fab_project=fab_project, personnel_type='lead')[0]
             project_one.project_type = fab_project.project_type.name
+            project_one.retired_date = str(fab_project.retired_date) if fab_project.retired_date else None
+            project_one.review_required = bool(fab_project.review_required)
+            project_one.topics = [t.topic for t in fab_project.topics]
             project_one.uuid = fab_project.uuid
             # set remaining attributes for project_creators, project_owners and project_members
             if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
@@ -960,6 +1135,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
                 project_one.tags = []
         else:
             # anonymous user project details
+            project_one.active = bool(fab_project.active)
             project_one.communities = [c.community for c in fab_project.communities]
             project_one.description = fab_project.description
             project_one.fabric_matrix = get_fabric_matrix(project_id=fab_project.id)
@@ -1004,18 +1180,10 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for description
         try:
             if len(body.description) != 0:
@@ -1136,6 +1304,8 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
                     metricsLogger.info(log_msg)
         except Exception as exc:
             consoleLogger.info("NOP: projects_uuid_patch(): 'project_type' - {0}".format(exc))
+        # update active status as needed
+        projects_set_active(fab_project=fab_project)
 
         # create response
         patch_info = Status200OkNoContentResults()
@@ -1174,18 +1344,10 @@ def projects_uuid_personnel_patch(uuid: str = None,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for project_members
         try:
             if len(body.project_members) == 0:
@@ -1254,18 +1416,10 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         fab_profile = FabricProfilesProjects.query.filter_by(id=fab_project.profile.id).one_or_none()
         # check for award_information
         try:
@@ -1445,17 +1599,10 @@ def projects_uuid_project_creators_patch(operation: str = None, uuid: str = None
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project creator or facility operator
-        if not api_user.active or not (
-                api_user.is_facility_operator() or api_user.is_project_creator(project_uuid=str(fab_project.uuid))):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not a project creator".format(
-                    api_user.display_name))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for project_creators
         try:
             if len(body.project_creators) == 0:
@@ -1511,17 +1658,10 @@ def projects_uuid_project_members_patch(operation: str = None, uuid: str = None,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project creator/owner or facility operator
-        if not api_user.active or not (api_user.is_facility_operator() or api_user.is_project_creator(
-                project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid))):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not a project creator/owner".format(
-                    api_user.display_name))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for project_members
         try:
             if len(body.project_members) == 0:
@@ -1577,17 +1717,10 @@ def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # verify active project creator/owner or facility operator
-        if not api_user.active or not (api_user.is_facility_operator() or api_user.is_project_creator(
-                project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(project_uuid=str(fab_project.uuid))):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not a project creator/owner".format(
-                    api_user.display_name))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for project_owners
         try:
             if len(body.project_owners) == 0:
@@ -1620,6 +1753,75 @@ def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
         return cors_500(details=details)
 
 
+def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
+    """Update Project review status as Facility Operator
+
+    Update Project review status as Facility Operator # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project review as Facility Operator
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    # NOTE: Facility Operator only
+    try:
+        # get api_user
+        api_user, id_source = get_person_by_login_claims()
+        # get project by uuid
+        fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
+        if not fab_project:
+            return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
+        # verify active facility-operators role
+        if not api_user.active or not api_user.is_facility_operator():
+            return cors_403(
+                details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
+                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+        # check for review_required
+        try:
+            # validate review_required
+            invalid = False
+            try:
+                review_required = str(body.review_required)
+                if review_required.casefold() not in ['true', 'false']:
+                    invalid = True
+            except ValueError as exc:
+                details = 'Exception: review_required: {0}'.format(exc)
+                consoleLogger.error(details)
+                invalid = True
+            if invalid:
+                return cors_400(details='BooleanRequired: must be true or false, not {0}'.format(review_required))
+            # update project review_required
+            fab_project.review_required = bool(body.review_required)
+            db.session.commit()
+            # metrics log - Project review_required was modified:
+            # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify review_required by usr:dead-beef-dead-beef
+            log_msg = 'Project event prj:{0} modify \'review_required={1}\' by usr:{2}'.format(
+                str(fab_project.uuid),
+                str(fab_project.review_required),
+                str(api_user.uuid))
+            metricsLogger.info(log_msg)
+        except Exception as exc:
+            consoleLogger.info("NOP: projects_uuid_expires_on_patch(): 'review_required' - {0}".format(exc))
+        # update project active status
+        projects_set_active(fab_project=fab_project)
+        # create response
+        patch_info = Status200OkNoContentResults()
+        patch_info.details = "Project: '{0}' has been successfully updated".format(fab_project.name)
+        response = Status200OkNoContent()
+        response.results = [patch_info]
+        response.size = len(response.results)
+        response.status = 200
+        response.type = 'no_content'
+        return cors_200(response_body=response)
+
+    except Exception as exc:
+        details = 'Oops! something went wrong with projects_uuid_review_required_patch(): {0}'.format(exc)
+        consoleLogger.error(details)
+        return cors_500(details=details)
+
+
 @login_required
 def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Status200OkNoContent:  # noqa: E501
     """Update Projects Tags as Facility Operator
@@ -1633,6 +1835,7 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
 
     :rtype: Status200OkNoContent
     """
+    # NOTE: Facility Operator only
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -1645,11 +1848,6 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
         # check for tags
         try:
             if len(body.tags) == 0:
@@ -1699,6 +1897,7 @@ def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
 
     :rtype: Status200OkNoContent
     """
+    # NOTE: Facility Operator only
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -1715,11 +1914,6 @@ def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
         for p_uuid in body.token_holders:
             if not FabricPeople.query.filter_by(uuid=p_uuid).one_or_none():
                 return cors_404(details="No match for People with uuid = '{0}'".format(p_uuid))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
         # check for token_holders
         try:
             if len(body.token_holders) == 0:
@@ -1772,21 +1966,14 @@ def projects_uuid_topics_patch(uuid: str,
         fab_project = FabricProjects.query.filter_by(uuid=uuid).one_or_none()
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
-        # check if the project is locked or has exceeded expiry date
-        if fab_project.is_locked or fab_project.expires_on < datetime.now(timezone.utc):
-            return cors_423(
-                details="Locked project, uuid = '{0}', expires_on = '{1}'".format(str(fab_project.uuid),
-                                                                                  str(fab_project.expires_on)))
-        # verify active project_creator, project_owner or facility-operator
-        if not api_user.active or not api_user.is_facility_operator() and \
-                not api_user.is_project_creator(str(fab_project.uuid)) and \
-                not api_user.is_project_owner(str(fab_project.uuid)):
-            return cors_403(
-                details="User: '{0}' is not registered as an active FABRIC user or not an owner of the project".format(
-                    api_user.display_name))
+        # can api_user edit project
+        can_edit, message = project_is_editable_by_api_user(fab_project=fab_project, api_user=api_user)
+        if not can_edit:
+            return cors_403(details=message)
         # check for topics
         try:
-            topics = [str(t.replace(" ", "-")).casefold() for t in body.topics]
+            topics = [str(t.strip()) for t in body.topics]
+            topics = [str(t.replace(" ", "-")).casefold() for t in topics]
             update_projects_topics(api_user=api_user, fab_project=fab_project,
                                    topics=topics)
             consoleLogger.info('UPDATE: FabricProjects: uuid={0}, topics={1}'.format(

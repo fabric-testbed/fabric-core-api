@@ -5,12 +5,12 @@ from swagger_server.database.models.people import FabricPeople, Organizations, F
 from swagger_server.models.journey_tracker_people_one import JourneyTrackerPeopleOne
 
 
-def journey_tracker_people_by_since_date(since_date: datetime = None, until_date: datetime = None) -> [
+def journey_tracker_people_by_start_date(start_date: datetime = None, end_date: datetime = None) -> [
     JourneyTrackerPeopleOne]:
     jt_people = []
     results = FabricPeople.query.filter(
-        FabricPeople.updated >= since_date,
-        FabricPeople.updated <= until_date,
+        FabricPeople.updated >= start_date,
+        FabricPeople.updated <= end_date,
     ).order_by(FabricPeople.updated.desc()).all()
     for res in results:
         try:

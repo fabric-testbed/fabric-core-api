@@ -98,6 +98,12 @@ def create_tables():
 
 @app.route("/start", methods=["GET"])
 def start_task_monitor():
+    """
+    Start the task monitor
+    - only starts once on the condition of value != 'running'
+    - needs to be manually set back to None when a new version is deployed or service is restarted
+      to restart the timer thread
+    """
     try:
         ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
         if str(ske.value).casefold() != 'running':
@@ -114,19 +120,19 @@ def start_task_monitor():
 
 
 # TODO: remove /stop on production deployment
-@app.route("/stop", methods=["GET"])
-def stop_task_monitor():
-    try:
-        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
-        if str(ske.value).casefold() == 'running':
-            thread_event.clear()
-            ske.value = None
-            db.session.commit()
-            return "Task Monitor Stopped"
-        else:
-            return "Task Monitor Already Stopped"
-    except Exception as error:
-        return str(error)
+# @app.route("/stop", methods=["GET"])
+# def stop_task_monitor():
+#     try:
+#         ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
+#         if str(ske.value).casefold() == 'running':
+#             thread_event.clear()
+#             ske.value = None
+#             db.session.commit()
+#             return "Task Monitor Stopped"
+#         else:
+#             return "Task Monitor Already Stopped"
+#     except Exception as error:
+#         return str(error)
 
 
 if __name__ == '__main__':

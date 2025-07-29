@@ -213,25 +213,46 @@ def backfill_core_api_projects():
         people_uuid = event_triggered_by
         project_is_public = fp.is_public
         project_uuid = fp.uuid
-        add_core_api_event(
-            event=event,
-            event_date=event_date,
-            event_triggered_by=event_triggered_by,
-            event_type=event_type,
-            people_uuid=people_uuid,
-            project_uuid=project_uuid,
-            project_is_public=project_is_public
-        )
+        is_core_api_event = CoreApiEvents.query.filter(
+            CoreApiEvents.event == event,
+            CoreApiEvents.event_date == event_date,
+            CoreApiEvents.event_triggered_by == event_triggered_by,
+            CoreApiEvents.event_type == event_type,
+            CoreApiEvents.people_uuid == people_uuid,
+            CoreApiEvents.project_uuid == project_uuid,
+            CoreApiEvents.project_is_public == project_is_public
+        ).first()
+        if not is_core_api_event:
+            add_core_api_event(
+                event=event,
+                event_date=event_date,
+                event_triggered_by=event_triggered_by,
+                event_type=event_type,
+                people_uuid=people_uuid,
+                project_uuid=project_uuid,
+                project_is_public=project_is_public
+            )
+        else:
+            consoleLogger.info('Event duplicate: {0}:{1} by {2}'.format(event_type, event, event_triggered_by))
         # check for project_retire
-        if fp.retired_date:
-            if not CoreApiEvents.query.filter(
-                    CoreApiEvents.project_uuid == project_uuid,
-                    CoreApiEvents.event == EnumEvents.project_retire.name
-            ).first():
-                event = EnumEvents.project_retire.name
-                event_date = fp.retired_date
-                people_uuid = event_triggered_by
-                event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+        if fp.retired_date and not CoreApiEvents.query.filter(
+                CoreApiEvents.project_uuid == project_uuid,
+                CoreApiEvents.event == EnumEvents.project_retire.name
+        ).first():
+            event = EnumEvents.project_retire.name
+            event_date = fp.retired_date
+            people_uuid = event_triggered_by
+            event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+            is_core_api_event = CoreApiEvents.query.filter(
+                CoreApiEvents.event == event,
+                CoreApiEvents.event_date == event_date,
+                CoreApiEvents.event_triggered_by == event_triggered_by,
+                CoreApiEvents.event_type == event_type,
+                CoreApiEvents.people_uuid == people_uuid,
+                CoreApiEvents.project_uuid == project_uuid,
+                CoreApiEvents.project_is_public == project_is_public
+            ).first()
+            if not is_core_api_event:
                 add_core_api_event(
                     event=event,
                     event_date=event_date,
@@ -241,6 +262,8 @@ def backfill_core_api_projects():
                     project_uuid=project_uuid,
                     project_is_public=project_is_public
                 )
+            else:
+                consoleLogger.info('Event duplicate: {0}:{1} by {2}'.format(event_type, event, event_triggered_by))
 
 
 def backfill_core_api_people():
@@ -260,24 +283,46 @@ def backfill_core_api_people():
         people_uuid = fp.uuid
         project_is_public = None
         project_uuid = None
-        add_core_api_event(
-            event=event,
-            event_date=event_date,
-            event_triggered_by=event_triggered_by,
-            event_type=event_type,
-            people_uuid=people_uuid,
-            project_uuid=project_uuid,
-            project_is_public=project_is_public
-        )
+        is_core_api_event = CoreApiEvents.query.filter(
+            CoreApiEvents.event == event,
+            CoreApiEvents.event_date == event_date,
+            CoreApiEvents.event_triggered_by == event_triggered_by,
+            CoreApiEvents.event_type == event_type,
+            CoreApiEvents.people_uuid == people_uuid,
+            CoreApiEvents.project_uuid == project_uuid,
+            CoreApiEvents.project_is_public == project_is_public
+        ).first()
+        if not is_core_api_event:
+            add_core_api_event(
+                event=event,
+                event_date=event_date,
+                event_triggered_by=event_triggered_by,
+                event_type=event_type,
+                people_uuid=people_uuid,
+                project_uuid=project_uuid,
+                project_is_public=project_is_public
+            )
+        else:
+            consoleLogger.info('Event duplicate: {0}:{1} by {2}'.format(event_type, event, event_triggered_by))
+
         # check for people_retire
-        if not fp.active:
-            if not CoreApiEvents.query.filter(
-                    CoreApiEvents.people_uuid == people_uuid,
-                    CoreApiEvents.event == EnumEvents.people_retire.name
-            ).first():
-                event = EnumEvents.people_retire.name
-                event_date = datetime.now(timezone.utc)
-                event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+        if not fp.active and not CoreApiEvents.query.filter(
+                CoreApiEvents.people_uuid == people_uuid,
+                CoreApiEvents.event == EnumEvents.people_retire.name
+        ).first():
+            event = EnumEvents.people_retire.name
+            event_date = datetime.now(timezone.utc)
+            event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
+            is_core_api_event = CoreApiEvents.query.filter(
+                CoreApiEvents.event == event,
+                CoreApiEvents.event_date == event_date,
+                CoreApiEvents.event_triggered_by == event_triggered_by,
+                CoreApiEvents.event_type == event_type,
+                CoreApiEvents.people_uuid == people_uuid,
+                CoreApiEvents.project_uuid == project_uuid,
+                CoreApiEvents.project_is_public == project_is_public
+            ).first()
+            if not is_core_api_event:
                 add_core_api_event(
                     event=event,
                     event_date=event_date,
@@ -287,6 +332,8 @@ def backfill_core_api_people():
                     project_uuid=project_uuid,
                     project_is_public=project_is_public
                 )
+            else:
+                consoleLogger.info('Event duplicate: {0}:{1} by {2}'.format(event_type, event, event_triggered_by))
         # event project_creator/member/owner/tokenholder
         event_type = EnumEventTypes.projects.name
         for r in fp.roles:
@@ -314,15 +361,28 @@ def backfill_core_api_people():
                         event_triggered_by = os.getenv('SERVICE_ACCOUNT_UUID')
                     people_uuid = fp.uuid
                     project_is_public = project.is_public
-                    add_core_api_event(
-                        event=event,
-                        event_date=event_date,
-                        event_triggered_by=event_triggered_by,
-                        event_type=event_type,
-                        people_uuid=people_uuid,
-                        project_uuid=project_uuid,
-                        project_is_public=project_is_public
-                    )
+                    is_core_api_event = CoreApiEvents.query.filter(
+                        CoreApiEvents.event == event,
+                        CoreApiEvents.event_date == event_date,
+                        CoreApiEvents.event_triggered_by == event_triggered_by,
+                        CoreApiEvents.event_type == event_type,
+                        CoreApiEvents.people_uuid == people_uuid,
+                        CoreApiEvents.project_uuid == project_uuid,
+                        CoreApiEvents.project_is_public == project_is_public
+                    ).first()
+                    if not is_core_api_event:
+                        add_core_api_event(
+                            event=event,
+                            event_date=event_date,
+                            event_triggered_by=event_triggered_by,
+                            event_type=event_type,
+                            people_uuid=people_uuid,
+                            project_uuid=project_uuid,
+                            project_is_public=project_is_public
+                        )
+                    else:
+                        consoleLogger.info(
+                            'Event duplicate: {0}:{1} by {2}'.format(event_type, event, event_triggered_by))
 
 
 if __name__ == '__main__':
@@ -333,19 +393,19 @@ if __name__ == '__main__':
     # Projects: backfill project_lead information for existing projects that don't already have it
     consoleLogger.info('Projects: backfill project_lead information for existing projects that don\'t already have it')
     projects_project_lead_backfill()
-    #
-    # # Projects: backfill quota information for existing projects that don't already have it
-    # consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
-    # projects_quota_placeholder_backfill()
-    #
-    # # Projects: migrate projects that have expired for more than 365 days to retired status
-    # consoleLogger.info('Projects: migrate projects that have expired for more than 365 days to retired status')
-    # projects_retire_after_365_days_expired()
-    #
-    # # Projects: backfill core-api projects with event data
-    # consoleLogger.info('Projects: backfill core-api projects with event data')
-    # backfill_core_api_projects()
-    #
-    # # People: backfill core-api people with event data
-    # consoleLogger.info('People: backfill core-api people with event data')
-    # backfill_core_api_people()
+
+    # Projects: backfill quota information for existing projects that don't already have it
+    consoleLogger.info('Projects: backfill quota information for existing projects that don\'t already have it')
+    projects_quota_placeholder_backfill()
+
+    # Projects: migrate projects that have expired for more than 365 days to retired status
+    consoleLogger.info('Projects: migrate projects that have expired for more than 365 days to retired status')
+    projects_retire_after_365_days_expired()
+
+    # Projects: backfill core-api projects with event data
+    consoleLogger.info('Projects: backfill core-api projects with event data')
+    backfill_core_api_projects()
+
+    # People: backfill core-api people with event data
+    consoleLogger.info('People: backfill core-api people with event data')
+    backfill_core_api_people()

@@ -73,23 +73,26 @@ def projects_project_lead_backfill():
     - if no project owner exists, make the project creator the project lead
     """
     default_pl = FabricPeople.query.filter(
-        FabricPeople.uuid == '593dd0d3-cedb-4bc6-9522-a945da0a8a8e'
+        FabricPeople.uuid == '00000000-0000-0000-0000-000000000000'
     ).first()
     try:
         fab_projects = FabricProjects.query.all()
         for fp in fab_projects:
             consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
-            po_list = fp.project_owners
-            print(' - ', po_list)
-            if len(po_list) > 0:
-                proj_lead = po_list[0]
-            elif len(fp.project_creators) > 0:
-                proj_lead = fp.project_creators[0]
+            if not fp.project_lead:
+                po_list = fp.project_owners
+                print(' - project owners: ', po_list)
+                if len(po_list) > 0:
+                    proj_lead = po_list[0]
+                elif len(fp.project_creators) > 0:
+                    proj_lead = fp.project_creators[0]
+                else:
+                    proj_lead = default_pl
+                print(' - project lead: ', proj_lead)
+                fp.project_lead = proj_lead
+                db.session.commit()
             else:
-                proj_lead = default_pl
-            print(' - ', proj_lead)
-            fp.project_lead = proj_lead
-            db.session.commit()
+                print(' - project lead: ', fp.project_lead)
 
     except Exception as exc:
         consoleLogger.error(exc)

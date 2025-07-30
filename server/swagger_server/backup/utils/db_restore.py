@@ -199,6 +199,30 @@ def restore_core_api_events_data():
         "idx_events_people_only" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NULL
         "idx_events_people_projects" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NOT NULL
     """
+    try:
+        with open(BACKUP_DATA_DIR + '/core_api_events-v{0}.json'.format(api_version), 'r') as infile:
+            core_api_events_dict = json.load(infile)
+        core_api_events = core_api_events_dict.get('core_api_events')
+        max_id = 0
+        for i in core_api_events:
+            t_id = int(i.get('id'))
+            if t_id > max_id:
+                max_id = t_id
+            stmt = insert(db.Table('core_api_events')).values(
+                event=i.get('event'),
+                event_date=i.get('event_date') if i.get('event_date') else None,
+                event_triggered_by=i.get('event_triggered_by'),
+                event_type=i.get('event_type') if i.get('event_type') else None,
+                id=t_id,
+                people_uuid=i.get('people_uuid'),
+                project_is_public=i.get('project_is_public'),
+                project_uuid=i.get('project_uuid')
+            ).on_conflict_do_nothing()
+            db.session.execute(stmt)
+        db.session.commit()
+        reset_serial_sequence(db_table='core_api_events', seq_value=max_id + 1)
+    except Exception as exc:
+        consoleLogger.error(exc)
 
 
 # import core_api_metrics from JSON input file
@@ -1638,6 +1662,10 @@ if __name__ == '__main__':
     #  public | announcements             | table | postgres
     consoleLogger.info('restore announcements table')
     restore_announcements_data()
+
+    # public | core_api_events            | table | postgres
+    consoleLogger.info('restore core_api_events table')
+    restore_core_api_events_data()
 
     # public | core_api_metrics           | table | postgres
     consoleLogger.info('restore core_api_metrics table')

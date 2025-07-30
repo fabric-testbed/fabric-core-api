@@ -54,7 +54,7 @@ from swagger_server import __API_VERSION__
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.announcements import FabricAnnouncements
-from swagger_server.database.models.core_api_metrics import CoreApiMetrics
+from swagger_server.database.models.core_api_metrics import CoreApiEvents, CoreApiMetrics
 from swagger_server.database.models.people import EmailAddresses, FabricGroups, FabricPeople, FabricRoles, \
     Organizations, UserOrgAffiliations, UserSubjectIdentifiers
 from swagger_server.database.models.preferences import FabricPreferences
@@ -206,6 +206,29 @@ def dump_core_api_events_data():
         "idx_events_people_only" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NULL
         "idx_events_people_projects" UNIQUE, btree (event_date, event, people_uuid) WHERE project_uuid IS NOT NULL
     """
+    try:
+        core_api_events = []
+        fab_core_api_events = CoreApiEvents.query.order_by('id').all()
+        for e in fab_core_api_events:
+            data = {
+                'event': e.event.name,
+                'event_date': normalize_date_to_utc(date_str=str(e.event_date),
+                                                    return_type='str') if e.event_date else None,
+                'event_triggered_by': e.event_triggered_by,
+                'event_type': e.event_type.name,
+                'id': e.id,
+                'people_uuid': e.people_uuid,
+                'project_is_public': e.project_is_public,
+                'project_uuid': e.project_uuid,
+            }
+            core_api_events.append(data)
+        output_dict = {'core_api_events': core_api_events}
+        output_json = json.dumps(output_dict, indent=2)
+        # print(json.dumps(output_dict, indent=2))
+        with open(BACKUP_DATA_DIR + '/core_api_events-v{0}.json'.format(__API_VERSION__), 'w') as outfile:
+            outfile.write(output_json)
+    except Exception as exc:
+        consoleLogger.error(exc)
 
 
 # export core-api-metrics as JSON output file
@@ -1659,6 +1682,10 @@ if __name__ == '__main__':
     #  public | announcements             | table | postgres
     consoleLogger.info('dump announcements table')
     dump_announcements_data()
+
+    #  public | core_api_events           | table | postgres
+    consoleLogger.info('dump core_api_events table')
+    dump_core_api_events_data()
 
     #  public | core_api_metrics          | table | postgres
     consoleLogger.info('dump core_api_metrics table')

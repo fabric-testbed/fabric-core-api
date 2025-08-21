@@ -1,6 +1,6 @@
 """
-REV: v1.9.1
-v1.9.0 --> v1.9.1 - database tables
+REV: v1.9.0
+v1.8.0 --> v1.9.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -41,8 +41,9 @@ v1.9.0 --> v1.9.1 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (34 rows)
 
-Changes from v1.9.0 --> v1.9.1
-- None
+Changes from v1.8.0 --> v1.9.0
+- TODO: table: core_api_events - new table - backfill from db_version_updates.py
+- TODO: table: projects - project_lead
 """
 
 import json
@@ -54,11 +55,10 @@ from sqlalchemy.dialects.postgresql import insert
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
-from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code.core_api_utils import normalize_date_to_utc
 
 # API version of data to restore from
-api_version = '1.9.0'
+api_version = '1.8.0'
 
 # relative to the top level of the repository
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
@@ -817,7 +817,6 @@ def restore_projects_data():
     - profile = db.relationship('FabricProfilesProjects', backref='projects')
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
     - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
-    - project_lead = db.relationship('FabricPeople', backref='people', uselist=False)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
@@ -843,7 +842,6 @@ def restore_projects_data():
      is_locked        | boolean                  |           | not null |
      is_public        | boolean                  |           | not null |
      name             | character varying        |           | not null |
-     project_lead_id  | integer                  |           |          |
      project_type     | enumprojecttypes         |           | not null |
      retired_date     | timestamp with time zone |           |          |
      review_required  | boolean                  |           | not null |
@@ -855,8 +853,6 @@ def restore_projects_data():
      modified_by_uuid | character varying        |           |          |
     Indexes:
         "projects_pkey" PRIMARY KEY, btree (id)
-    Foreign-key constraints:
-        "projects_project_lead_id_fkey" FOREIGN KEY (project_lead_id) REFERENCES people(id)
     """
     try:
         with open(BACKUP_DATA_DIR + '/projects-v{0}.json'.format(api_version), 'r') as infile:
@@ -893,7 +889,6 @@ def restore_projects_data():
                 # project_owners=p.get('projects_owners'), <-- restore_projects_owners_data()
                 # project_storage=p.get('projects_storage'), <-- restore_projects_storage_data()
                 # project_topics=p.get('projects_topics'), <-- restore_projects_topics_data()
-                project_lead_id=p.get('project_lead_id') if p.get('project_lead_id') else None,
                 project_type=p.get('project_type') if p.get('project_type') else 'research',
                 retired_date=normalize_date_to_utc(p.get('retired_date')) if p.get('retired_date') else None,
                 review_required=p.get('review_required') if p.get('review_required') else False,
@@ -1506,7 +1501,151 @@ def reset_serial_sequence(db_table: str, seq_value: int):
         consoleLogger.error(exc)
 
 
-# -------------------------------------- Main --------------------------------------
+# -------------------------------------- Version specific methods --------------------------------------
+from swagger_server.response_code.comanage_utils import api
+from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles
+from swagger_server.response_code.core_api_utils import is_valid_uuid
+from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
+
+
+def import_missing_groups_from_comanage():
+    """
+    check all COUs from COmanage and add groups that may be missing
+    """
+    try:
+        cous = api.cous_view_per_co().get('Cous', [])
+        for co_cou in cous:
+            co_cou_id = co_cou.get('Id')
+            fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+            if not fab_group:
+                consoleLogger.info("CREATE: entry in 'groups' table for co_cou_id: {0}".format(co_cou_id))
+                fab_group = FabricGroups()
+                fab_group.co_cou_id = co_cou_id
+                fab_group.co_parent_cou_id = co_cou.get('ParentId', None)
+                fab_group.created = normalize_date_to_utc(co_cou.get('Created'))
+                fab_group.name = co_cou.get('Name')
+                fab_group.description = co_cou.get('Description')
+                fab_group.deleted = co_cou.get('Deleted')
+                db.session.add(fab_group)
+                db.session.commit()
+            else:
+                modified = False
+                if fab_group.name != co_cou.get('Name'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, name = '{1}'".format(
+                        co_cou_id, fab_group.name))
+                    fab_group.name = co_cou.get('Name')
+                    db.session.commit()
+                    modified = True
+                if fab_group.description != co_cou.get('Description'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, description = '{1}'".format(
+                        co_cou_id, fab_group.description))
+                    fab_group.description = co_cou.get('Description')
+                    db.session.commit()
+                    modified = True
+                if fab_group.deleted != co_cou.get('Deleted'):
+                    consoleLogger.info("UPDATE: entry in 'groups' table for co_cou_id: {0}, deleted = '{1}'".format(
+                        co_cou_id, fab_group.deleted))
+                    fab_group.deleted = co_cou.get('Deleted')
+                    db.session.commit()
+                    modified = True
+                if not modified:
+                    consoleLogger.info("NO CHANGE: entry in 'groups' table for co_cou_id: {0}, name = '{1}'".format(
+                        co_cou_id, fab_group.name))
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+def import_missing_roles_from_comanage():
+    """
+    check all COPerson Roles that may be missing and add to active FABRIC people
+    """
+    co_people = api.copeople_view_per_co().get('CoPeople', [])
+    for co_person in co_people:
+        co_person_id = co_person.get('Id')
+        fab_person = FabricPeople.query.filter_by(co_person_id=co_person_id).first()
+        if fab_person:
+            co_roles = api.coperson_roles_view_per_coperson(coperson_id=co_person_id)
+            if co_roles:
+                co_roles = co_roles.get('CoPersonRoles', [])
+                for co_role in co_roles:
+                    co_person_role_id = co_role.get('Id', None)
+                    co_cou_id = co_role.get('CouId')
+                    fab_role = FabricRoles.query.filter_by(co_person_role_id=co_person_role_id).one_or_none()
+                    fab_group = FabricGroups.query.filter_by(co_cou_id=co_cou_id).one_or_none()
+                    if not fab_role:
+                        if fab_group:
+                            fab_role = FabricRoles()
+                            fab_role.affiliation = co_role.get('Affiliation', 'member')
+                            fab_role.co_cou_id = co_cou_id
+                            fab_role.co_person_id = co_person_id
+                            fab_role.co_person_role_id = co_person_role_id
+                            fab_role.name = fab_group.name
+                            fab_role.description = fab_group.description
+                            fab_role.people_id = fab_person.id
+                            fab_role.status = co_role.get('Status', 'Active')
+                            try:
+                                db.session.add(fab_role)
+                                db.session.commit()
+                                consoleLogger.info(
+                                    "CREATE: entry in 'roles' table for co_person_role_id: {0}".format(
+                                        co_person_role_id))
+                            except Exception as exc:
+                                consoleLogger.error('DUPLICATE ROLE: {0}'.format(exc))
+                                db.session.rollback()
+                                continue
+                        else:
+                            consoleLogger.warning(
+                                "ERROR: unable to locate co_cou_id {0} in the 'groups' table".format(co_cou_id))
+                    else:
+                        modified = False
+                        if fab_role.name != fab_group.name:
+                            consoleLogger.info(
+                                "UPDATE: entry in 'roles' table for co_person_role_id: {0}, name = '{1}'".format(
+                                    co_person_role_id, fab_group.name))
+                            fab_role.name = fab_group.name
+                            db.session.commit()
+                            modified = True
+                        if fab_role.description != fab_group.description:
+                            consoleLogger.info(
+                                "UPDATE: entry in 'roles' table for co_person_role_id: {0}, description = '{1}'".format(
+                                    co_person_role_id, fab_group.description))
+                            fab_role.description = fab_group.description
+                            db.session.commit()
+                            modified = True
+                        if fab_role.status != co_role.get('Status'):
+                            consoleLogger.info(
+                                "UPDATE: entry in 'roles' table for co_person_role_id: {0}, status = '{1}'".format(
+                                    co_person_role_id, co_role.get('Status')))
+                            fab_role.status = co_role.get('Status')
+                            db.session.commit()
+                            modified = True
+                        if not modified:
+                            consoleLogger.info(
+                                "NO CHANGE: entry in 'roles' table for co_person_role_id: {0}".format(
+                                    co_person_role_id))
+        else:
+            consoleLogger.warning("ERROR: unable to locate co_person_id {0} in the 'people' table".format(co_person_id))
+
+
+def import_missing_projects_cous():
+    """
+    Add missing projects based on COUs
+    """
+    try:
+        fab_groups = FabricGroups.query.order_by('id').all()
+        for group in fab_groups:
+            proj_uuid = str(group.name)[:-3]
+            fab_project = FabricProjects.query.filter_by(uuid=proj_uuid).one_or_none()
+            if not fab_project and is_valid_uuid(proj_uuid):
+                print('- create project {0}'.format(proj_uuid))
+                fab_project = create_fabric_project_from_uuid(uuid=proj_uuid)
+
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+# -------------------------------------- Version specific methods --------------------------------------
 
 
 if __name__ == '__main__':
@@ -1652,3 +1791,13 @@ if __name__ == '__main__':
     #  verify project expiry
     consoleLogger.info('verify project expiry')
     verify_project_expiry()
+
+    # import missing groups, roles, and project cous from COmanage
+    # consoleLogger.info('import missing groups from COmanage')
+    # import_missing_groups_from_comanage()
+    #
+    # consoleLogger.info('import missing roles from COmanage')
+    # import_missing_roles_from_comanage()
+    #
+    # consoleLogger.info('import missing projects from COUs')
+    # import_missing_projects_cous()

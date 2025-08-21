@@ -1,6 +1,6 @@
 """
-REV: v1.9.1
-v1.9.0 - database tables
+REV: v1.9.0
+v1.8.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -41,8 +41,8 @@ v1.9.0 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (34 rows)
 
-Changes from v1.9.0 --> v1.9.1
-- None
+- TODO: table: core_api_events (placeholder)
+- TODO: table: projects - project_lead
 """
 
 import json
@@ -892,7 +892,6 @@ def dump_projects_data():
     - profile = db.relationship('FabricProfilesProjects', backref='projects')
     - project_creators = db.relationship('FabricPeople', secondary=projects_creators)
     - project_funding = db.relationship('ProjectsFunding', backref='projects', lazy=True)
-    - project_lead = db.relationship('FabricPeople', backref='people', uselist=False)
     - project_members = db.relationship('FabricPeople', secondary=projects_members)
     - project_owners = db.relationship('FabricPeople', secondary=projects_owners)
     - project_storage = db.relationship('FabricStorage', secondary=projects_storage)
@@ -918,7 +917,6 @@ def dump_projects_data():
      is_locked        | boolean                  |           | not null |
      is_public        | boolean                  |           | not null |
      name             | character varying        |           | not null |
-     project_lead_id  | integer                  |           |          |
      project_type     | enumprojecttypes         |           | not null |
      retired_date     | timestamp with time zone |           |          |
      review_required  | boolean                  |           | not null |
@@ -930,8 +928,6 @@ def dump_projects_data():
      modified_by_uuid | character varying        |           |          |
     Indexes:
         "projects_pkey" PRIMARY KEY, btree (id)
-    Foreign-key constraints:
-        "projects_project_lead_id_fkey" FOREIGN KEY (project_lead_id) REFERENCES people(id)
     """
     try:
         projects = []
@@ -964,7 +960,6 @@ def dump_projects_data():
                 'project_members': [pm.id for pm in p.project_members],  # [FabricPeople.id]
                 'project_owners': [po.id for po in p.project_owners],  # [FabricPeople.id]
                 'project_storage': [ps.id for ps in p.project_storage],  # [FabricStorage.id]
-                'project_lead_id': p.project_lead_id,
                 'project_type': p.project_type.name,
                 # 'retired_date': normalize_date_to_utc(date_str=str(p.retired_date), return_type='str') if p.retired_date else None,
                 # 'review_required': p.review_required,

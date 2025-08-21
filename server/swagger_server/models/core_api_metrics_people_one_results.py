@@ -14,13 +14,15 @@ class CoreApiMetricsPeopleOneResults(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=None, affiliation: str=None, email: str=None, google_scholar: str=None, last_updated: datetime=None, name: str=None, registered_on: datetime=None, roles: List[str]=None, scopus: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=None, affiliation: str=None, bastion_login: str=None, email: str=None, google_scholar: str=None, last_updated: datetime=None, name: str=None, registered_on: datetime=None, roles: List[str]=None, scopus: str=None, uuid: str=None):  # noqa: E501
         """CoreApiMetricsPeopleOneResults - a model defined in Swagger
 
         :param active: The active of this CoreApiMetricsPeopleOneResults.  # noqa: E501
         :type active: bool
         :param affiliation: The affiliation of this CoreApiMetricsPeopleOneResults.  # noqa: E501
         :type affiliation: str
+        :param bastion_login: The bastion_login of this CoreApiMetricsPeopleOneResults.  # noqa: E501
+        :type bastion_login: str
         :param email: The email of this CoreApiMetricsPeopleOneResults.  # noqa: E501
         :type email: str
         :param google_scholar: The google_scholar of this CoreApiMetricsPeopleOneResults.  # noqa: E501
@@ -41,6 +43,7 @@ class CoreApiMetricsPeopleOneResults(Model):
         self.swagger_types = {
             'active': bool,
             'affiliation': str,
+            'bastion_login': str,
             'email': str,
             'google_scholar': str,
             'last_updated': datetime,
@@ -54,6 +57,7 @@ class CoreApiMetricsPeopleOneResults(Model):
         self.attribute_map = {
             'active': 'active',
             'affiliation': 'affiliation',
+            'bastion_login': 'bastion_login',
             'email': 'email',
             'google_scholar': 'google_scholar',
             'last_updated': 'last_updated',
@@ -65,6 +69,7 @@ class CoreApiMetricsPeopleOneResults(Model):
         }
         self._active = active
         self._affiliation = affiliation
+        self._bastion_login = bastion_login
         self._email = email
         self._google_scholar = google_scholar
         self._last_updated = last_updated
@@ -126,6 +131,27 @@ class CoreApiMetricsPeopleOneResults(Model):
         """
 
         self._affiliation = affiliation
+
+    @property
+    def bastion_login(self) -> str:
+        """Gets the bastion_login of this CoreApiMetricsPeopleOneResults.
+
+
+        :return: The bastion_login of this CoreApiMetricsPeopleOneResults.
+        :rtype: str
+        """
+        return self._bastion_login
+
+    @bastion_login.setter
+    def bastion_login(self, bastion_login: str):
+        """Sets the bastion_login of this CoreApiMetricsPeopleOneResults.
+
+
+        :param bastion_login: The bastion_login of this CoreApiMetricsPeopleOneResults.
+        :type bastion_login: str
+        """
+
+        self._bastion_login = bastion_login
 
     @property
     def email(self) -> str:

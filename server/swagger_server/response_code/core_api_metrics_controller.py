@@ -387,6 +387,7 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
             {
                 "active": true,
                 "affiliation": "string",
+                "bastion_login": "string",
                 "email": "string",
                 "google_scholar": "string",
                 "last_updated": "2025-05-09T20:03:24.290Z",
@@ -434,6 +435,7 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
                 'active': bool(fabric_person.active),
                 'affiliation': Organizations.query.filter_by(
                     id=fabric_person.org_affiliation).one_or_none().organization,
+                'bastion_login': fabric_person.bastion_login,
                 'email': fabric_person.preferred_email,
                 'google_scholar': google_scholar,
                 'last_updated': str(fabric_person.modified),

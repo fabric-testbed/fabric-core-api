@@ -113,6 +113,8 @@
     "Net.FacilityPort.STAR-HU0-wk3-pci3-p1": "STAR-HU0-wk3-pci3-p1",
     "Net.FacilityPort.STAR-HU2-wk3-pci3-p2": "STAR-HU2-wk3-pci3-p2",
     "Net.FacilityPort.STAR-HU4-wk3-pci6-p1": "STAR-HU4-wk3-pci6-p1",
-    "Net.FacilityPort.STAR-HU6-wk3-pci6-p2": "STAR-HU6-wk3-pci6-p2"
+    "Net.FacilityPort.STAR-HU6-wk3-pci6-p2": "STAR-HU6-wk3-pci6-p2",
+    "Net.FacilityPort.DTN-Clemson": "DTN-Clemson",
+    "Net.FacilityPort.SDSC-L3-UCSD": "SDSC-L3-UCSD"
   }
 }

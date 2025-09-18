@@ -12,6 +12,8 @@
     }
   ],
   "key_value_pairs": {
+    "Component.SmartNIC_ConnectX_7_100": "allows to provision and attach 100G dedicated Blue Field SmartNIC DPU components",
+    "Component.SmartNIC_ConnectX_7_400": "allows to provision and attach 400G dedicated Blue Field SmartNIC DPU components",
     "Net.FacilityPort.AmLight-EXP-Layer2-FIU": "AmLight FIU Layer 2",
     "Net.FacilityPort.AmLight-Layer3-FIU": "AmLight FIU Layer 3",
     "Net.FacilityPort.AMST-HU0-wk2-pci3-p1": "AMST-HU0-wk2-pci3-p1",

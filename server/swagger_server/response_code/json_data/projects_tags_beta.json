@@ -12,7 +12,8 @@
     }
   ],
   "key_value_pairs": {
-    "Net.FacilityPort.RENC-GSU": "RENCI Development",
-    "Net.FacilityPort.RENC-Chameleon": "RENCI Development"
+    "Component.SmartNIC_BlueField_2_ConnectX_6": "allows to provision and attach Blue Field 2 dedicated SmartNIC components",
+    "Net.FacilityPort.RENC-Chameleon": "RENCI Development",
+    "Net.FacilityPort.RENC-GSU": "RENCI Development"
   }
 }

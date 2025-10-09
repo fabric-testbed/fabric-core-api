@@ -7,23 +7,23 @@
 
 services:
 
-#  flask-server:
-#    # default port 5000
-#    build:
-#      context: ./
-#      dockerfile: Dockerfile
-#    container_name: api-flask-server
-#    depends_on:
-#      - database
-#      - nginx
-#    networks:
-#      - core-api
-#    ports:
-#      - "127.0.0.1:5000:5000"
-#    volumes:
-#      - ./logs/metrics:/code/logs/metrics
-#      - ./migrations:/code/migrations
-#    restart: unless-stopped
+  flask-server:
+    # default port 5000
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: api-flask-server
+    depends_on:
+      - database
+      - nginx
+    networks:
+      - core-api
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./logs/metrics:/code/logs/metrics
+      - ./migrations:/code/migrations
+    restart: unless-stopped
 
   database:
     # default port 5432

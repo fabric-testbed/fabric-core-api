@@ -42,7 +42,7 @@ v1.9.0 - database tables
 (34 rows)
 
 Changes from v1.9.0 --> v1.9.1
-- None
+- TODO: table projects: project_creator_id
 """
 
 import json
@@ -905,32 +905,34 @@ def dump_projects_data():
     - uuid = db.Column(db.String(), primary_key=False, nullable=False)
 
     Table "public.projects"
-          Column      |           Type           | Collation | Nullable |               Default
-    ------------------+--------------------------+-----------+----------+--------------------------------------
-     active           | boolean                  |           | not null |
-     co_cou_id_pc     | integer                  |           |          |
-     co_cou_id_pm     | integer                  |           |          |
-     co_cou_id_po     | integer                  |           |          |
-     co_cou_id_tk     | integer                  |           |          |
-     description      | text                     |           | not null |
-     expires_on       | timestamp with time zone |           |          |
-     facility         | character varying        |           | not null |
-     is_locked        | boolean                  |           | not null |
-     is_public        | boolean                  |           | not null |
-     name             | character varying        |           | not null |
-     project_lead_id  | integer                  |           |          |
-     project_type     | enumprojecttypes         |           | not null |
-     retired_date     | timestamp with time zone |           |          |
-     review_required  | boolean                  |           | not null |
-     uuid             | character varying        |           | not null |
-     id               | integer                  |           | not null | nextval('projects_id_seq'::regclass)
-     created          | timestamp with time zone |           | not null |
-     modified         | timestamp with time zone |           |          |
-     created_by_uuid  | character varying        |           |          |
-     modified_by_uuid | character varying        |           |          |
+           Column       |           Type           | Collation | Nullable |               Default
+    --------------------+--------------------------+-----------+----------+--------------------------------------
+     active             | boolean                  |           | not null |
+     co_cou_id_pc       | integer                  |           |          |
+     co_cou_id_pm       | integer                  |           |          |
+     co_cou_id_po       | integer                  |           |          |
+     co_cou_id_tk       | integer                  |           |          |
+     description        | text                     |           | not null |
+     expires_on         | timestamp with time zone |           |          |
+     facility           | character varying        |           | not null |
+     is_locked          | boolean                  |           | not null |
+     is_public          | boolean                  |           | not null |
+     name               | character varying        |           | not null |
+     project_lead_id    | integer                  |           |          |
+     project_type       | enumprojecttypes         |           | not null |
+     retired_date       | timestamp with time zone |           |          |
+     review_required    | boolean                  |           | not null |
+     uuid               | character varying        |           | not null |
+     id                 | integer                  |           | not null | nextval('projects_id_seq'::regclass)
+     created            | timestamp with time zone |           | not null |
+     modified           | timestamp with time zone |           |          |
+     created_by_uuid    | character varying        |           |          |
+     modified_by_uuid   | character varying        |           |          |
+     project_creator_id | integer                  |           |          |
     Indexes:
         "projects_pkey" PRIMARY KEY, btree (id)
     Foreign-key constraints:
+        "projects_project_creator_id_fkey" FOREIGN KEY (project_creator_id) REFERENCES people(id)
         "projects_project_lead_id_fkey" FOREIGN KEY (project_lead_id) REFERENCES people(id)
     """
     try:

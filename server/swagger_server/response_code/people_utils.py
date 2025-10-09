@@ -7,7 +7,7 @@ from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.core_api_metrics import EnumEvents, EnumEventTypes
 from swagger_server.database.models.people import FabricGroups, FabricPeople, FabricRoles, UserSubjectIdentifiers
-from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.projects import FabricProjects, EnumProjectTypes
 from swagger_server.response_code.comanage_utils import api, create_comanage_role, delete_comanage_role, \
     is_fabric_active_user, update_email_addresses, update_org_affiliation, update_people_identifiers, \
     update_people_roles, update_user_org_affiliations, update_user_subject_identities
@@ -411,7 +411,7 @@ def set_jupyterhub_role(fab_person: FabricPeople):
     in_a_project = False
     for project_uuid in project_uuid_list:
         fp = FabricProjects.query.filter_by(uuid=project_uuid).one_or_none()
-        if fp and fp.is_active():
+        if fp and fp.is_active() and fp.project_type.name is not EnumProjectTypes.service.name:
             in_a_project = True
             break
     # in_a_project = any([is_valid_uuid(r[:-3]) for r in roles])

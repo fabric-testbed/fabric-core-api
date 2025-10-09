@@ -98,7 +98,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_post(self):
         """Test case for projects_post
 
-        Create new Project
+        Create new Project as Project Admin
         """
         body = ProjectsPost()
         response = self.client.open(
@@ -164,7 +164,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_communities_patch(self):
         """Test case for projects_uuid_communities_patch
 
-        Update Project Communities as Project creator/owner
+        Update Project Communities as project owner
         """
         body = ProjectsCommunitiesPatch()
         response = self.client.open(
@@ -178,7 +178,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_delete(self):
         """Test case for projects_uuid_delete
 
-        Delete Project as owner
+        Retire (soft delete) Project as project owner
         """
         response = self.client.open(
             '/projects/{uuid}'.format(uuid='uuid_example'),
@@ -189,7 +189,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_expires_on_patch(self):
         """Test case for projects_uuid_expires_on_patch
 
-        Update Project expires on date as Facility Operator
+        Update Project expires on date as Project Admin
         """
         body = ProjectsExpiresOnPatch()
         response = self.client.open(
@@ -214,7 +214,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_patch(self):
         """Test case for projects_uuid_patch
 
-        Update Project details as owner
+        Update Project details as project owner
         """
         body = ProjectsPatch()
         response = self.client.open(
@@ -228,7 +228,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_personnel_patch(self):
         """Test case for projects_uuid_personnel_patch
 
-        Update Project personnel as owner
+        Update Project personnel as project owner
         """
         body = ProjectsPersonnelPatch()
         response = self.client.open(
@@ -242,7 +242,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_profile_patch(self):
         """Test case for projects_uuid_profile_patch
 
-        Update Project Profile details as owner
+        Update Project Profile details as project owner
         """
         body = ProfileProjects()
         response = self.client.open(
@@ -256,7 +256,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_project_creators_patch(self):
         """Test case for projects_uuid_project_creators_patch
 
-        Update Project Creators as facility-operator
+        Update Project Creators as Project Admin
         """
         body = ProjectsCreatorsPatch()
         query_string = [('operation', 'add')]
@@ -272,7 +272,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_project_funding_patch(self):
         """Test case for projects_uuid_project_funding_patch
 
-        Update Project Funding as Project creator/owner
+        Update Project Funding as project owner
         """
         body = ProjectsFundingPatch()
         response = self.client.open(
@@ -286,7 +286,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_project_lead_patch(self):
         """Test case for projects_uuid_project_lead_patch
 
-        Update Project Lead as Facility Operator
+        Update Project Lead as Project Admin
         """
         body = ProjectsProjectLeadPatch()
         response = self.client.open(
@@ -300,7 +300,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_project_members_patch(self):
         """Test case for projects_uuid_project_members_patch
 
-        Update Project Members as project creator or owner
+        Update Project Members as project owner
         """
         body = ProjectsMembersPatch()
         query_string = [('operation', 'add')]
@@ -316,7 +316,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_project_owners_patch(self):
         """Test case for projects_uuid_project_owners_patch
 
-        Update Project Owners as project creator or owner
+        Update Project Owners as project owner
         """
         body = ProjectsOwnersPatch()
         query_string = [('operation', 'add')]
@@ -332,7 +332,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_review_required_patch(self):
         """Test case for projects_uuid_review_required_patch
 
-        Update Project review status as Facility Operator
+        Update Project review status as Project Admin
         """
         body = ProjectsReviewRequiredPatch()
         response = self.client.open(
@@ -360,7 +360,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_token_holders_patch(self):
         """Test case for projects_uuid_token_holders_patch
 
-        Update Project Long-Lived Token Holders as facility-operator
+        Update Project Long-Lived Token Holders as Project Admin
         """
         body = ProjectsTokenHoldersPatch()
         query_string = [('operation', 'add')]
@@ -376,7 +376,7 @@ class TestProjectsController(BaseTestCase):
     def test_projects_uuid_topics_patch(self):
         """Test case for projects_uuid_topics_patch
 
-        Update Project Topics as Project creator/owner
+        Update Project Topics as project owner
         """
         body = ProjectsTopicsPatch()
         response = self.client.open(

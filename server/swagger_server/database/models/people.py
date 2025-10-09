@@ -103,6 +103,7 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     preferences = db.relationship('FabricPreferences', backref='people', lazy=True)
     preferred_email = db.Column(db.String(), nullable=False)
     profile = db.relationship('FabricProfilesPeople', backref='people', uselist=False, lazy=True)
+    project_lead_approved = db.Column(db.Boolean, nullable=False, default=False)
     receive_promotional_email = db.Column(db.Boolean, nullable=False, default=True)
     registered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     roles = db.relationship('FabricRoles', backref='people', lazy=True)
@@ -115,6 +116,9 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
     def is_active(self) -> bool:
         return self.active
 
+    def is_project_admin(self) -> bool:
+        return os.getenv('COU_NAME_PROJECT_ADMINS').casefold() in [r.name.casefold() for r in self.roles]
+    # TODO: project-leads role to be deprecated v1.10
     def is_project_lead(self) -> bool:
         return os.getenv('COU_NAME_PROJECT_LEADS').casefold() in [r.name.casefold() for r in self.roles]
 

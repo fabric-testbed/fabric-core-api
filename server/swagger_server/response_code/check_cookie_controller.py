@@ -10,9 +10,9 @@ from swagger_server.response_code.vouch_utils import vouch_get_custom_claims
 
 
 def check_cookie_get():  # noqa: E501
-    """Check Cookie
+    """Check FABRIC Service Cookie
 
-    Check Cookie # noqa: E501
+    Check FABRIC Service Cookie # noqa: E501
 
 
     :rtype: CheckCookie

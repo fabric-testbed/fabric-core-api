@@ -1,6 +1,6 @@
 """
-REV: v1.9.0
-v1.8.0 --> v1.9.0 - database tables
+REV: v1.9.1
+v1.9.0 --> v1.9.1 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -196,12 +196,9 @@ def projects_retire_after_365_days_expired():
         consoleLogger.error(exc)
 
 
-def backfill_core_api_projects():
+def backfill_core_api_project_creator():
     """
-    Generate core api events for existing projects
-
-    add_core_api_event(event, event_date, event_triggered_by, event_type,
-                       people_uuid, project_is_public, project_uuid):
+    Set project creator from project_creators table in preparation for removal of COU from COmanage
     """
     projects = FabricProjects.query.order_by(FabricProjects.created).all()
     for fp in projects:

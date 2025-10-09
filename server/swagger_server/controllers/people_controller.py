@@ -5,6 +5,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
+from swagger_server.models.people_project_lead_approved_patch import PeopleProjectLeadApprovedPatch  # noqa: E501
 from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
 from swagger_server.models.service_auth_details import ServiceAuthDetails  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
@@ -18,9 +19,9 @@ from swagger_server.response_code import people_controller as rc
 
 
 def people_get(search=None, exact_match=None, offset=None, limit=None):  # noqa: E501
-    """Search for FABRIC People
+    """Search for FABRIC People by email, name, or UUID
 
-    Search for FABRIC People by name or email # noqa: E501
+    Search for FABRIC People email, name, or UUID # noqa: E501
 
     :param search: search term applied
     :type search: str
@@ -148,3 +149,20 @@ def people_uuid_profile_patch(uuid, body=None):  # noqa: E501
     if connexion.request.is_json:
         body = ProfilePeople.from_dict(connexion.request.get_json())  # noqa: E501
     return rc.people_uuid_profile_patch(uuid, body)
+
+
+def people_uuid_project_lead_approved_patch(uuid, body=None):  # noqa: E501
+    """Update Project Lead Approved status as Project Admin
+
+    Update Project Lead Approved status as Project Admin # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Lead Approved as Project Admin
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    if connexion.request.is_json:
+        body = PeopleProjectLeadApprovedPatch.from_dict(connexion.request.get_json())  # noqa: E501
+    return rc.people_uuid_project_lead_approved_patch(uuid, body)

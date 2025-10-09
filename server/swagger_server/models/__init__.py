@@ -37,6 +37,7 @@ from swagger_server.models.people_details import PeopleDetails
 from swagger_server.models.people_one import PeopleOne
 from swagger_server.models.people_one_roles import PeopleOneRoles
 from swagger_server.models.people_patch import PeoplePatch
+from swagger_server.models.people_project_lead_approved_patch import PeopleProjectLeadApprovedPatch
 from swagger_server.models.person import Person
 from swagger_server.models.preferences import Preferences
 from swagger_server.models.profile_people import ProfilePeople

@@ -163,7 +163,7 @@ class ProjectsPatch(Model):
         :param project_type: The project_type of this ProjectsPatch.
         :type project_type: str
         """
-        allowed_values = ["educational", "industry", "maintenance", "research", "tutorial"]  # noqa: E501
+        allowed_values = ["educational", "industry", "maintenance", "research", "service", "tutorial"]  # noqa: E501
         if project_type not in allowed_values:
             raise ValueError(
                 "Invalid value for `project_type` ({0}), must be one of {1}"

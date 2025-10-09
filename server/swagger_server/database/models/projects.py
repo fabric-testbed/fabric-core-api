@@ -11,6 +11,7 @@ class EnumProjectTypes(enum.Enum):
     maintenance = 3
     research = 4
     tutorial = 5
+    service = 6
 
 
 projects_creators = db.Table('projects_creators',

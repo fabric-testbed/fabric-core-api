@@ -106,6 +106,7 @@ def init_task_timeout_tracker():
             ske.description = os.getenv('SKE_DESCRIPTION')
             ske.name = os.getenv('SKE_NAME')
             ske.timeout_in_seconds = os.getenv('SKE_TIMEOUT_IN_SECONDS')
+            ske.value = None
             db.session.commit()
         reset_serial_sequence(db_table='task_timeout_tracker', seq_value=4)
     except Exception as exc:

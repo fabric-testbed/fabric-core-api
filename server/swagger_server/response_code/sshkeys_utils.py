@@ -8,6 +8,7 @@ from swagger_server.api_logger import consoleLogger, metricsLogger
 from swagger_server.database.db import db
 from swagger_server.database.models.people import FabricPeople
 from swagger_server.database.models.sshkeys import EnumSshKeyStatus, EnumSshKeyTypes, FabricSshKeys
+from swagger_server.database.models.tasktracker import TaskTimeoutTracker
 from swagger_server.models.bastionkeys import BastionkeysOne
 from swagger_server.models.sshkey_pair import SshkeyPairResults
 from swagger_server.models.sshkeys_one import SshkeysOne
@@ -381,3 +382,8 @@ def ssh_key_expiry_check():
                 sshkey_uuid=sshkey_uuid,
                 people_uuid=people_uuid
             )
+    # update last_updated
+    ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).one_or_none()
+    if ske:
+        ske.last_updated = now
+        db.session.commit()

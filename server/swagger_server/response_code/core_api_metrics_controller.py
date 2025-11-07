@@ -322,6 +322,7 @@ def core_api_metrics_people_get():  # noqa: E501
         "results": [
             {
                 "active": true,
+                "bastion_login": "string",
                 "google_scholar": "string",
                 "last_updated": "2025-05-09T18:40:38.836Z",
                 "scopus": "string",
@@ -350,6 +351,7 @@ def core_api_metrics_people_get():  # noqa: E501
                         scopus = pr.identity
                 person = {
                     'active': bool(p.active),
+                    'bastion_login': p.bastion_login,
                     'google_scholar': google_scholar,
                     'last_updated': str(p.modified),
                     'scopus': scopus,

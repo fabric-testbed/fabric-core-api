@@ -4907,6 +4907,8 @@ components:
       properties:
         active:
           type: boolean
+        bastion_login:
+          type: string
         google_scholar:
           type: string
         last_updated:

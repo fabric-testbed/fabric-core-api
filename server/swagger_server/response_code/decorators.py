@@ -146,7 +146,7 @@ def get_token_revocation_list() -> [str]:
             token_revocation_list = api_call.json().get('data')
             trl.value = json.dumps(token_revocation_list)
             trl.last_updated = datetime.now(timezone.utc)
-            trl.save()
+            db.session.commit()
     except Exception as exc:
         print(exc)
         token_revocation_list = []

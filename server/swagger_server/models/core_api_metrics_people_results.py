@@ -14,11 +14,13 @@ class CoreApiMetricsPeopleResults(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, active: bool=None, google_scholar: str=None, last_updated: datetime=None, scopus: str=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=None, bastion_login: str=None, google_scholar: str=None, last_updated: datetime=None, scopus: str=None, uuid: str=None):  # noqa: E501
         """CoreApiMetricsPeopleResults - a model defined in Swagger
 
         :param active: The active of this CoreApiMetricsPeopleResults.  # noqa: E501
         :type active: bool
+        :param bastion_login: The bastion_login of this CoreApiMetricsPeopleResults.  # noqa: E501
+        :type bastion_login: str
         :param google_scholar: The google_scholar of this CoreApiMetricsPeopleResults.  # noqa: E501
         :type google_scholar: str
         :param last_updated: The last_updated of this CoreApiMetricsPeopleResults.  # noqa: E501
@@ -30,6 +32,7 @@ class CoreApiMetricsPeopleResults(Model):
         """
         self.swagger_types = {
             'active': bool,
+            'bastion_login': str,
             'google_scholar': str,
             'last_updated': datetime,
             'scopus': str,
@@ -38,12 +41,14 @@ class CoreApiMetricsPeopleResults(Model):
 
         self.attribute_map = {
             'active': 'active',
+            'bastion_login': 'bastion_login',
             'google_scholar': 'google_scholar',
             'last_updated': 'last_updated',
             'scopus': 'scopus',
             'uuid': 'uuid'
         }
         self._active = active
+        self._bastion_login = bastion_login
         self._google_scholar = google_scholar
         self._last_updated = last_updated
         self._scopus = scopus
@@ -80,6 +85,27 @@ class CoreApiMetricsPeopleResults(Model):
         """
 
         self._active = active
+
+    @property
+    def bastion_login(self) -> str:
+        """Gets the bastion_login of this CoreApiMetricsPeopleResults.
+
+
+        :return: The bastion_login of this CoreApiMetricsPeopleResults.
+        :rtype: str
+        """
+        return self._bastion_login
+
+    @bastion_login.setter
+    def bastion_login(self, bastion_login: str):
+        """Sets the bastion_login of this CoreApiMetricsPeopleResults.
+
+
+        :param bastion_login: The bastion_login of this CoreApiMetricsPeopleResults.
+        :type bastion_login: str
+        """
+
+        self._bastion_login = bastion_login
 
     @property
     def google_scholar(self) -> str:

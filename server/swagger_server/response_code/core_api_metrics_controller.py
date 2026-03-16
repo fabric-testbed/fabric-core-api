@@ -435,8 +435,8 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
             roles = sorted(roles, key=lambda d: (d.get('name')).casefold())
             person = {
                 'active': bool(fabric_person.active),
-                'affiliation': Organizations.query.filter_by(
-                    id=fabric_person.org_affiliation).one_or_none().organization,
+                'affiliation': getattr(Organizations.query.filter_by(
+                    id=fabric_person.org_affiliation).one_or_none(), 'organization', None),
                 'bastion_login': fabric_person.bastion_login,
                 'email': fabric_person.preferred_email,
                 'google_scholar': google_scholar,

@@ -440,7 +440,7 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
                 'bastion_login': fabric_person.bastion_login,
                 'email': fabric_person.preferred_email,
                 'google_scholar': google_scholar,
-                'last_updated': str(fabric_person.modified),
+                'last_updated': str(fabric_person.updated),
                 'name': fabric_person.display_name,
                 'registered_on': str(fabric_person.registered_on),
                 'roles': roles,

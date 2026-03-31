@@ -37,9 +37,9 @@ _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
 @login_or_token_required
 def people_get(search: str = None, exact_match: bool = False, offset: int = None,
                limit: int = None) -> People:  # noqa: E501
-    """Search for FABRIC People
+    """Search for FABRIC People by email, name, or UUID
 
-    Search for FABRIC People by name or email # noqa: E501
+    Search for FABRIC People email, name, or UUID # noqa: E501
 
     :param search: search term applied
     :type search: str
@@ -342,6 +342,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
             people_one.gecos = fab_person.gecos
             people_one.preferences = {p.key: p.value for p in fab_person.preferences}
             people_one.profile = get_profile_people(profile_people_id=fab_person.profile.id, as_self=True)
+            people_one.project_lead_approved = fab_person.project_lead_approved
             people_one.receive_promotional_email = fab_person.receive_promotional_email
             people_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)
             people_one.sshkeys = sshkeys_from_fab_person(fab_person=fab_person, is_self=True)
@@ -811,3 +812,18 @@ def people_uuid_profile_patch(uuid: str, body: ProfilePeople = None):  # noqa: E
         details = 'Oops! something went wrong with people_uuid_profile_patch(): {0}'.format(exc)
         consoleLogger.error(details)
         return cors_500(details=details)
+
+
+def people_uuid_project_lead_approved_patch(uuid, body=None):  # noqa: E501
+    """Update Project Lead Approved status as Project Admin
+
+    Update Project Lead Approved status as Project Admin # noqa: E501
+
+    :param uuid: universally unique identifier
+    :type uuid: str
+    :param body: Update Project Lead Approved as Project Admin
+    :type body: dict | bytes
+
+    :rtype: Status200OkNoContent
+    """
+    return "do some magic!"

@@ -322,6 +322,7 @@ def core_api_metrics_people_get():  # noqa: E501
         "results": [
             {
                 "active": true,
+                "bastion_login": "string",
                 "google_scholar": "string",
                 "last_updated": "2025-05-09T18:40:38.836Z",
                 "scopus": "string",
@@ -350,6 +351,7 @@ def core_api_metrics_people_get():  # noqa: E501
                         scopus = pr.identity
                 person = {
                     'active': bool(p.active),
+                    'bastion_login': p.bastion_login,
                     'google_scholar': google_scholar,
                     'last_updated': str(p.modified),
                     'scopus': scopus,
@@ -387,6 +389,7 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
             {
                 "active": true,
                 "affiliation": "string",
+                "bastion_login": "string",
                 "email": "string",
                 "google_scholar": "string",
                 "last_updated": "2025-05-09T20:03:24.290Z",
@@ -432,11 +435,12 @@ def core_api_metrics_people_details_uuid_get(uuid):  # noqa: E501
             roles = sorted(roles, key=lambda d: (d.get('name')).casefold())
             person = {
                 'active': bool(fabric_person.active),
-                'affiliation': Organizations.query.filter_by(
-                    id=fabric_person.org_affiliation).one_or_none().organization,
+                'affiliation': getattr(Organizations.query.filter_by(
+                    id=fabric_person.org_affiliation).one_or_none(), 'organization', None),
+                'bastion_login': fabric_person.bastion_login,
                 'email': fabric_person.preferred_email,
                 'google_scholar': google_scholar,
-                'last_updated': str(fabric_person.modified),
+                'last_updated': str(fabric_person.updated),
                 'name': fabric_person.display_name,
                 'registered_on': str(fabric_person.registered_on),
                 'roles': roles,

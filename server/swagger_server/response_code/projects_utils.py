@@ -70,6 +70,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     """
     # create Project
     now = datetime.now(timezone.utc)
+    project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
     fab_project = FabricProjects()
     fab_project.active = False
     fab_project.created = now
@@ -79,7 +80,7 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     fab_project.facility = os.getenv('CORE_API_DEFAULT_FACILITY')
     fab_project.is_locked = False
     fab_project.is_public = body.is_public
-    fab_project.project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
+    fab_project.project_lead = project_lead
     fab_project.modified = now
     fab_project.modified_by_uuid = str(project_creator.uuid)
     fab_project.name = body.name
@@ -142,6 +143,9 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
         project_uuid=project_uuid,
         people_uuid=people_uuid
     )
+    # set project_lead_approved status if not already set to true
+    project_lead.project_lead_approved = True
+    db.session.commit()
     # metrics log - Project was created:
     # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef create by usr:dead-beef-dead-beef
     log_msg = 'Project event prj:{0} create by usr:{1}'.format(str(fab_project.uuid), str(project_creator.uuid))
@@ -974,8 +978,8 @@ def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: Fabri
     bool | Any, Any | None]:
     """
     Determine whether project is editable by API user
-    - facility-operator - always True
-    - pc or po - True when project is not retired
+    - facility-operator or project-admin - always True
+    - po - True when project is not retired
     - others - False
     """
     message = None
@@ -984,9 +988,13 @@ def project_is_editable_by_api_user(fab_project: FabricProjects, api_user: Fabri
         can_edit = True
         consoleLogger.info('FACILITY_OPERATOR: {0} editing project {1}'.format(api_user.uuid, fab_project.uuid))
         return can_edit, message
+    # facility-operator can always edit a project
+    elif api_user.is_project_admin():
+        can_edit = True
+        consoleLogger.info('PROJECT_ADMIN: {0} editing project {1}'.format(api_user.uuid, fab_project.uuid))
+        return can_edit, message
     # project_creator and project_owner can edit active non-retired projects
-    elif api_user.is_project_creator(project_uuid=str(fab_project.uuid)) or api_user.is_project_owner(
-            project_uuid=str(fab_project.uuid)):
+    elif api_user.is_project_owner(project_uuid=str(fab_project.uuid)):
         can_edit = True
         # check if project has been retired
         if fab_project.retired_date:

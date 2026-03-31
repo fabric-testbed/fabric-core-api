@@ -241,9 +241,9 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
         if not is_anonymous:
             is_public_check = (
                     FabricProjects.is_public.is_(True) |
-                    FabricProjects.project_creators.any(FabricPeople.id == api_user.id) |
                     FabricProjects.project_owners.any(FabricPeople.id == api_user.id) |
                     FabricProjects.project_members.any(FabricPeople.id == api_user.id) |
+                    api_user.is_project_admin() |
                     api_user.is_facility_operator() |
                     api_user.is_facility_viewer()
             )
@@ -459,9 +459,9 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
 
 @login_required
 def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
-    """Create new Project
+    """Create new Project as Project Admin
 
-    Create new Project # noqa: E501
+    Create new Project as Project Admin # noqa: E501
 
     :param body: Create new Project
     :type body: dict | bytes
@@ -484,10 +484,10 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
         # get api_user
         api_user, id_source = get_person_by_login_claims()
         # check api_user active flag and verify project-leads role
-        if not api_user.active or not api_user.is_project_lead():
+        if not api_user.active or (not api_user.is_project_admin() and not api_user.is_facility_operator()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
-                    api_user.display_name, os.getenv('COU_NAME_PROJECT_LEADS')))
+                    api_user.display_name, os.getenv('COU_NAME_PROJECT_ADMINS')))
         # verify project_lead is a FABRIC user
         project_lead = FabricPeople.query.filter_by(uuid=body.project_lead).first()
         if not project_lead:
@@ -495,7 +495,7 @@ def projects_post(body: ProjectsPost = None) -> ProjectsDetails:  # noqa: E501
                 details='InvalidProjectLead: User with uuid={0} not found'.format(body.project_lead))
         # create Project
         fab_project = create_fabric_project_from_api(body=body, project_creator=api_user)
-        # NOTE: projects must be reviewed by a facility-operator prior to becoming active (v1.8.1)
+        # NOTE: projects must be reviewed by a facility-operator / project-admin prior to becoming active (v1.8.1)
         fab_project.active = False
         db.session.commit()
         # add event project_create
@@ -626,9 +626,9 @@ def projects_tags_get(search=None) -> ApiOptions:  # noqa: E501
 @login_required
 def projects_uuid_communities_patch(uuid: str,
                                     body: ProjectsCommunitiesPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Projects Communities as Project creator/owner
+    """Update Project Communities as project owner
 
-    Update Projects Communities as Project creator/owner # noqa: E501
+    Update Project Communities as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -683,9 +683,9 @@ def projects_uuid_communities_patch(uuid: str,
 
 @login_required
 def projects_uuid_delete(uuid: str):  # noqa: E501
-    """Delete Project as owner
+    """Retire (soft delete) Project as project owner
 
-    Delete Project as owner # noqa: E501
+    Retire (soft delete) Project as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -726,7 +726,7 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
                                )
             # TODO: notification email project_retire
             # send email - project_retire
-            to_email = fab_project.project_creators[0].preferred_email
+            to_email = fab_project.project_lead.preferred_email
             email_type = 'project_retire'
             people_uuid = str(api_user.uuid)
             project_uuid = str(fab_project.uuid)
@@ -806,9 +806,9 @@ def projects_uuid_delete(uuid: str):  # noqa: E501
 @login_required
 def projects_uuid_expires_on_patch(uuid: str,
                                    body: ProjectsExpiresOnPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project expires on date as Facility Operator
+    """Update Project expires on date as Project Admin
 
-    Update Project expires on date as Facility Operator # noqa: E501
+    Update Project expires on date as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -826,10 +826,10 @@ def projects_uuid_expires_on_patch(uuid: str,
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # verify active facility-operators role
-        if not api_user.active or not api_user.is_facility_operator():
+        if not api_user.active or (not api_user.is_facility_operator() and not api_user.is_project_admin()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
-                    api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
+                    api_user.display_name, os.getenv('COU_NAME_PROJECT_ADMINS')))
         # check for expires_on
         try:
             # validate expires_on
@@ -875,9 +875,9 @@ def projects_uuid_expires_on_patch(uuid: str,
 
 @login_required
 def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchProjectFunding = None):  # noqa: E501
-    """Update Project Funding as Project creator/owner
+    """Update Project Funding as project owner
 
-    Update Project Funding as Project creator/owner # noqa: E501
+    Update Project Funding as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -939,9 +939,9 @@ def projects_uuid_project_funding_patch(uuid: str, body: ProjectsFundingPatchPro
 
 
 def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
-    """Update Project Lead as Facility Operator
+    """Update Project Lead as Project Admin
 
-    Update Project Lead as Facility Operator # noqa: E501
+    Update Project Lead as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -959,7 +959,7 @@ def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # verify active facility-operators role
-        if not api_user.active or not api_user.is_facility_operator():
+        if not api_user.active or (not api_user.is_facility_operator() and not api_user.is_project_admin()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
@@ -1049,7 +1049,6 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
 
     :rtype: ProjectsDetails
     """
-    # TODO: active, retired_date, review_required
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
@@ -1095,7 +1094,7 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
             project_one.uuid = fab_project.uuid
             # set remaining attributes for project_creators, project_owners and project_members
             if project_one.memberships.is_creator or project_one.memberships.is_owner or project_one.memberships.is_member \
-                    or api_user.is_facility_operator() or api_user.is_facility_viewer():
+                    or api_user.is_facility_operator() or api_user.is_facility_viewer() or api_user.is_project_admin():
                 project_one.active = fab_project.active
                 project_one.modified = str(fab_project.modified)
                 project_one.preferences = {p.key: p.value for p in fab_project.preferences}
@@ -1162,9 +1161,9 @@ def projects_uuid_get(uuid: str) -> ProjectsDetails:  # noqa: E501
 
 @login_required
 def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project details as owner
+    """Update Project details as project owner
 
-    Update Project details as owner # noqa: E501
+    Update Project details as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -1285,13 +1284,13 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         # check for project type
         try:
             if len(body.project_type) != 0:
-                if body.project_type in [EnumProjectTypes.maintenance.name,
+                if body.project_type in [EnumProjectTypes.maintenance.name, EnumProjectTypes.service.name,
                                          EnumProjectTypes.industry.name] and not api_user.is_facility_operator():
                     details = 'Invalid project type: {0}, must be set by facility-operator'.format(body.project_type)
                     consoleLogger.error(details)
                     return cors_400(details=details)
                 else:
-                    fab_project.project_type = body.project_type
+                    fab_project.project_type = EnumProjectTypes[body.project_type]
                     db.session.commit()
                     consoleLogger.info('UPDATE: FabricProjects: uuid={0}, description={1}'.format(
                         fab_project.uuid, fab_project.description))
@@ -1326,9 +1325,9 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
 @login_required
 def projects_uuid_personnel_patch(uuid: str = None,
                                   body: ProjectsPersonnelPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project personnel as owner
+    """Update Project personnel as project owner
 
-    Update Project personnel as owner # noqa: E501
+    Update Project personnel as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -1398,9 +1397,9 @@ def projects_uuid_personnel_patch(uuid: str = None,
 
 @login_required
 def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noqa: E501
-    """Update Project Profile details as owner
+    """Update Project Profile details as project owner
 
-    Update Project Profile details as owner # noqa: E501
+    Update Project Profile details as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -1579,9 +1578,9 @@ def projects_uuid_profile_patch(uuid: str, body: ProfileProjects = None):  # noq
 @login_required
 def projects_uuid_project_creators_patch(operation: str = None, uuid: str = None,
                                          body: ProjectsCreatorsPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project Creators as facility-operator
+    """Update Project Creators as Project Admin
 
-    Update Project Creators as facility-operator # noqa: E501
+    Update Project Creators as Project Admin # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -1638,9 +1637,9 @@ def projects_uuid_project_creators_patch(operation: str = None, uuid: str = None
 @login_required
 def projects_uuid_project_members_patch(operation: str = None, uuid: str = None,
                                         body: ProjectsMembersPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project Members as project creator or owner
+    """Update Project Members as project owner
 
-    Update Project Members as project creator or owner # noqa: E501
+    Update Project Members as project owner # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -1697,9 +1696,9 @@ def projects_uuid_project_members_patch(operation: str = None, uuid: str = None,
 @login_required
 def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
                                        body: ProjectsOwnersPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project Owners as project creator or owner
+    """Update Project Owners as project owner
 
-    Update Project Owners as project creator or owner # noqa: E501
+    Update Project Owners as project owner # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -1754,9 +1753,9 @@ def projects_uuid_project_owners_patch(operation: str = None, uuid: str = None,
 
 
 def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
-    """Update Project review status as Facility Operator
+    """Update Project review status as Project Admin
 
-    Update Project review status as Facility Operator # noqa: E501
+    Update Project review status as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -1774,7 +1773,7 @@ def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # verify active facility-operators role
-        if not api_user.active or not api_user.is_facility_operator():
+        if not api_user.active or (not api_user.is_facility_operator() and not api_user.is_project_admin()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
@@ -1844,7 +1843,7 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # verify active facility-operators role
-        if not api_user.active or not api_user.is_facility_operator():
+        if not api_user.active or (not api_user.is_facility_operator() and not api_user.is_project_admin()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not in group '{1}'".format(
                     api_user.display_name, os.getenv('COU_NAME_FACILITY_OPERATORS')))
@@ -1884,9 +1883,9 @@ def projects_uuid_tags_patch(uuid: str, body: ProjectsTagsPatch = None) -> Statu
 @login_required
 def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
                                       body: ProjectsTokenHoldersPatch = None) -> Status200OkNoContent:  # noqa: E501
-    """Update Project Long-Lived Token Holders as facility-operator
+    """Update Project Long-Lived Token Holders as Project Admin
 
-    Update Project Long-Lived Token Holders as facility-operator # noqa: E501
+    Update Project Long-Lived Token Holders as Project Admin # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -1906,7 +1905,7 @@ def projects_uuid_token_holders_patch(operation: str = None, uuid: str = None,
         if not fab_project:
             return cors_404(details="No match for Project with uuid = '{0}'".format(uuid))
         # verify active facility-operator
-        if not api_user.active or not api_user.is_facility_operator():
+        if not api_user.active or (not api_user.is_facility_operator() and not api_user.is_project_admin()):
             return cors_403(
                 details="User: '{0}' is not registered as an active FABRIC user or not a facility operator".format(
                     api_user.display_name))
@@ -1950,7 +1949,9 @@ def projects_uuid_topics_patch(uuid: str,
                                body: ProjectsTopicsPatch = None) -> Status200OkNoContent:  # noqa: E501
     """
     NOTE: spaces between words in a single topic are replaced with dashes: " " --> "-"
-    Update Project Topics as Project creator/owner # noqa: E501
+    Update Project Topics as project owner
+
+    Update Project Topics as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str

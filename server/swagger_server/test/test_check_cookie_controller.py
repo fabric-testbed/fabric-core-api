@@ -16,7 +16,7 @@ class TestCheckCookieController(BaseTestCase):
     def test_check_cookie_get(self):
         """Test case for check_cookie_get
 
-        Check Cookie
+        Check FABRIC Service Cookie
         """
         response = self.client.open(
             '/check-cookie',

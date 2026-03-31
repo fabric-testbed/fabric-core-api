@@ -8,9 +8,9 @@ from swagger_server.response_code import check_cookie_controller as rc
 
 
 def check_cookie_get():  # noqa: E501
-    """Check Cookie
+    """Check FABRIC Service Cookie
 
-    Check Cookie # noqa: E501
+    Check FABRIC Service Cookie # noqa: E501
 
 
     :rtype: CheckCookie

@@ -17,9 +17,11 @@ class PeopleOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, gecos: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, receive_promotional_email: bool=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, user_sub_identities: List[str]=None, user_org_affiliations: List[str]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, active: bool=None, affiliation: str=None, bastion_login: str=None, cilogon_email: str=None, cilogon_family_name: str=None, cilogon_given_name: str=None, cilogon_id: str=None, cilogon_name: str=None, email: str=None, email_addresses: List[str]=None, eppn: str=None, fabric_id: str=None, gecos: str=None, name: str=None, preferences: Preferences=None, profile: ProfilePeople=None, project_lead_approved: bool=False, receive_promotional_email: bool=None, registered_on: str=None, roles: List[PeopleOneRoles]=None, sshkeys: List[object]=None, user_sub_identities: List[str]=None, user_org_affiliations: List[str]=None, uuid: str=None):  # noqa: E501
         """PeopleOne - a model defined in Swagger
 
+        :param active: The active of this PeopleOne.  # noqa: E501
+        :type active: bool
         :param affiliation: The affiliation of this PeopleOne.  # noqa: E501
         :type affiliation: str
         :param bastion_login: The bastion_login of this PeopleOne.  # noqa: E501
@@ -50,6 +52,8 @@ class PeopleOne(Model):
         :type preferences: Preferences
         :param profile: The profile of this PeopleOne.  # noqa: E501
         :type profile: ProfilePeople
+        :param project_lead_approved: The project_lead_approved of this PeopleOne.  # noqa: E501
+        :type project_lead_approved: bool
         :param receive_promotional_email: The receive_promotional_email of this PeopleOne.  # noqa: E501
         :type receive_promotional_email: bool
         :param registered_on: The registered_on of this PeopleOne.  # noqa: E501
@@ -66,6 +70,7 @@ class PeopleOne(Model):
         :type uuid: str
         """
         self.swagger_types = {
+            'active': bool,
             'affiliation': str,
             'bastion_login': str,
             'cilogon_email': str,
@@ -81,6 +86,7 @@ class PeopleOne(Model):
             'name': str,
             'preferences': Preferences,
             'profile': ProfilePeople,
+            'project_lead_approved': bool,
             'receive_promotional_email': bool,
             'registered_on': str,
             'roles': List[PeopleOneRoles],
@@ -91,6 +97,7 @@ class PeopleOne(Model):
         }
 
         self.attribute_map = {
+            'active': 'active',
             'affiliation': 'affiliation',
             'bastion_login': 'bastion_login',
             'cilogon_email': 'cilogon_email',
@@ -106,6 +113,7 @@ class PeopleOne(Model):
             'name': 'name',
             'preferences': 'preferences',
             'profile': 'profile',
+            'project_lead_approved': 'project_lead_approved',
             'receive_promotional_email': 'receive_promotional_email',
             'registered_on': 'registered_on',
             'roles': 'roles',
@@ -114,6 +122,7 @@ class PeopleOne(Model):
             'user_org_affiliations': 'user_org_affiliations',
             'uuid': 'uuid'
         }
+        self._active = active
         self._affiliation = affiliation
         self._bastion_login = bastion_login
         self._cilogon_email = cilogon_email
@@ -129,6 +138,7 @@ class PeopleOne(Model):
         self._name = name
         self._preferences = preferences
         self._profile = profile
+        self._project_lead_approved = project_lead_approved
         self._receive_promotional_email = receive_promotional_email
         self._registered_on = registered_on
         self._roles = roles
@@ -147,6 +157,27 @@ class PeopleOne(Model):
         :rtype: PeopleOne
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def active(self) -> bool:
+        """Gets the active of this PeopleOne.
+
+
+        :return: The active of this PeopleOne.
+        :rtype: bool
+        """
+        return self._active
+
+    @active.setter
+    def active(self, active: bool):
+        """Sets the active of this PeopleOne.
+
+
+        :param active: The active of this PeopleOne.
+        :type active: bool
+        """
+
+        self._active = active
 
     @property
     def affiliation(self) -> str:
@@ -466,6 +497,27 @@ class PeopleOne(Model):
         """
 
         self._profile = profile
+
+    @property
+    def project_lead_approved(self) -> bool:
+        """Gets the project_lead_approved of this PeopleOne.
+
+
+        :return: The project_lead_approved of this PeopleOne.
+        :rtype: bool
+        """
+        return self._project_lead_approved
+
+    @project_lead_approved.setter
+    def project_lead_approved(self, project_lead_approved: bool):
+        """Sets the project_lead_approved of this PeopleOne.
+
+
+        :param project_lead_approved: The project_lead_approved of this PeopleOne.
+        :type project_lead_approved: bool
+        """
+
+        self._project_lead_approved = project_lead_approved
 
     @property
     def receive_promotional_email(self) -> bool:

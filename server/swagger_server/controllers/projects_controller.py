@@ -97,9 +97,9 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
 
 
 def projects_post(body=None):  # noqa: E501
-    """Create new Project
+    """Create new Project as Project Admin
 
-    Create new Project # noqa: E501
+    Create new Project as Project Admin # noqa: E501
 
     :param body: Create new Project
     :type body: dict | bytes
@@ -164,9 +164,9 @@ def projects_tags_get(search=None):  # noqa: E501
 
 
 def projects_uuid_communities_patch(uuid, body=None):  # noqa: E501
-    """Update Project Communities as Project creator/owner
+    """Update Project Communities as project owner
 
-    Update Project Communities as Project creator/owner # noqa: E501
+    Update Project Communities as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -181,9 +181,9 @@ def projects_uuid_communities_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_delete(uuid):  # noqa: E501
-    """Delete Project as owner
+    """Retire (soft delete) Project as project owner
 
-    Delete Project as owner # noqa: E501
+    Retire (soft delete) Project as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -194,9 +194,9 @@ def projects_uuid_delete(uuid):  # noqa: E501
 
 
 def projects_uuid_expires_on_patch(uuid, body=None):  # noqa: E501
-    """Update Project expires on date as Facility Operator
+    """Update Project expires on date as Project Admin
 
-    Update Project expires on date as Facility Operator # noqa: E501
+    Update Project expires on date as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -224,9 +224,9 @@ def projects_uuid_get(uuid):  # noqa: E501
 
 
 def projects_uuid_patch(uuid, body=None):  # noqa: E501
-    """Update Project details as owner
+    """Update Project details as project owner
 
-    Update Project details as owner # noqa: E501
+    Update Project details as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -241,9 +241,9 @@ def projects_uuid_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_personnel_patch(uuid, body=None):  # noqa: E501
-    """Update Project personnel as owner
+    """Update Project personnel as project owner
 
-    Update Project personnel as owner # noqa: E501
+    Update Project personnel as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -258,9 +258,9 @@ def projects_uuid_personnel_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
-    """Update Project Profile details as owner
+    """Update Project Profile details as project owner
 
-    Update Project Profile details as owner # noqa: E501
+    Update Project Profile details as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -275,9 +275,9 @@ def projects_uuid_profile_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_project_creators_patch(operation, uuid, body=None):  # noqa: E501
-    """Update Project Creators as facility-operator
+    """Update Project Creators as Project Admin
 
-    Update Project Creators as facility-operator # noqa: E501
+    Update Project Creators as Project Admin # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -294,9 +294,9 @@ def projects_uuid_project_creators_patch(operation, uuid, body=None):  # noqa: E
 
 
 def projects_uuid_project_funding_patch(uuid, body=None):  # noqa: E501
-    """Update Project Funding as Project creator/owner
+    """Update Project Funding as project owner
 
-    Update Project Funding as Project creator/owner # noqa: E501
+    Update Project Funding as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -311,9 +311,9 @@ def projects_uuid_project_funding_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
-    """Update Project Lead as Facility Operator
+    """Update Project Lead as Project Admin
 
-    Update Project Lead as Facility Operator # noqa: E501
+    Update Project Lead as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -328,9 +328,9 @@ def projects_uuid_project_lead_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_project_members_patch(operation, uuid, body=None):  # noqa: E501
-    """Update Project Members as project creator or owner
+    """Update Project Members as project owner
 
-    Update Project Members as project creator or owner # noqa: E501
+    Update Project Members as project owner # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -347,9 +347,9 @@ def projects_uuid_project_members_patch(operation, uuid, body=None):  # noqa: E5
 
 
 def projects_uuid_project_owners_patch(operation, uuid, body=None):  # noqa: E501
-    """Update Project Owners as project creator or owner
+    """Update Project Owners as project owner
 
-    Update Project Owners as project creator or owner # noqa: E501
+    Update Project Owners as project owner # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -366,9 +366,9 @@ def projects_uuid_project_owners_patch(operation, uuid, body=None):  # noqa: E50
 
 
 def projects_uuid_review_required_patch(uuid, body=None):  # noqa: E501
-    """Update Project review status as Facility Operator
+    """Update Project review status as Project Admin
 
-    Update Project review status as Facility Operator # noqa: E501
+    Update Project review status as Project Admin # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str
@@ -400,9 +400,9 @@ def projects_uuid_tags_patch(uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_token_holders_patch(operation, uuid, body=None):  # noqa: E501
-    """Update Project Long-Lived Token Holders as facility-operator
+    """Update Project Long-Lived Token Holders as Project Admin
 
-    Update Project Long-Lived Token Holders as facility-operator # noqa: E501
+    Update Project Long-Lived Token Holders as Project Admin # noqa: E501
 
     :param operation: operation to be performed
     :type operation: str
@@ -419,9 +419,9 @@ def projects_uuid_token_holders_patch(operation, uuid, body=None):  # noqa: E501
 
 
 def projects_uuid_topics_patch(uuid, body=None):  # noqa: E501
-    """Update Project Topics as Project creator/owner
+    """Update Project Topics as project owner
 
-    Update Project Topics as Project creator/owner # noqa: E501
+    Update Project Topics as project owner # noqa: E501
 
     :param uuid: universally unique identifier
     :type uuid: str

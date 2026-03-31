@@ -322,8 +322,8 @@ paths:
     get:
       tags:
       - check-cookie
-      summary: Check Cookie
-      description: Check Cookie
+      summary: Check FABRIC Service Cookie
+      description: Check FABRIC Service Cookie
       operationId: check_cookie_get
       responses:
         "200":
@@ -643,8 +643,8 @@ paths:
     get:
       tags:
       - people
-      summary: Search for FABRIC People
-      description: Search for FABRIC People by name or email
+      summary: "Search for FABRIC People by email, name, or UUID"
+      description: "Search for FABRIC People email, name, or UUID"
       operationId: people_get
       parameters:
       - name: search
@@ -863,6 +863,62 @@ paths:
           type: string
       requestBody:
         $ref: "#/components/requestBodies/payload_people_profile_patch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_200_ok_no_content"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_400_bad_request"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_401_unauthorized"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_403_forbidden"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_404_not_found"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status_500_internal_server_error"
+      x-openapi-router-controller: swagger_server.controllers.people_controller
+  /people/{uuid}/project-lead-approved:
+    patch:
+      tags:
+      - people
+      summary: Update Project Lead Approved status as Project Admin
+      description: Update Project Lead Approved status as Project Admin
+      operationId: people_uuid_project_lead_approved_patch
+      parameters:
+      - name: uuid
+        in: path
+        description: universally unique identifier
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: "#/components/requestBodies/payload_project_lead_approved_patch"
       responses:
         "200":
           description: OK
@@ -1218,8 +1274,8 @@ paths:
     post:
       tags:
       - projects
-      summary: Create new Project
-      description: Create new Project
+      summary: Create new Project as Project Admin
+      description: Create new Project as Project Admin
       operationId: projects_post
       requestBody:
         $ref: "#/components/requestBodies/payload_projects_post"
@@ -1312,8 +1368,8 @@ paths:
     delete:
       tags:
       - projects
-      summary: Delete Project as owner
-      description: Delete Project as owner
+      summary: Retire (soft delete) Project as project owner
+      description: Retire (soft delete) Project as project owner
       operationId: projects_uuid_delete
       parameters:
       - name: uuid
@@ -1365,8 +1421,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project details as owner
-      description: Update Project details as owner
+      summary: Update Project details as project owner
+      description: Update Project details as project owner
       operationId: projects_uuid_patch
       parameters:
       - name: uuid
@@ -1427,8 +1483,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Communities as Project creator/owner
-      description: Update Project Communities as Project creator/owner
+      summary: Update Project Communities as project owner
+      description: Update Project Communities as project owner
       operationId: projects_uuid_communities_patch
       parameters:
       - name: uuid
@@ -1489,8 +1545,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Funding as Project creator/owner
-      description: Update Project Funding as Project creator/owner
+      summary: Update Project Funding as project owner
+      description: Update Project Funding as project owner
       operationId: projects_uuid_project_funding_patch
       parameters:
       - name: uuid
@@ -1551,8 +1607,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project expires on date as Facility Operator
-      description: Update Project expires on date as Facility Operator
+      summary: Update Project expires on date as Project Admin
+      description: Update Project expires on date as Project Admin
       operationId: projects_uuid_expires_on_patch
       parameters:
       - name: uuid
@@ -1607,8 +1663,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Profile details as owner
-      description: Update Project Profile details as owner
+      summary: Update Project Profile details as project owner
+      description: Update Project Profile details as project owner
       operationId: projects_uuid_profile_patch
       parameters:
       - name: uuid
@@ -1663,8 +1719,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project personnel as owner
-      description: Update Project personnel as owner
+      summary: Update Project personnel as project owner
+      description: Update Project personnel as project owner
       operationId: projects_uuid_personnel_patch
       parameters:
       - name: uuid
@@ -1725,8 +1781,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Creators as facility-operator
-      description: Update Project Creators as facility-operator
+      summary: Update Project Creators as Project Admin
+      description: Update Project Creators as Project Admin
       operationId: projects_uuid_project_creators_patch
       parameters:
       - name: uuid
@@ -1800,8 +1856,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Lead as Facility Operator
-      description: Update Project Lead as Facility Operator
+      summary: Update Project Lead as Project Admin
+      description: Update Project Lead as Project Admin
       operationId: projects_uuid_project_lead_patch
       parameters:
       - name: uuid
@@ -1856,8 +1912,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Members as project creator or owner
-      description: Update Project Members as project creator or owner
+      summary: Update Project Members as project owner
+      description: Update Project Members as project owner
       operationId: projects_uuid_project_members_patch
       parameters:
       - name: uuid
@@ -1931,8 +1987,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Owners as project creator or owner
-      description: Update Project Owners as project creator or owner
+      summary: Update Project Owners as project owner
+      description: Update Project Owners as project owner
       operationId: projects_uuid_project_owners_patch
       parameters:
       - name: uuid
@@ -2006,8 +2062,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project review status as Facility Operator
-      description: Update Project review status as Facility Operator
+      summary: Update Project review status as Project Admin
+      description: Update Project review status as Project Admin
       operationId: projects_uuid_review_required_patch
       parameters:
       - name: uuid
@@ -2124,8 +2180,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Long-Lived Token Holders as facility-operator
-      description: Update Project Long-Lived Token Holders as facility-operator
+      summary: Update Project Long-Lived Token Holders as Project Admin
+      description: Update Project Long-Lived Token Holders as Project Admin
       operationId: projects_uuid_token_holders_patch
       parameters:
       - name: uuid
@@ -2199,8 +2255,8 @@ paths:
     patch:
       tags:
       - projects
-      summary: Update Project Topics as Project creator/owner
-      description: Update Project Topics as Project creator/owner
+      summary: Update Project Topics as project owner
+      description: Update Project Topics as project owner
       operationId: projects_uuid_topics_patch
       parameters:
       - name: uuid
@@ -3819,6 +3875,8 @@ components:
       - uuid
       type: object
       properties:
+        active:
+          type: boolean
         affiliation:
           type: string
         bastion_login:
@@ -3851,6 +3909,9 @@ components:
           $ref: "#/components/schemas/preferences"
         profile:
           $ref: "#/components/schemas/profile_people"
+        project_lead_approved:
+          type: boolean
+          default: false
         receive_promotional_email:
           type: boolean
         registered_on:
@@ -4395,6 +4456,12 @@ components:
           $ref: "#/components/schemas/preferences"
         receive_promotional_email:
           type: boolean
+    people_project_lead_approved_patch:
+      type: object
+      properties:
+        project_lead_approved:
+          type: boolean
+          example: true
     projects_post:
       required:
       - description
@@ -4420,6 +4487,7 @@ components:
           - industry
           - maintenance
           - research
+          - service
           - tutorial
     projects_patch:
       type: object
@@ -4440,6 +4508,7 @@ components:
           - industry
           - maintenance
           - research
+          - service
           - tutorial
     projects_expires_on_patch:
       type: object
@@ -4838,6 +4907,8 @@ components:
       properties:
         active:
           type: boolean
+        bastion_login:
+          type: string
         google_scholar:
           type: string
         last_updated:
@@ -4853,6 +4924,8 @@ components:
         active:
           type: boolean
         affiliation:
+          type: string
+        bastion_login:
           type: string
         email:
           type: string
@@ -5475,6 +5548,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/profile_people"
+    payload_project_lead_approved_patch:
+      description: Update Project Lead Approved as Project Admin
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/people_project_lead_approved_patch"
     payload_projects_post:
       description: Create new Project
       content:

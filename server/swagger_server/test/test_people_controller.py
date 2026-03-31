@@ -9,6 +9,7 @@ from swagger_server.models.api_options import ApiOptions  # noqa: E501
 from swagger_server.models.people import People  # noqa: E501
 from swagger_server.models.people_details import PeopleDetails  # noqa: E501
 from swagger_server.models.people_patch import PeoplePatch  # noqa: E501
+from swagger_server.models.people_project_lead_approved_patch import PeopleProjectLeadApprovedPatch  # noqa: E501
 from swagger_server.models.profile_people import ProfilePeople  # noqa: E501
 from swagger_server.models.service_auth_details import ServiceAuthDetails  # noqa: E501
 from swagger_server.models.status200_ok_no_content import Status200OkNoContent  # noqa: E501
@@ -26,7 +27,7 @@ class TestPeopleController(BaseTestCase):
     def test_people_get(self):
         """Test case for people_get
 
-        Search for FABRIC People
+        Search for FABRIC People by email, name, or UUID
         """
         query_string = [('search', 'search_example'),
                         ('exact_match', false),
@@ -139,6 +140,20 @@ class TestPeopleController(BaseTestCase):
         body = ProfilePeople()
         response = self.client.open(
             '/people/{uuid}/profile'.format(uuid='uuid_example'),
+            method='PATCH',
+            data=json.dumps(body),
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_people_uuid_project_lead_approved_patch(self):
+        """Test case for people_uuid_project_lead_approved_patch
+
+        Update Project Lead Approved status as Project Admin
+        """
+        body = PeopleProjectLeadApprovedPatch()
+        response = self.client.open(
+            '/people/{uuid}/project-lead-approved'.format(uuid='uuid_example'),
             method='PATCH',
             data=json.dumps(body),
             content_type='application/json')

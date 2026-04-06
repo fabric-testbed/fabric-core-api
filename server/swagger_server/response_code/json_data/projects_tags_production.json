@@ -124,6 +124,7 @@
     "Net.FacilityPort.UCSD-HU4-wk3-pci6-p1": "UCSD-HU4-wk3-pci6-p1",
     "Net.FacilityPort.UCSD-HU6-wk3-pci6-p2": "UCSD-HU6-wk3-pci6-p2",
     "Net.FacilityPort.Ultrasound-Clemson": "Ultrasound-Clemson Production",
-    "Net.FacilityPort.Utah-Cloudlab-Powder": "Utah-Cloudlab-Powder Production"
+    "Net.FacilityPort.Utah-Cloudlab-Powder": "Utah-Cloudlab-Powder Production",
+    "Net.FacilityPort.Spectrum-Syracuse-NEWY": "Spectrum-Syracuse-NEWY"
   }
 }

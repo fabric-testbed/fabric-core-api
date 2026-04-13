@@ -21,6 +21,13 @@
 
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# Backup format version — increment when the archive layout changes
+# ---------------------------------------------------------------------------
+# 1.0.0  2026-04-12  Initial format
+# 1.1.0  2026-04-13  Added VERSION.json with machine-readable version metadata
+BACKUP_FORMAT_VERSION="1.1.0"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="${1:-${SCRIPT_DIR}/full-backup-${TIMESTAMP}}"
@@ -31,6 +38,30 @@ BACKUP_DIR="${1:-${SCRIPT_DIR}/full-backup-${TIMESTAMP}}"
 
 log()  { echo "[backup] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
 warn() { echo "[backup] WARNING: $*" >&2; }
+
+# Detect the API version from the source tree. The canonical location is
+# server/swagger_server/__init__.py but this may move in future revisions.
+# Falls back to searching common locations, then to "unknown".
+detect_api_version() {
+    local version="unknown"
+    local candidates=(
+        "${SCRIPT_DIR}/server/swagger_server/__init__.py"
+        "${SCRIPT_DIR}/server/swagger_server/version.py"
+        "${SCRIPT_DIR}/server/version.py"
+        "${SCRIPT_DIR}/version.py"
+    )
+    for f in "${candidates[@]}"; do
+        if [[ -f "$f" ]]; then
+            local match
+            match=$(grep -oP "__API_VERSION__\s*=\s*['\"]([^'\"]+)['\"]" "$f" 2>/dev/null | head -1) || true
+            if [[ -n "$match" ]]; then
+                version=$(echo "$match" | grep -oP "['\"][^'\"]+['\"]" | tr -d "'\"")
+                break
+            fi
+        fi
+    done
+    echo "$version"
+}
 
 require_var() {
     local var_name="$1"
@@ -247,20 +278,45 @@ fi
 # 11. Capture metadata
 # ---------------------------------------------------------------------------
 
-log "Writing backup manifest..."
+API_VERSION="$(detect_api_version)"
+GIT_BRANCH="$(git -C "${SCRIPT_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
+GIT_COMMIT="$(git -C "${SCRIPT_DIR}" rev-parse HEAD 2>/dev/null || echo "unknown")"
+CREATED_UTC="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+log "Detected API version: ${API_VERSION}"
+
+# Machine-readable version metadata (consumed by full-restore.sh)
+log "Writing VERSION.json..."
+cat > "${BACKUP_DIR}/VERSION.json" <<VERSIONJSON
+{
+    "backup_format_version": "${BACKUP_FORMAT_VERSION}",
+    "api_version": "${API_VERSION}",
+    "created": "${CREATED_UTC}",
+    "hostname": "$(hostname)",
+    "git_branch": "${GIT_BRANCH}",
+    "git_commit": "${GIT_COMMIT}",
+    "postgres_db": "${POSTGRES_DB}",
+    "postgres_server": "${POSTGRES_SERVER}:${POSTGRES_PORT}"
+}
+VERSIONJSON
+
+# Human-readable manifest
+log "Writing MANIFEST.txt..."
 cat > "${BACKUP_DIR}/MANIFEST.txt" <<MANIFEST
 fabric-core-api Full Backup
 ============================
-Created:    $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-Hostname:   $(hostname)
-Git branch: $(git -C "${SCRIPT_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-Git commit: $(git -C "${SCRIPT_DIR}" rev-parse HEAD 2>/dev/null || echo "unknown")
-API version: $(grep -oP "__API_VERSION__\s*=\s*'[^']+'" "${SCRIPT_DIR}/server/swagger_server/__init__.py" 2>/dev/null || echo "unknown")
-DB server:  ${POSTGRES_SERVER}:${POSTGRES_PORT}
-DB name:    ${POSTGRES_DB}
+Backup format: ${BACKUP_FORMAT_VERSION}
+API version:   ${API_VERSION}
+Created:       ${CREATED_UTC}
+Hostname:      $(hostname)
+Git branch:    ${GIT_BRANCH}
+Git commit:    ${GIT_COMMIT}
+DB server:     ${POSTGRES_SERVER}:${POSTGRES_PORT}
+DB name:       ${POSTGRES_DB}
 
 Contents
 --------
+VERSION.json    Machine-readable version metadata
 database/       PostgreSQL dump (custom + plain SQL formats)
 json-export/    Per-table JSON exports from db_export.py
 config/         .env, env.template, docker-compose files, uWSGI config

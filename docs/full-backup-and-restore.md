@@ -15,10 +15,68 @@ Two scripts work together to capture and restore the full application state:
 
 These scripts complement the existing table-level JSON export/import tools in `server/swagger_server/backup/utils/` by adding everything else needed for a complete migration.
 
+## Versioning
+
+Both scripts carry version information to ensure backwards compatibility as the application and backup format evolve.
+
+### Backup format version
+
+Each backup archive includes a `VERSION.json` file with machine-readable metadata:
+
+```json
+{
+    "backup_format_version": "1.1.0",
+    "api_version": "1.9.0",
+    "created": "2026-04-13T14:30:00Z",
+    "hostname": "alpha-6.fabric-testbed.net",
+    "git_branch": "develop",
+    "git_commit": "ab35789...",
+    "postgres_db": "postgres",
+    "postgres_server": "database:5432"
+}
+```
+
+The `backup_format_version` tracks the archive layout itself (directory structure, which files are present). The `api_version` tracks the fabric-core-api application version the data was exported from.
+
+| Format Version | Date | Changes |
+|---|---|---|
+| `1.0.0` | 2026-04-12 | Initial format — `MANIFEST.txt` only, no `VERSION.json` |
+| `1.1.0` | 2026-04-13 | Added `VERSION.json` with machine-readable version metadata |
+
+When the archive layout changes (new directories, renamed files, changed dump format), increment the backup format version and update `RESTORE_SUPPORTED_FORMATS` in `full-restore.sh`.
+
+### API version detection
+
+The API version is read from `__API_VERSION__` in the source tree. Both scripts search these locations in order, stopping at the first match:
+
+1. `server/swagger_server/__init__.py` (current location)
+2. `server/swagger_server/version.py`
+3. `server/version.py`
+4. `version.py`
+
+If `__API_VERSION__` moves to a new file in a future revision, add the new path to the `detect_api_version()` function in both scripts.
+
+### Version checks during restore
+
+When `full-restore.sh` runs, it:
+
+1. **Reads `VERSION.json`** from the backup (falls back to parsing `MANIFEST.txt` for pre-1.1.0 backups)
+2. **Validates the backup format version** against `RESTORE_SUPPORTED_FORMATS` — refuses to restore if the format is unrecognized
+3. **Compares the backup API version** with the local codebase — warns if they differ and suggests running migrations:
+   ```
+   WARNING: API version mismatch: backup=1.8.0, local codebase=1.9.0
+   WARNING: You may need to run database migrations or version update scripts after restore:
+              python -m flask db upgrade
+              python -m server.swagger_server.backup.utils.db_version_updates
+   ```
+
+This means a backup from API version 1.8.0 can be restored into a 1.9.0 codebase — the restore proceeds with a warning, and the operator runs migrations afterward.
+
 ## What Gets Backed Up
 
 | Component | Directory in Archive | Description |
 |---|---|---|
+| Version metadata | `VERSION.json` | Machine-readable backup format version, API version, git commit, timestamps |
 | PostgreSQL dump | `database/` | Full `pg_dump` in both custom (`.dump`) and plain SQL (`.sql`) formats — includes schema, data, sequences, indexes, and constraints |
 | JSON table exports | `json-export/` | Per-table JSON files from `db_export.py` (34 tables) — human-readable fallback |
 | Environment variables | `config/dot-env` | Production `.env` with all secrets and configuration |
@@ -30,7 +88,7 @@ These scripts complement the existing table-level JSON export/import tools in `s
 | Nginx config | `nginx/` | Reverse proxy, TLS termination, and auth\_request rules |
 | Alembic migrations | `migrations/` | Database migration history and version state |
 | Application logs | `logs/` | Metrics and audit logs (optional, may be large) |
-| Manifest | `MANIFEST.txt` | Timestamp, git commit, API version, and restore instructions |
+| Manifest | `MANIFEST.txt` | Human-readable summary with restore instructions |
 
 ## Prerequisites
 
@@ -268,6 +326,165 @@ docker-compose up -d flask-server
 # Verify
 curl -k https://localhost:8443/ui/
 ```
+
+---
+
+## Walkthrough: Restore to a Fresh Clone (Docker)
+
+This section documents a tested end-to-end restore from a backup archive (`full-backup-20260412-203800.tar.gz` captured from `alpha-6.fabric-testbed.net`) into a fresh `git clone` of the repository, deploying entirely in Docker at `127.0.0.1:8443`.
+
+### Starting point
+
+- A fresh `git clone` of `fabric-core-api` — no `.env`, no database, no prior state
+- The backup `.tar.gz` placed in the repo root
+- Docker Desktop running
+
+### Step 1: Extract the backup and restore config files
+
+```bash
+cd /path/to/fabric-core-api
+tar -xzf full-backup-20260412-203800.tar.gz
+```
+
+Copy config files from the extracted backup into place. The Dockerfile copies `.env` into the image at build time, so `.env` **must** exist and be correct before `docker compose build`:
+
+```bash
+cp full-backup-20260412-203800/config/dot-env .env
+cp full-backup-20260412-203800/nginx/default.conf nginx/default.conf
+cp full-backup-20260412-203800/vouch/config vouch/config
+cp -a full-backup-20260412-203800/migrations/ migrations/
+```
+
+> **Note:** `full-restore.sh --skip-db` can do this for you interactively, but for a fresh clone with no existing files, manual copy is straightforward.
+
+### Step 2: Generate self-signed SSL certificates
+
+The backup contains SSL certificates issued for the source domain (e.g., `fabric-testbed.net`). These won't work for `127.0.0.1`. Generate a self-signed certificate:
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout ssl/privkey.pem \
+  -out ssl/fullchain.pem \
+  -subj "/CN=127.0.0.1" \
+  -addext "subjectAltName=IP:127.0.0.1"
+```
+
+### Step 3: Update configuration for the new host
+
+All three config files contain host-specific values from the source VM. The table below shows every change needed when moving from a production domain to `127.0.0.1:8443`:
+
+#### `.env`
+
+| Variable | Source value | Local value |
+|---|---|---|
+| `CORE_API_SERVER_URL` | `https://alpha-6.fabric-testbed.net` | `https://127.0.0.1:8443` |
+| `NGINX_ACCESS_CONTROL_ALLOW_ORIGIN` | `https://alpha-4.fabric-testbed.net` | `https://127.0.0.1:8443` |
+| `FABRIC_CORE_API` | `https://alpha-6.fabric-testbed.net` | `https://127.0.0.1:8443` |
+
+Leave `POSTGRES_SERVER=database` as-is for Docker deployment (this is the compose service name).
+
+#### `nginx/default.conf`
+
+| Setting | Source value | Local value |
+|---|---|---|
+| `ssl_certificate` | `/etc/ssl/alphabeta_fabric-testbed_net.pem` | `/etc/ssl/fullchain.pem` |
+| `ssl_certificate_key` | `/etc/ssl/fabric-alpha-beta.key` | `/etc/ssl/privkey.pem` |
+| HTTP->HTTPS redirect | `return 301 https://$host$request_uri` | `return 301 https://$host:8443$request_uri` |
+| CORS `Access-Control-Allow-Origin` | `https://alpha-4.fabric-testbed.net` | `https://127.0.0.1:8443` |
+
+The `proxy_pass http://flask-server:6000/` line should remain as-is for Docker deployment.
+
+#### `vouch/config`
+
+| Setting | Source value | Local value |
+|---|---|---|
+| `vouch.post_logout_redirect_uris` | `https://alpha-6.fabric-testbed.net/ui/#` | `https://127.0.0.1:8443/ui/#` |
+| `vouch.cookie.domain` | `fabric-testbed.net` | `127.0.0.1` |
+| `oauth.callback_url` | `https://alpha-6.fabric-testbed.net/auth` | `https://127.0.0.1:8443/auth` |
+
+### Step 4: Start the database and restore data
+
+```bash
+source .env
+docker compose up -d database
+
+# Wait for PostgreSQL to accept connections
+sleep 5
+docker exec api-database pg_isready -U postgres
+```
+
+Restore the database using the dump file inside the extracted backup:
+
+```bash
+docker exec -i -e PGPASSWORD="${POSTGRES_PASSWORD}" api-database \
+  pg_restore -U postgres -d postgres --clean --if-exists --no-owner --no-privileges \
+  < full-backup-20260412-203800/database/postgres-20260412-203800.dump
+```
+
+Verify the restore:
+
+```bash
+docker exec -e PGPASSWORD="${POSTGRES_PASSWORD}" api-database \
+  psql -U postgres -d postgres -c "\dt"
+```
+
+Expected: all 34 tables listed.
+
+### Step 5: Start all services
+
+```bash
+docker compose up -d nginx vouch-proxy
+docker compose build flask-server   # builds image with .env baked in
+docker compose up -d flask-server
+```
+
+The Flask container takes 1-2 minutes on first start — it creates a virtualenv, installs `requirements.txt`, and launches uWSGI (8 workers x 8 threads). Monitor progress with:
+
+```bash
+docker logs -f api-flask-server
+```
+
+Wait until you see:
+
+```
+WSGI app 0 (mountpoint='') ready in N seconds on interpreter ... (default app)
+spawned uWSGI worker 1 ...
+```
+
+### Step 6: Verify
+
+```bash
+# All containers healthy
+docker ps --filter "name=api-"
+
+# Swagger UI
+curl -sk https://127.0.0.1:8443/ui/ | head -5
+
+# API version
+curl -sk https://127.0.0.1:8443/version
+
+# Public endpoint (no auth required)
+curl -sk 'https://127.0.0.1:8443/projects?search=test' | python3 -m json.tool | head -20
+
+# Auth-protected endpoint (should return 401)
+curl -sk 'https://127.0.0.1:8443/people?search=fabric'
+```
+
+Expected results:
+- `/ui/` — returns Swagger UI HTML (HTTP 200)
+- `/version` — returns `{"version": "1.9.0"}` with correct API reference
+- `/projects` — returns project data with pagination links rewritten to `127.0.0.1:8443`
+- `/people` — returns HTTP 401 ("Login or Valid Token required"), confirming Vouch-Proxy auth gate works
+
+### Known limitations of a local deployment
+
+| Area | Limitation | Workaround |
+|---|---|---|
+| **OIDC login** | CILogon callback URL is registered to the source domain — login redirects back to the source, not `127.0.0.1` | Register a new CILogon OIDC client with `https://127.0.0.1:8443/auth` as the callback URL, and update `vouch/config` with the new `client_id` |
+| **COmanage API** | Credentials in `.env` point to the source tier's COmanage registry; sync operations will hit the real registry | Acceptable for read-only testing; for isolation, disable COmanage-dependent features or point to a test registry |
+| **SMTP** | Email settings point to the source mail server | Change `SMTP_SERVER` in `.env` to a local mail sink (e.g., [MailHog](https://github.com/mailhog/MailHog)) or disable email features |
+| **Self-signed cert** | Browsers show security warnings; API clients need `-k` / `verify=False` | Expected for local development; use a real cert or add the self-signed cert to your trust store |
+| **First startup time** | Flask container installs dependencies on every fresh start (~1-2 minutes) | Normal — the virtualenv is created inside the container at runtime per `docker-entrypoint.sh` |
 
 ---
 

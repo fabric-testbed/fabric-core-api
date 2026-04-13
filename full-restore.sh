@@ -21,7 +21,39 @@
 
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# Supported backup format versions — update when format changes
+# ---------------------------------------------------------------------------
+# This restore script can handle these backup format versions:
+#   1.0.0  Initial format (no VERSION.json, MANIFEST.txt only)
+#   1.1.0  Added VERSION.json with machine-readable version metadata
+RESTORE_SUPPORTED_FORMATS=("1.0.0" "1.1.0")
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Detect the API version from the local source tree. Same search order as
+# full-backup.sh — the canonical location is server/swagger_server/__init__.py
+# but may move in future revisions.
+detect_api_version() {
+    local version="unknown"
+    local candidates=(
+        "${SCRIPT_DIR}/server/swagger_server/__init__.py"
+        "${SCRIPT_DIR}/server/swagger_server/version.py"
+        "${SCRIPT_DIR}/server/version.py"
+        "${SCRIPT_DIR}/version.py"
+    )
+    for f in "${candidates[@]}"; do
+        if [[ -f "$f" ]]; then
+            local match
+            match=$(grep -oP "__API_VERSION__\s*=\s*['\"]([^'\"]+)['\"]" "$f" 2>/dev/null | head -1) || true
+            if [[ -n "$match" ]]; then
+                version=$(echo "$match" | grep -oP "['\"][^'\"]+['\"]" | tr -d "'\"")
+                break
+            fi
+        fi
+    done
+    echo "$version"
+}
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -98,16 +130,62 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Validate backup contents
+# Validate backup contents and version compatibility
 # ---------------------------------------------------------------------------
 
-if [[ ! -f "${BACKUP_DIR}/MANIFEST.txt" ]]; then
-    warn "No MANIFEST.txt found — this may not be a valid full-backup archive."
+BACKUP_FORMAT_VERSION="unknown"
+BACKUP_API_VERSION="unknown"
+
+if [[ -f "${BACKUP_DIR}/VERSION.json" ]]; then
+    # Parse VERSION.json (no jq dependency — use grep/sed)
+    BACKUP_FORMAT_VERSION=$(grep -oP '"backup_format_version"\s*:\s*"[^"]+"' "${BACKUP_DIR}/VERSION.json" | grep -oP '"[^"]+"\s*$' | tr -d '"' || echo "unknown")
+    BACKUP_API_VERSION=$(grep -oP '"api_version"\s*:\s*"[^"]+"' "${BACKUP_DIR}/VERSION.json" | grep -oP '"[^"]+"\s*$' | tr -d '"' || echo "unknown")
+elif [[ -f "${BACKUP_DIR}/MANIFEST.txt" ]]; then
+    # Pre-1.1.0 backup — no VERSION.json, infer from MANIFEST.txt
+    BACKUP_FORMAT_VERSION="1.0.0"
+    BACKUP_API_VERSION=$(grep -oP "API version:\s*.*?'([^']+)'" "${BACKUP_DIR}/MANIFEST.txt" | grep -oP "'[^']+'" | tr -d "'" || echo "unknown")
+    if [[ "${BACKUP_API_VERSION}" == "unknown" ]]; then
+        BACKUP_API_VERSION=$(grep -oP "API version:\s*(\S+)" "${BACKUP_DIR}/MANIFEST.txt" | awk '{print $NF}' || echo "unknown")
+    fi
+else
+    warn "No VERSION.json or MANIFEST.txt found — this may not be a valid full-backup archive."
 fi
 
-log "Backup manifest:"
+# Check format version compatibility
+FORMAT_SUPPORTED=false
+for supported in "${RESTORE_SUPPORTED_FORMATS[@]}"; do
+    if [[ "${BACKUP_FORMAT_VERSION}" == "${supported}" ]]; then
+        FORMAT_SUPPORTED=true
+        break
+    fi
+done
+
+if [[ "${FORMAT_SUPPORTED}" == "false" && "${BACKUP_FORMAT_VERSION}" != "unknown" ]]; then
+    echo "ERROR: Backup format version '${BACKUP_FORMAT_VERSION}' is not supported by this restore script." >&2
+    echo "       Supported formats: ${RESTORE_SUPPORTED_FORMATS[*]}" >&2
+    echo "       Update full-restore.sh to a version that supports this backup format." >&2
+    exit 1
+fi
+
+# Compare backup API version with local codebase
+LOCAL_API_VERSION="$(detect_api_version)"
+if [[ "${BACKUP_API_VERSION}" != "unknown" && "${LOCAL_API_VERSION}" != "unknown" ]]; then
+    if [[ "${BACKUP_API_VERSION}" != "${LOCAL_API_VERSION}" ]]; then
+        warn "API version mismatch: backup=${BACKUP_API_VERSION}, local codebase=${LOCAL_API_VERSION}"
+        warn "The backup was created with a different API version than the code you are restoring into."
+        warn "You may need to run database migrations or version update scripts after restore:"
+        warn "  python -m flask db upgrade"
+        warn "  python -m server.swagger_server.backup.utils.db_version_updates"
+    fi
+fi
+
+log "Backup format version: ${BACKUP_FORMAT_VERSION}"
+log "Backup API version:    ${BACKUP_API_VERSION}"
+log "Local API version:     ${LOCAL_API_VERSION}"
+
 if [[ -f "${BACKUP_DIR}/MANIFEST.txt" ]]; then
-    head -8 "${BACKUP_DIR}/MANIFEST.txt" | sed 's/^/  /'
+    log "Backup manifest:"
+    head -10 "${BACKUP_DIR}/MANIFEST.txt" | sed 's/^/  /'
 fi
 echo ""
 

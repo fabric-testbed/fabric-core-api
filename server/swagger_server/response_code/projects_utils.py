@@ -91,10 +91,8 @@ def create_fabric_project_from_api(body: ProjectsPost, project_creator: FabricPe
     db.session.add(fab_project)
     db.session.commit()
     # create COU groups
-    # COU project creators
-    fab_project.co_cou_id_pc = create_comanage_group(
-        name=str(fab_project.uuid) + '-pc', description=fab_project.name,
-        parent_cou_id=int(os.getenv('COU_ID_PROJECTS')))
+    # project creators - decoupled from COmanage in v1.10.0
+    # creator membership tracked via projects_creators junction table only
     # COU project members
     fab_project.co_cou_id_pm = create_comanage_group(
         name=str(fab_project.uuid) + '-pm', description=fab_project.name,
@@ -404,8 +402,9 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
     # get list of token holders to add/batch/remove
     personnel = list(set(personnel))
     # get FabricGroup information
+    # creators decoupled from COmanage in v1.10.0 — no COU group needed
     if personnel_type == 'creators':
-        fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-pc').one_or_none()
+        fab_group = None
     elif personnel_type == 'members':
         fab_group = FabricGroups.query.filter_by(name=str(fab_project.uuid) + '-pm').one_or_none()
     elif personnel_type == 'owners':
@@ -415,7 +414,7 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
         fab_group = None
     # add
     if operation == 'add':
-        if fab_group:
+        if fab_group or personnel_type == 'creators':
             # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     # batch
@@ -431,14 +430,14 @@ def update_projects_personnel(api_user: FabricPeople = None, fab_project: Fabric
             p_orig = []
         p_add = array_difference(personnel, p_orig)
         p_remove = array_difference(p_orig, personnel)
-        if fab_group:
+        if fab_group or personnel_type == 'creators':
             # add project creators / members / owners
             add_project_personnel(api_user, fab_project, fab_group, p_add, personnel_type)
             # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, p_remove, personnel_type)
     # remove
     elif operation == 'remove':
-        if fab_group:
+        if fab_group or personnel_type == 'creators':
             # remove project creators / members / owners
             remove_project_personnel(api_user, fab_project, fab_group, personnel, personnel_type)
     else:
@@ -451,7 +450,7 @@ def add_project_personnel(api_user: FabricPeople, fab_project: FabricProjects, f
     for uuid in personnel:
         p = FabricPeople.query.filter_by(uuid=uuid).one_or_none()
         if personnel_type == 'creators' and not p.is_project_creator(project_uuid=fab_project.uuid):
-            create_comanage_role(fab_person=p, fab_group=fab_group)
+            # creators decoupled from COmanage in v1.10.0 — junction table only
             fab_project.project_creators.append(p)
             db.session.commit()
             p_added = True
@@ -549,15 +548,16 @@ def remove_project_personnel(api_user: FabricPeople, fab_project: FabricProjects
     # remove personnel
     for uuid in personnel:
         p = FabricPeople.query.filter_by(uuid=uuid).one_or_none()
-        co_person_role = FabricRoles.query.filter(
-            FabricRoles.co_person_id == p.co_person_id,
-            FabricRoles.co_cou_id == fab_group.co_cou_id,
-            FabricRoles.name == fab_group.name,
-            FabricRoles.people_id == p.id
-        ).one_or_none()
+        # creators decoupled from COmanage in v1.10.0 — no role lookup needed
+        if personnel_type != 'creators':
+            co_person_role = FabricRoles.query.filter(
+                FabricRoles.co_person_id == p.co_person_id,
+                FabricRoles.co_cou_id == fab_group.co_cou_id,
+                FabricRoles.name == fab_group.name,
+                FabricRoles.people_id == p.id
+            ).one_or_none()
         if personnel_type == 'creators' and p.is_project_creator(project_uuid=fab_project.uuid):
             fab_project.project_creators.remove(p)
-            delete_comanage_role(co_person_role_id=co_person_role.co_person_role_id)
             db.session.commit()
             p_removed = True
             # add event project_remove_creator

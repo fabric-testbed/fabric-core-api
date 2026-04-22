@@ -1,6 +1,6 @@
 """
-REV: v1.9.1
-v1.9.0 --> v1.9.1 - database tables
+REV: v1.10.0
+v1.9.0 --> v1.10.0 - database tables
 
                    List of relations
  Schema |           Name            | Type  |  Owner
@@ -41,11 +41,13 @@ v1.9.0 --> v1.9.1 - database tables
  public | user_subject_identifiers  | table | postgres  <-- user_subject_identifiers-v<VERSION>.json
 (34 rows)
 
-Changes from v1.9.0 --> v1.9.1
-- backfill people: project_lead_approved
+Changes from v1.9.0 --> v1.10.0
+- NULL out co_cou_id_pc for all projects (project creators decoupled from COmanage)
 """
 
+import json
 import os
+from datetime import datetime, timezone
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
@@ -58,25 +60,55 @@ api_version = '1.9.0'
 BACKUP_DATA_DIR = os.getcwd() + '/server/swagger_server/backup/data'
 
 
-def people_project_lead_approved_backfill():
+def projects_export_co_cou_id_pc():
     """
-    Backfill project_lead_approved information
-    - based on existing project_lead data in projects
+    Export co_cou_id_pc values to a JSON file before NULLing them.
+    This manifest can be used to purge the orphaned -pc COUs from the
+    remote COmanage registry on a separate schedule.
+
+    Output: BACKUP_DATA_DIR/comanage_pc_cous_to_purge.json
+    """
+    try:
+        cous_to_purge = []
+        fab_projects = FabricProjects.query.order_by('id').all()
+        for fp in fab_projects:
+            if fp.co_cou_id_pc is not None:
+                cous_to_purge.append({
+                    'project_uuid': str(fp.uuid),
+                    'project_name': fp.name,
+                    'co_cou_id_pc': fp.co_cou_id_pc,
+                    'cou_name': str(fp.uuid) + '-pc'
+                })
+        output = {
+            'description': 'Project-creator COUs to purge from COmanage registry (v1.9.0 -> v1.10.0)',
+            'exported_at': datetime.now(timezone.utc).isoformat(),
+            'count': len(cous_to_purge),
+            'cous': cous_to_purge
+        }
+        output_file = BACKUP_DATA_DIR + '/comanage_pc_cous_to_purge.json'
+        with open(output_file, 'w') as outfile:
+            outfile.write(json.dumps(output, indent=2))
+        consoleLogger.info('Exported {0} co_cou_id_pc entries to {1}'.format(len(cous_to_purge), output_file))
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
+def projects_null_co_cou_id_pc():
+    """
+    NULL out co_cou_id_pc for all projects
+    - project creators decoupled from COmanage in v1.10.0
+    - creator membership now tracked via projects_creators junction table only
     """
     try:
         fab_projects = FabricProjects.query.all()
         for fp in fab_projects:
             consoleLogger.info('Project: id {0}, uuid {1}'.format(fp.id, fp.uuid))
-            if fp.project_lead_id:
-                pl = fp.project_lead
-                if not pl.project_lead_approved:
-                    print(' - set project_lead_approved = True for user {0}'.format(pl.uuid))
-                    pl.project_lead_approved = True
-                    db.session.commit()
-                else:
-                    print(' - project_lead_approved already True for user {0}'.format(pl.uuid))
+            if fp.co_cou_id_pc is not None:
+                print(' - NULL out co_cou_id_pc (was {0})'.format(fp.co_cou_id_pc))
+                fp.co_cou_id_pc = None
+                db.session.commit()
             else:
-                print(' - PROJECT LEAD NOT FOUND')
+                print(' - co_cou_id_pc already NULL')
 
     except Exception as exc:
         consoleLogger.error(exc)
@@ -88,6 +120,10 @@ if __name__ == '__main__':
 
     consoleLogger.info('Update data from API version {0}'.format(api_version))
 
-    # People: backfill project_lead_approved based on existing project_lead data in projects
-    consoleLogger.info('People: backfill project_lead_approved based on existing project_lead data in projects')
-    people_project_lead_approved_backfill()
+    # Projects: export co_cou_id_pc values before NULLing
+    consoleLogger.info('Projects: exporting co_cou_id_pc manifest for COmanage COU purge')
+    projects_export_co_cou_id_pc()
+
+    # Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)
+    consoleLogger.info('Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)')
+    projects_null_co_cou_id_pc()

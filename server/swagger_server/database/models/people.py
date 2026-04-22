@@ -118,10 +118,6 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
 
     def is_project_admin(self) -> bool:
         return os.getenv('COU_NAME_PROJECT_ADMINS').casefold() in [r.name.casefold() for r in self.roles]
-    # TODO: project-leads role to be deprecated v1.10
-    def is_project_lead(self) -> bool:
-        return os.getenv('COU_NAME_PROJECT_LEADS').casefold() in [r.name.casefold() for r in self.roles]
-
     def is_portal_admin(self) -> bool:
         return os.getenv('COU_NAME_PORTAL_ADMINS').casefold() in [r.name.casefold() for r in self.roles]
 
@@ -132,7 +128,11 @@ class FabricPeople(BaseMixin, TimestampMixin, db.Model):
         return os.getenv('COU_NAME_FACILITY_VIEWERS').casefold() in [r.name.casefold() for r in self.roles]
 
     def is_project_creator(self, project_uuid: str = None) -> bool:
-        return project_uuid + '-pc' in [r.name.casefold() for r in self.roles]
+        from swagger_server.database.models.projects import FabricProjects
+        fab_project = FabricProjects.query.filter_by(uuid=project_uuid).one_or_none()
+        if fab_project:
+            return self in fab_project.project_creators
+        return False
 
     def is_project_member(self, project_uuid: str = None) -> bool:
         return project_uuid + '-pm' in [r.name.casefold() for r in self.roles]

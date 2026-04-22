@@ -317,6 +317,7 @@ def people_uuid_get(uuid, as_self=None) -> PeopleDetails:  # noqa: E501
         # set PeopleOne object
         people_one = PeopleOne()
         # set required attributes for any uuid
+        people_one.active = fab_person.active
         try:
             people_one.affiliation = Organizations.query.filter_by(
                 id=fab_person.org_affiliation).one_or_none().organization

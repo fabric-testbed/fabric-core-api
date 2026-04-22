@@ -1,5 +1,5 @@
 connexion==2.14.2
-fabric-comanage-api
+fabric-comanage-api @ git+https://github.com/fabric-testbed/python-comanage-api.git@develop
 fabric_fss_utils
 Flask-Migrate==4.1.0
 Flask-SQLAlchemy==3.1.1

@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.12
 MAINTAINER Michael J. Stealey <michael.j.stealey@gmail.com>
 
 # make code directory

@@ -845,7 +845,16 @@ def projects_uuid_expires_on_patch(uuid: str,
                 fab_project.is_locked = True
             else:
                 fab_project.is_locked = False
+            # cascade expires_on to associated storage allocations
+            storage_updated = 0
+            for fab_storage in fab_project.project_storage:
+                fab_storage.expires_on = expires_on
+                storage_updated += 1
             db.session.commit()
+            if storage_updated > 0:
+                consoleLogger.info(
+                    'UPDATE: cascaded expires_on={0} to {1} storage allocation(s) for project uuid={2}'.format(
+                        str(expires_on), storage_updated, str(fab_project.uuid)))
             # metrics log - Project expires_on was modified:
             # 2022-09-06 19:45:56,022 Project event prj:dead-beef-dead-beef modify expires_on by usr:dead-beef-dead-beef
             log_msg = 'Project event prj:{0} modify \'expires_on={1}\' by usr:{2}'.format(

@@ -52,7 +52,6 @@ from datetime import datetime, timezone
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.projects import FabricProjects
-from swagger_server.database.models.storage import FabricStorage
 
 # API version of data to restore from
 api_version = '1.9.0'
@@ -116,28 +115,6 @@ def projects_null_co_cou_id_pc():
         db.session.rollback()
 
 
-def storage_align_expires_on_with_project():
-    """
-    Backfill: align storage expires_on with the expires_on of the associated project.
-    - Only updates storage where the dates differ and the project has an expires_on set.
-    """
-    try:
-        updated = 0
-        fab_storage_all = FabricStorage.query.all()
-        for fs in fab_storage_all:
-            fp = FabricProjects.query.filter_by(id=fs.project_id).one_or_none()
-            if fp and fp.expires_on and fs.expires_on != fp.expires_on:
-                print(' - Storage uuid={0}: expires_on {1} -> {2} (project uuid={3})'.format(
-                    fs.uuid, fs.expires_on, fp.expires_on, fp.uuid))
-                fs.expires_on = fp.expires_on
-                updated += 1
-        db.session.commit()
-        consoleLogger.info('Aligned expires_on for {0} storage allocation(s)'.format(updated))
-    except Exception as exc:
-        consoleLogger.error(exc)
-        db.session.rollback()
-
-
 if __name__ == '__main__':
     app.app_context().push()
 
@@ -150,7 +127,3 @@ if __name__ == '__main__':
     # Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)
     consoleLogger.info('Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)')
     projects_null_co_cou_id_pc()
-
-    # Storage: align expires_on with project expires_on
-    consoleLogger.info('Storage: aligning storage expires_on with project expires_on')
-    storage_align_expires_on_with_project()

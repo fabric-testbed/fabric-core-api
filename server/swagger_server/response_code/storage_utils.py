@@ -45,7 +45,11 @@ def create_storage_allocation_from_api(body: StoragePost, storage_creator: Fabri
     fab_storage.active = False
     fab_storage.created = now
     fab_storage.created_by_uuid = str(storage_creator.uuid)
-    fab_storage.expires_on = normalize_date_to_utc(body.expires_on)
+    # align storage expiry with project expiry if the project has one
+    if fab_project.expires_on:
+        fab_storage.expires_on = fab_project.expires_on
+    else:
+        fab_storage.expires_on = normalize_date_to_utc(body.expires_on)
     fab_storage.modified = now
     fab_storage.modified_by_uuid = str(storage_creator.uuid)
     fab_storage.project_id = fab_project.id

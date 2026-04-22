@@ -388,6 +388,12 @@ def storage_uuid_patch(uuid: str, body: StoragePatch = None) -> Status200OkNoCon
         try:
             expires_on = normalize_date_to_utc(date_str=body.expires_on)
             if expires_on:
+                # validate storage expiry does not exceed project expiry
+                fab_project = FabricProjects.query.filter_by(id=fab_storage.project_id).one_or_none()
+                if fab_project and fab_project.expires_on and expires_on > fab_project.expires_on:
+                    return cors_400(
+                        details="Storage expires_on ({0}) cannot exceed project expires_on ({1})".format(
+                            str(expires_on), str(fab_project.expires_on)))
                 fab_storage.expires_on = expires_on
                 db.session.commit()
                 consoleLogger.info('UPDATE: FabricStorage: uuid={0}, expires_on={1}'.format(

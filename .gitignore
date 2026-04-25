@@ -1,41 +1,67 @@
-### Custom exclusion
-python-flask-server-generated/
-server_archive/
-logs/
-migrations/
-.idea
+# =============================================================================
+# .gitignore — fabric-core-api
+# -----------------------------------------------------------------------------
+# Sections:
+#   1. Project — rendered config files (from *.template) and generated code
+#   2. Application data — runtime artifacts, exports, DB volumes
+#   3. Secrets — environment files (NEVER commit)
+#   4. Python — bytecode, packaging, virtualenvs
+#   5. Testing & coverage
+#   6. Type checkers & tool caches
+#   7. Editors & IDEs
+#   8. macOS (development hosts)
+#   9. Linux (deployment hosts)
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Project — rendered config files & generated code
+# -----------------------------------------------------------------------------
+# *.template files are committed; their rendered counterparts are local only.
+docker-compose.yml
+nginx/default.conf
 vouch/config*
 !vouch/config.yml.template
-.DS_Store
-server/swagger_server/pr-uis-migration/data/*.json
-server/swagger_server/backup/data/*.json
-server/swagger_server/backup/data/
-pg_data/
 
-# Explicit developer files for local only usage
+# Connexion / swagger code generation outputs (regenerated on demand).
+python-flask-server-generated/
+server_archive/
+
+# Database migrations are generated locally per deployment.
+migrations/
+
+
+# -----------------------------------------------------------------------------
+# 2. Application data — runtime artifacts (never commit)
+# -----------------------------------------------------------------------------
+logs/
+pg_data/
 misc_local_files/
 
-### VirtualEnv template
-# Virtualenv
-# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
-.Python
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
-pyvenv.cfg
-.venv
-pip-selfcheck.json
+# Per-table JSON exports/imports
+server/swagger_server/backup/data/
+server/swagger_server/backup/data/*.json
 
-### Python template
-# Byte-compiled / optimized / DLL files
+# Full-backup script output (./full-backup-<timestamp>/ and tarballs)
+full-backup-*/
+full-backup-*.tar.gz
+
+
+# -----------------------------------------------------------------------------
+# 3. Secrets — environment files
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!env.template
+
+
+# -----------------------------------------------------------------------------
+# 4. Python — bytecode, packaging, virtualenvs
+# -----------------------------------------------------------------------------
+# Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -46,8 +72,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -58,115 +82,104 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.env.*
-.venv
-env/
+# Virtualenvs (covers `venv`, `.venv`, `env`, `ENV`, and timestamped backups)
 venv/
+.venv/
+env/
 ENV/
 env.bak/
 venv.bak/
+pyvenv.cfg
+pip-selfcheck.json
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Spyder project settings
-.spyderproject
-.spyproject
 
-# Rope project settings
-.ropeproject
+# -----------------------------------------------------------------------------
+# 5. Testing & coverage
+# -----------------------------------------------------------------------------
+.tox/
+.nox/
+.cache/
+.pytest_cache/
+.hypothesis/
+htmlcov/
+cover/
+.coverage
+.coverage.*
+coverage.xml
+nosetests.xml
+*.cover
+*.py,cover
 
-# mkdocs documentation
-/site
 
-# mypy
+# -----------------------------------------------------------------------------
+# 6. Type checkers & tool caches
+# -----------------------------------------------------------------------------
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Pyre type checker
 .pyre/
-
-# pytype static type analyzer
 .pytype/
+.ruff_cache/
 
-# Cython debug symbols
-cython_debug/
 
+# -----------------------------------------------------------------------------
+# 7. Editors & IDEs
+# -----------------------------------------------------------------------------
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+
+# VS Code (keep this entry even if you don't use VSCode — contributors might)
+.vscode/
+
+# Vim / Neovim swap & undo files
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Claude Code / agent state (local only)
+.claude/
+
+
+# -----------------------------------------------------------------------------
+# 8. macOS (development hosts)
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*               # AppleDouble resource forks (e.g. ._filename)
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Files that may appear on network/USB volumes mounted under macOS
+.AppleDB
+.AppleDesktop
+Network\ Trash\ Folder
+Temporary\ Items
+.apdisk
+
+
+# -----------------------------------------------------------------------------
+# 9. Linux (deployment hosts)
+# -----------------------------------------------------------------------------
+*~                # backup files (already covered above; harmless duplicate)
+.fuse_hidden*
+.directory        # KDE
+.Trash-*          # KDE/GNOME trash
+.nfs*             # stale NFS handles
+core              # core dumps
+*.pid             # service pid files (e.g. uWSGI)

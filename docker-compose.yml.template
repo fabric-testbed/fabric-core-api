@@ -1,0 +1,96 @@
+# =============================================================================
+# Core API — Docker Compose stack
+# -----------------------------------------------------------------------------
+# Services:
+#   flask-server  — Connexion/Flask app served via uWSGI on port 6000
+#   database      — PostgreSQL 17 backing store on port 5432
+#   nginx         — Reverse proxy (TLS termination, CORS) on 80/443
+#   vouch-proxy   — OIDC auth proxy (CILogon) on port 9090
+#
+# Prerequisites (host paths, all mounted into containers):
+#   ./.env                 — environment values consumed by Compose interpolation
+#   ./ssl/{fullchain,privkey}.pem — TLS certs for nginx
+#   ./nginx/default.conf   — rendered from nginx/default.conf.template
+#   ./vouch/config.yml     — rendered from vouch/config.yml.template
+#   ./pg_data/             — created automatically; persists Postgres data
+#   ./logs/metrics/        — flask-server writes audit logs here
+#
+# Local Development
+#   - Ports are exposed to the host for debugging convenience.
+#
+# Production
+#   - Expose ONLY 80 and 443 (nginx). All other published ports must be
+#     removed so internal services are reachable only via the bridge network.
+# =============================================================================
+
+services:
+
+  # Application server — uWSGI runs the Connexion/Flask app from server/.
+  # Depends on database (for ORM) and nginx (for upstream proxy_pass).
+  flask-server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: api-flask-server
+    depends_on:
+      - database
+      - nginx
+    networks:
+      - core-api
+    ports:
+      - 6000:6000   # PRODUCTION: remove this published port
+    volumes:
+      - ./logs/metrics:/code/logs/metrics   # auditable metrics log output
+      - ./migrations:/code/migrations       # Alembic migration history
+    restart: unless-stopped
+
+  # PostgreSQL — persistent storage for users, projects, sshkeys, etc.
+  # Data is bind-mounted to ./pg_data so it survives container removal.
+  database:
+    image: postgres:17
+    container_name: api-database
+    restart: unless-stopped
+    networks:
+      - core-api
+    ports:
+      - 5432:5432   # PRODUCTION: remove this published port
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: ${PGDATA}
+    volumes:
+      - ./pg_data:${PGDATA}
+
+  # Nginx — TLS termination, CORS preflight, auth_request → vouch-proxy.
+  # SSL certs and the rendered config must exist on the host before `up`.
+  nginx:
+    image: nginx:1
+    container_name: api-nginx
+    networks:
+      - core-api
+    ports:
+      - 8080:80
+      - 8443:443
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/ssl
+    restart: unless-stopped
+
+  # Vouch Proxy — OIDC client (CILogon). Validates session cookies and
+  # mints the JWT consumed by Nginx via auth_request.
+  vouch-proxy:
+    image: fabrictestbed/vouch-proxy:0.27.1
+    container_name: api-vouch-proxy
+    networks:
+      - core-api
+    ports:
+      - 9090:9090   # PRODUCTION: remove this published port
+    volumes:
+      - ./vouch:/config
+    restart: unless-stopped
+
+networks:
+  core-api:
+    name: core-api
+    driver: bridge

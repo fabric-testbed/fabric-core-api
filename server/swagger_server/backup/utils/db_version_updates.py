@@ -43,6 +43,7 @@ v1.9.0 --> v1.10.0 - database tables
 
 Changes from v1.9.0 --> v1.10.0
 - NULL out co_cou_id_pc for all projects (project creators decoupled from COmanage)
+- Backfill created_by_uuid from projects_creators or project_lead
 """
 
 import json
@@ -138,6 +139,98 @@ def storage_align_expires_on_with_project():
         db.session.rollback()
 
 
+def projects_backfill_created_by_uuid():
+    """
+    Backfill created_by_uuid for projects that are missing it.
+    - First tries the projects_creators junction table (takes the first creator)
+    - Falls back to the project_lead relationship
+    """
+    try:
+        updated = 0
+        skipped = 0
+        fab_projects = FabricProjects.query.order_by('id').all()
+        for fp in fab_projects:
+            if fp.created_by_uuid is not None:
+                continue
+            creator_uuid = None
+            # try projects_creators first
+            if fp.project_creators:
+                creator_uuid = str(fp.project_creators[0].uuid)
+                source = 'projects_creators'
+            # fall back to project_lead
+            elif fp.project_lead:
+                creator_uuid = str(fp.project_lead.uuid)
+                source = 'project_lead'
+            if creator_uuid:
+                print(' - Project id={0} ({1}): set created_by_uuid={2} (from {3})'.format(
+                    fp.id, fp.name, creator_uuid, source))
+                fp.created_by_uuid = creator_uuid
+                updated += 1
+            else:
+                print(' - Project id={0} ({1}): no creator found, skipping'.format(fp.id, fp.name))
+                skipped += 1
+        db.session.commit()
+        consoleLogger.info('Backfilled created_by_uuid for {0} project(s), skipped {1}'.format(updated, skipped))
+    except Exception as exc:
+        consoleLogger.error(exc)
+        db.session.rollback()
+
+
+def projects_export_creator_owners_report():
+    """
+    Export a markdown report of project creators vs. owners.
+    Flags projects where the creator is not an owner.
+
+    Output: BACKUP_DATA_DIR/project_creator_owners.md
+    """
+    try:
+        fab_projects = FabricProjects.query.order_by('id').all()
+        lines = [
+            '# Project Creator vs. Owner Report',
+            '',
+            'Generated: {0}'.format(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')),
+            '',
+            '| Project | Creator | Owners | Creator is Owner? |',
+            '|---|---|---|---|',
+        ]
+        mismatch_count = 0
+        for fp in fab_projects:
+            creator_entries = ['{0} ({1})'.format(p.display_name, p.uuid) for p in fp.project_creators]
+            owner_names = [p.display_name for p in fp.project_owners]
+            creator_set = set(c.id for c in fp.project_creators)
+            owner_set = set(o.id for o in fp.project_owners)
+            not_owners = creator_set - owner_set
+            if not_owners:
+                flag = '**No**'
+                mismatch_count += 1
+                lines.append('| **{0} ({1})** | **{2}** | **{3}** | {4} |'.format(
+                    fp.name,
+                    fp.uuid,
+                    ', '.join(creator_entries) if creator_entries else '*(none)*',
+                    ', '.join(owner_names) if owner_names else '*(none)*',
+                    flag,
+                ))
+            else:
+                flag = 'Yes' if creator_set else 'N/A'
+                lines.append('| {0} ({1}) | {2} | {3} | {4} |'.format(
+                    fp.name,
+                    fp.uuid,
+                    ', '.join(creator_entries) if creator_entries else '*(none)*',
+                    ', '.join(owner_names) if owner_names else '*(none)*',
+                    flag,
+                ))
+        lines.append('')
+        lines.append('**{0}** project(s) where a creator is not an owner.'.format(mismatch_count))
+        lines.append('')
+
+        output_file = BACKUP_DATA_DIR + '/project_creator_owners.md'
+        with open(output_file, 'w') as f:
+            f.write('\n'.join(lines))
+        consoleLogger.info('Exported creator/owner report to {0}'.format(output_file))
+    except Exception as exc:
+        consoleLogger.error(exc)
+
+
 if __name__ == '__main__':
     app.app_context().push()
 
@@ -150,6 +243,14 @@ if __name__ == '__main__':
     # Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)
     consoleLogger.info('Projects: NULL out co_cou_id_pc (creators decoupled from COmanage)')
     projects_null_co_cou_id_pc()
+
+    # Projects: backfill created_by_uuid from projects_creators or project_lead
+    consoleLogger.info('Projects: backfilling created_by_uuid for projects missing it')
+    projects_backfill_created_by_uuid()
+
+    # Projects: export creator vs. owner report
+    consoleLogger.info('Projects: exporting creator vs. owner report')
+    projects_export_creator_owners_report()
 
     # Storage: align expires_on with project expires_on
     consoleLogger.info('Storage: aligning storage expires_on with project expires_on')

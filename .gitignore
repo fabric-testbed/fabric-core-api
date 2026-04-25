@@ -5,12 +5,15 @@ logs/
 migrations/
 .idea
 vouch/config*
-!vouch/config.template
+!vouch/config.yml.template
 .DS_Store
 server/swagger_server/pr-uis-migration/data/*.json
 server/swagger_server/backup/data/*.json
 server/swagger_server/backup/data/
-local/
+pg_data/
+
+# Explicit developer files for local only usage
+misc_local_files/
 
 ### VirtualEnv template
 # Virtualenv

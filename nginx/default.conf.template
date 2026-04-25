@@ -1,20 +1,35 @@
+# =============================================================================
+# Nginx config for the Core API
+# -----------------------------------------------------------------------------
+# - Terminates TLS on :443
+# - Redirects :80 → :443
+# - Delegates auth to Vouch Proxy via `auth_request /validate`
+# - On 401, redirects to Vouch's /login flow (CILogon OIDC)
+# - Forwards authorized requests to the Flask/uWSGI upstream
+#
+# Customize before deployment (search for `### CHANGE-ME`):
+#   - external HTTPS port (default 8443)
+#   - upstream proxy_pass target (Docker service name vs. local dev URL)
+#   - CORS Access-Control-Allow-Origin
+# =============================================================================
+
 server {
     listen 80;
-    ### modify PORT prior to deployment (default 8443)
+    ### CHANGE-ME: external HTTPS port (default 8443)
     return 301 https://$host:8443$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name https://$host:8443; # substitute your machine's FQDN or IP and port
+    server_name https://$host:8443; # CHANGE-ME: machine's FQDN or IP and port
 
-    # Enable support for TLS 1.2 and/or 1.3
+    # TLS 1.2 / 1.3 only
     ssl_protocols  TLSv1.2 TLSv1.3;
 
     ssl_certificate /etc/ssl/fullchain.pem;
     ssl_certificate_key /etc/ssl/privkey.pem;
 
-    # send all requests to the `/validate` endpoint for authorization
+    # Every request is first sent to /validate for authorization
     auth_request /validate;
 
     location = /validate {
@@ -32,7 +47,7 @@ server {
         # optionally add X-Vouch-User as returned by Vouch Proxy along with the request
         auth_request_set $auth_resp_x_vouch_user $upstream_http_x_vouch_user;
 
-        # optinally add X-Vouch-IdP-IdToken, X-Vouch-IdP-AccessToken or X-Vouch-IdP-RefreshToken
+        # optionally add X-Vouch-IdP-IdToken, X-Vouch-IdP-AccessToken or X-Vouch-IdP-RefreshToken
         auth_request_set $auth_resp_x_vouch_idp_idtoken $upstream_http_x_vouch_idp_idtoken;
         #auth_request_set $auth_resp_x_vouch_idp_accesstoken $upstream_http_x_vouch_idp_accesstoken;
         #auth_request_set $auth_resp_x_vouch_idp_refreshtoken $upstream_http_x_vouch_idp_refreshtoken;
@@ -48,38 +63,43 @@ server {
 
     location @error401 {
         proxy_set_header Host $http_host;
-        # redirect to Vouch Proxy for login
+        # Redirect to Vouch Proxy for login.
+        # NOTE: in production you usually want to redirect to Vouch running
+        # behind the same Nginx (HTTPS-protected). The line below sends the
+        # user directly to the port Vouch is listening on, which is fine
+        # for development but exposes Vouch over plain HTTP.
         return 302 http://$host:9090/login?url=$scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
-        # you usually *want* to redirect to Vouch running behind the same Nginx config proteced by https
-        # but to get started you can just forward the end user to the port that vouch is running on
     }
 
+    # OIDC callback target — Vouch completes the auth code exchange here.
+    # The callback URL (relative to host) must be defined in BOTH the OIDC
+    # client registration and vouch/config.yml (oauth.callback_url).
     location /auth {
-        # redirect to Vouch Proxy for authentication with OIDC client
-        # Callback URL (relative to host) must be defined in both OIDC client and vouch/config
         proxy_pass http://vouch-proxy:9090/auth;
     }
 
+    # Initiate login flow via Vouch (redirects to CILogon).
     location /login {
         # these return values are used by the @error401 call
         auth_request_set $auth_resp_jwt $upstream_http_x_vouch_jwt;
         auth_request_set $auth_resp_err $upstream_http_x_vouch_err;
         auth_request_set $auth_resp_failcount $upstream_http_x_vouch_failcount;
 
-        # redirect to Vouch Proxy for login
         proxy_pass http://vouch-proxy:9090/login?url=$scheme://$http_host/ui/#;
     }
 
+    # Clear the Vouch session cookie and return to the UI.
     location /logout {
-        # redirect to Vouch Proxy for logout
         proxy_pass http://vouch-proxy:9090/logout?url=$scheme://$http_host/ui/#;
     }
 
-    # proxy pass authorized requests to your service
+    # Forward authorized requests to the upstream Flask/uWSGI service.
     location / {
-        # CORS - accept all preflight OPTIONS checks
+        # CORS — handle preflight OPTIONS without proxying upstream.
         if ($request_method = 'OPTIONS') {
-            ### modify 'Access-Control-Allow-Origin' to be CORE_API_ACCESS_CONTROL_ALLOW_ORIGIN
+            ### CHANGE-ME: set 'Access-Control-Allow-Origin' to match
+            ### NGINX_ACCESS_CONTROL_ALLOW_ORIGIN from .env (do not use '*'
+            ### in production — credentialed requests require an explicit origin).
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
@@ -96,20 +116,22 @@ server {
             return 204;
         }
 
-        # forward authorized requests to your service protectedapp.yourdomain.com
-        ### modify proxy_pass prior to deployment
-        ### local macOS development
+        ### CHANGE-ME: select the upstream that matches your deployment.
+        ### LOCAL development — Flask running on the host:
+        ###   macOS:  http://host.docker.internal:6000
+        ###   Linux:  http://172.17.0.1:6000  (or use --network=host)
         #proxy_pass http://host.docker.internal:6000/;
-        ### docker-compose deployment
+        ### DOCKER deployment — Flask running as the `flask-server` service:
         proxy_pass http://flask-server:6000/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
 
         ### AUTH REQUEST SET ###
-        # you may need to set these variables in this block as per https://github.com/vouch/vouch-proxy/issues/26#issuecomment-425215810
+        # See https://github.com/vouch/vouch-proxy/issues/26#issuecomment-425215810
+        # for why these auth_request_set lines must be repeated in the upstream block.
         auth_request_set $auth_resp_x_vouch_user $upstream_http_x_vouch_user;
 
-        # optinally add X-Vouch-IdP-IdToken, X-Vouch-IdP-AccessToken or X-Vouch-IdP-RefreshToken
+        # optionally add X-Vouch-IdP-IdToken, X-Vouch-IdP-AccessToken or X-Vouch-IdP-RefreshToken
         auth_request_set $auth_resp_x_vouch_idp_idtoken $upstream_http_x_vouch_idp_idtoken;
         auth_request_set $auth_resp_x_vouch_idp_accesstoken $upstream_http_x_vouch_idp_accesstoken;
         auth_request_set $auth_resp_x_vouch_idp_refreshtoken $upstream_http_x_vouch_idp_refreshtoken;

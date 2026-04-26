@@ -2,7 +2,7 @@
 
 Complete backup and restore procedures for migrating the fabric-core-api application between VMs.
 
-For the existing Docker-container-focused database backup/restore workflow, see [backup-and-restore.md](backup-and-restore.md).
+This guide covers the `full-backup.sh` / `full-restore.sh` scripts, which capture the full application state (database + configs + certificates). For per-table JSON-only operations, see the `db_export.py` / `db_restore.py` scripts in `server/swagger_server/backup/utils/`.
 
 ## Overview
 
@@ -26,7 +26,7 @@ Each backup archive includes a `VERSION.json` file with machine-readable metadat
 ```json
 {
     "backup_format_version": "1.1.0",
-    "api_version": "1.9.0",
+    "api_version": "1.10.0",
     "created": "2026-04-13T14:30:00Z",
     "hostname": "alpha-6.fabric-testbed.net",
     "git_branch": "develop",
@@ -64,13 +64,13 @@ When `full-restore.sh` runs, it:
 2. **Validates the backup format version** against `RESTORE_SUPPORTED_FORMATS` — refuses to restore if the format is unrecognized
 3. **Compares the backup API version** with the local codebase — warns if they differ and suggests running migrations:
    ```
-   WARNING: API version mismatch: backup=1.8.0, local codebase=1.9.0
+   WARNING: API version mismatch: backup=1.9.0, local codebase=1.10.0
    WARNING: You may need to run database migrations or version update scripts after restore:
               python -m flask db upgrade
               python -m server.swagger_server.backup.utils.db_version_updates
    ```
 
-This means a backup from API version 1.8.0 can be restored into a 1.9.0 codebase — the restore proceeds with a warning, and the operator runs migrations afterward.
+This means a backup from API version 1.9.0 can be restored into a 1.10.0 codebase — the restore proceeds with a warning, and the operator runs migrations afterward.
 
 ## What Gets Backed Up
 
@@ -438,7 +438,7 @@ docker compose build flask-server   # builds image with .env baked in
 docker compose up -d flask-server
 ```
 
-The Flask container takes 1-2 minutes on first start — it creates a virtualenv, installs `requirements.txt`, and launches uWSGI (8 workers x 8 threads). Monitor progress with:
+The Flask container starts quickly because the venv is baked into the image at build time via `uv sync` (see the `Dockerfile`). The runtime entry point only patches `swagger.yaml` with `CORE_API_SERVER_URL` and launches uWSGI (8 workers x 8 threads). Monitor progress with:
 
 ```bash
 docker logs -f api-flask-server
@@ -472,7 +472,7 @@ curl -sk 'https://127.0.0.1:8443/people?search=fabric'
 
 Expected results:
 - `/ui/` — returns Swagger UI HTML (HTTP 200)
-- `/version` — returns `{"version": "1.9.0"}` with correct API reference
+- `/version` — returns `{"version": "1.10.0"}` with correct API reference
 - `/projects` — returns project data with pagination links rewritten to `127.0.0.1:8443`
 - `/people` — returns HTTP 401 ("Login or Valid Token required"), confirming Vouch-Proxy auth gate works
 
@@ -484,7 +484,7 @@ Expected results:
 | **COmanage API** | Credentials in `.env` point to the source tier's COmanage registry; sync operations will hit the real registry | Acceptable for read-only testing; for isolation, disable COmanage-dependent features or point to a test registry |
 | **SMTP** | Email settings point to the source mail server | Change `SMTP_SERVER` in `.env` to a local mail sink (e.g., [MailHog](https://github.com/mailhog/MailHog)) or disable email features |
 | **Self-signed cert** | Browsers show security warnings; API clients need `-k` / `verify=False` | Expected for local development; use a real cert or add the self-signed cert to your trust store |
-| **First startup time** | Flask container installs dependencies on every fresh start (~1-2 minutes) | Normal — the virtualenv is created inside the container at runtime per `docker-entrypoint.sh` |
+| **First startup time** | First `docker compose build` is slow because uWSGI is compiled from sdist | Normal — subsequent builds reuse the cached `uv sync` layer; runtime starts are fast |
 
 ---
 

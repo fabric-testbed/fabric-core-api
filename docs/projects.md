@@ -1,13 +1,14 @@
 # Projects
 
-When a project is created it also triggers the remote creation of four COUs in COmanage (API call to COmanage registry)
+When a project is created it triggers the remote creation of three COUs in COmanage (API call to COmanage registry):
 
-- COU: `uuid-pc` - group to associate project creator to
 - COU: `uuid-pm` - group to associate project members to
 - COU: `uuid-po` - group to associate project owners to
 - COU: `uuid-tk` - group to associate project long lived token holders to
 
 The notation `uuid` from above is a universal unique identifier (e.g. `990d8a8b-7e50-4d13-a3be-0f133ffa8653`) - all COUs for the same project would have the same `uuid` value which matches the core-api `uuid` for the project object.
+
+> **Note (v1.10.0):** Project creators are no longer represented by a COmanage COU (the legacy `uuid-pc` COU has been deprecated and is being purged from the registry). Creator membership is tracked locally in the `projects_creators` junction table only.
 
 Personnel endpoints are additive, subtractive, or "WYSIWYG" in nature 
 
@@ -69,9 +70,11 @@ FABRIC Projects
   - data: `description` as string (required)
   - data: `is_public` as boolean (required)
   - data: `name` as string (required)
+  - data: `project_lead` as uuid string (required) - the FABRIC person designated as project lead
   - data: `project_members` as array of string (optional)
   - data: `project_owners` as array of string (optional)
-  - authz: `project-leads` - only role allowed to create a new project
+  - data: `project_type` as string (optional - default `research`)
+  - authz: `project-admins` or `facility-operators` - only roles allowed to create a new project
   - response type: singleton `projects.details`
 
 ### `/projects/communities`
@@ -195,7 +198,7 @@ FABRIC Projects
 
 ### `/projects/{uuid}/project-funding`
 
-- PATCH - update an existing project communities
+- PATCH - update an existing project's funding entries
   - data: `project_funding` as array of funding objects (optional)
   - data: `agency` as string, attribute of funding object
   - data: `agency_other` as string, attribute of funding object (optional)
@@ -204,6 +207,13 @@ FABRIC Projects
   - data: `directorate` as string, attribute of funding object (optional)
   - authz: project creator/owner can update their project
   - authz: `facility-operators` can update any project
+  - response type: 200 OK as `204 no content`
+
+### `/projects/{uuid}/project-lead`
+
+- PATCH - update the project lead person for a project
+  - data: `project_lead` as uuid string (required)
+  - authz: `project-admins` or `facility-operators` only
   - response type: 200 OK as `204 no content`
 
 ### `/projects/{uuid}/project-members`
@@ -232,11 +242,11 @@ FABRIC Projects
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
-### `/projects{uuid}/token-holders`
+### `/projects/{uuid}/token-holders`
 
-- PATCH - update an existing project personnel
+- PATCH - update an existing project's token holders
   - parameter: `operation` as string in {`add`, `remove`, `batch`} (default is `add`)
-  - data: `token-holders` as array of uuid as string (optional)
+  - data: `token_holders` as array of uuid as string (optional)
   - authz: `facility-operators` can update any project
   - response type: 200 OK as `204 no content`
 
@@ -390,15 +400,17 @@ FABRIC User:
 
 ```
 {
-    "description": "<string>", <-- required - 5 or more characters
-    "is_public": <boolean>,    <-- required - true/false
-    "name": "<string>",        <-- required - 5 or more characters
-    "project_members": [       <-- optional - array of uuid as string
+    "description": "<string>",  <-- required - 5 or more characters
+    "is_public": <boolean>,     <-- required - true/false
+    "name": "<string>",         <-- required - 5 or more characters
+    "project_lead": "<string>", <-- required - person uuid for the project lead
+    "project_members": [        <-- optional - array of uuid as string
         "<string>"
     ],
-    "project_owners": [        <-- optional - array of uuid as string
+    "project_owners": [         <-- optional - array of uuid as string
         "<string>"
-    ]
+    ],
+    "project_type": "<string>"  <-- optional - default "research"
 }
 ```
 

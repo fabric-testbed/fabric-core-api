@@ -1,16 +1,21 @@
 # =============================================================================
 # .gitignore — fabric-core-api
 # -----------------------------------------------------------------------------
+# Targets:
+#   - Development hosts: macOS (laptops, dev VMs)
+#   - Deployment hosts:  Linux (Docker hosts, production VMs)
+#
 # Sections:
-#   1. Project — rendered config files (from *.template) and generated code
-#   2. Application data — runtime artifacts, exports, DB volumes
-#   3. Secrets — environment files (NEVER commit)
-#   4. Python — bytecode, packaging, virtualenvs
-#   5. Testing & coverage
-#   6. Type checkers & tool caches
-#   7. Editors & IDEs
-#   8. macOS (development hosts)
-#   9. Linux (deployment hosts)
+#   1. Project          — rendered config files (from *.template), generated code
+#   2. Application data — runtime artifacts, exports, DB volumes, backups
+#   3. Secrets          — environment files (NEVER commit)
+#   4. Python           — bytecode, packaging, virtualenvs
+#   5. uv               — package manager state (lockfile IS committed)
+#   6. Testing & coverage
+#   7. Type checkers & tool caches
+#   8. Editors & IDEs
+#   9. macOS — development hosts
+#  10. Linux — deployment hosts
 # =============================================================================
 
 
@@ -64,7 +69,7 @@ __pycache__/
 *$py.class
 *.so
 
-# Distribution / packaging
+# Distribution / packaging (relevant if/when this becomes installable)
 .Python
 build/
 develop-eggs/
@@ -96,7 +101,17 @@ pip-delete-this-directory.txt
 
 
 # -----------------------------------------------------------------------------
-# 5. Testing & coverage
+# 5. uv — package manager state
+# -----------------------------------------------------------------------------
+# NOTE: uv.lock IS committed (do NOT add it here) — it's the reproducibility
+# guarantee for `uv sync --frozen` in CI and the Docker build.
+# .python-version is also typically committed when the project pins a Python
+# version, so it is not ignored here either.
+.uv-cache/        # only present if cache is configured to live in-tree
+
+
+# -----------------------------------------------------------------------------
+# 6. Testing & coverage
 # -----------------------------------------------------------------------------
 .tox/
 .nox/
@@ -114,7 +129,7 @@ nosetests.xml
 
 
 # -----------------------------------------------------------------------------
-# 6. Type checkers & tool caches
+# 7. Type checkers & tool caches
 # -----------------------------------------------------------------------------
 .mypy_cache/
 .dmypy.json
@@ -125,12 +140,12 @@ dmypy.json
 
 
 # -----------------------------------------------------------------------------
-# 7. Editors & IDEs
+# 8. Editors & IDEs
 # -----------------------------------------------------------------------------
 # JetBrains (PyCharm, IntelliJ)
 .idea/
 
-# VS Code (keep this entry even if you don't use VSCode — contributors might)
+# VS Code (kept even if you don't use VS Code — contributors might)
 .vscode/
 
 # Vim / Neovim swap & undo files
@@ -151,7 +166,7 @@ dmypy.json
 
 
 # -----------------------------------------------------------------------------
-# 8. macOS (development hosts)
+# 9. macOS — development hosts
 # -----------------------------------------------------------------------------
 .DS_Store
 .DS_Store?
@@ -174,9 +189,8 @@ Temporary\ Items
 
 
 # -----------------------------------------------------------------------------
-# 9. Linux (deployment hosts)
+# 10. Linux — deployment hosts
 # -----------------------------------------------------------------------------
-*~                # backup files (already covered above; harmless duplicate)
 .fuse_hidden*
 .directory        # KDE
 .Trash-*          # KDE/GNOME trash

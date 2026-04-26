@@ -1,0 +1,50 @@
+[project]
+name = "fabric-core-api"
+version = "1.10.0"
+description = "FABRIC Core API — User Information Service and Project Registry"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+authors = [
+    { name = "Michael J. Stealey", email = "michael.j.stealey@gmail.com" },
+]
+
+# Runtime dependencies
+dependencies = [
+    "connexion==2.14.2",
+    "fabric-comanage-api==0.2.0",
+    "fabric_fss_utils",
+    "Flask-Migrate==4.1.0",
+    "Flask-SQLAlchemy==3.1.1",
+    "psycopg2-binary",
+    "PyJWT",
+    "python-dateutil",            # alembic[tz]
+    "python-dotenv",
+    "pytz",
+    "swagger-ui-bundle==0.0.9",   # connexion[swagger-ui]
+    "uWSGI==2.0.29",
+    "validators",
+]
+
+# ---------------------------------------------------------------------------
+# uv configuration
+# ---------------------------------------------------------------------------
+# This project is an application (run via `python -m server.swagger_server`),
+# not a distributable library — tell uv not to try to build/install it.
+[tool.uv]
+package = false
+
+# ---------------------------------------------------------------------------
+# PEP 735 dependency groups
+# ---------------------------------------------------------------------------
+# Install with:    uv sync --group dev
+# Default sync:    uv sync             (runtime deps only)
+[dependency-groups]
+dev = [
+    "flask_testing==0.8.0",
+    "coverage>=4.0.3",
+    "nose>=1.3.7",
+    "pluggy>=0.3.1",
+    "randomize>=0.13",
+    "sqlalchemy-stubs",           # type stubs (dev-only)
+]

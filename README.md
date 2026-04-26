@@ -2,6 +2,9 @@
 
 A Python Flask REST API providing core services for the [FABRIC Testbed](https://fabric-testbed.net):
 
+- **User Information Service (UIS)** — user identities, profiles, SSH keys
+- **Project Registry (PR)** — projects, members, owners, creators, storage allocations
+
 Built with [Connexion](https://connexion.readthedocs.io/) (OpenAPI 3.0.0) on top of Flask, backed by PostgreSQL, and federated with [COmanage Registry](https://www.cilogon.org/comanage) for identity and authorization.
 
 > **DISCLAIMER:** This code may not be up-to-date with the latest package or security advisories. The review/update cadence is driven by the FABRIC project lifecycle and not actively maintained outside that scope. **Use at your own risk.**
@@ -74,11 +77,16 @@ fabric-core-api/
 │   ├── response_code/            #   Business logic
 │   ├── database/models/          #   SQLAlchemy ORM models
 │   └── backup/                   #   DB backup, restore, version updates
-├── migrations/                   # Alembic migration history
+├── server/versions/              # Per-version backfill scripts (e.g. v1.9 → v1.10)
+├── migrations/                   # Alembic migration history (generated)
 ├── nginx/default.conf.template   # Nginx reverse-proxy config
 ├── vouch/config.yml.template     # Vouch (OIDC) config
 ├── docker-compose.yml.template   # Compose stack (4 services)
 ├── env.template                  # Environment variables
+├── pyproject.toml                # Project manifest + runtime deps (uv)
+├── uv.lock                       # Locked dependency graph (uv — committed)
+├── .python-version               # Pinned Python interpreter (3.12)
+├── Dockerfile                    # uv-based image build
 ├── ssl/                          # Self-signed dev certs (DO NOT USE IN PROD)
 ├── docs/                         # Endpoint-level docs
 └── full-backup.sh / full-restore.sh   # VM-to-VM migration helpers
@@ -95,7 +103,7 @@ The four `*.template` files in this repository are pre-configured for local deve
 - Docker (24+) and Docker Compose v2
 - A registered OIDC client at [CILogon](https://www.cilogon.org/oidc) with redirect URI `https://127.0.0.1:8443/auth`
 - Access credentials for a **COmanage Registry** API user (can be a sandbox/dev registry)
-- (Optional) Python 3.12 + virtualenv if you also want to run Flask outside Docker
+- (Optional) [uv](https://docs.astral.sh/uv/) if you also want to run Flask outside Docker — uv installs the pinned Python 3.12 interpreter and venv for you (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 
 ### Setup
 
@@ -166,10 +174,8 @@ Use the [Quick Start](#quick-start) above — every service (Postgres, Nginx, Vo
 Useful when iterating on Python code (no rebuild on every change). Postgres still runs in Docker; Flask runs on the host so you can attach a debugger.
 
 ```console
-# 1. Create and activate a virtualenv
-virtualenv -p python3.12 venv
-source venv/bin/activate
-pip install -r requirements.txt
+# 1. Install dependencies into a managed venv (creates ./.venv/)
+uv sync --group dev
 
 # 2. Toggle .env for local Flask:
 #    - uncomment   POSTGRES_SERVER=127.0.0.1
@@ -181,11 +187,11 @@ source .env
 docker compose up -d database
 
 # 4. Initialize / migrate the database
-python -m flask db upgrade
-python -m server.swagger_server.database.db_load
+uv run python -m flask db upgrade
+uv run python -m server.swagger_server.database.db_load
 
 # 5. Run the Flask app on port 6000
-python -m server.swagger_server
+uv run python -m server.swagger_server
 ```
 
 If you also want Nginx + Vouch in front of the host-bound Flask, edit `nginx/default.conf` to switch the upstream `proxy_pass` from `http://flask-server:6000` to `http://host.docker.internal:6000` (macOS) or `http://172.17.0.1:6000` (Linux), then bring those two services up: `docker compose up -d nginx vouch-proxy`.
@@ -193,6 +199,8 @@ If you also want Nginx + Vouch in front of the host-bound Flask, edit `nginx/def
 ---
 
 ## <a name="database-lifecycle"></a>Database Lifecycle
+
+All `python -m …` commands below assume the managed venv. From the host, prefix with `uv run`; inside the Docker container the venv is already on `PATH`.
 
 | Operation | Command |
 |---|---|
@@ -212,14 +220,14 @@ Schema versioning lives in `server/swagger_server/__init__.py` (`__API_VERSION__
 ## <a name="testing"></a>Testing
 
 ```console
-# Full suite via tox (py38)
-tox
+# Install dev deps once
+uv sync --group dev
 
-# Direct invocation
-nosetests
+# Full suite
+uv run nosetests
 
 # A single test file
-nosetests server/swagger_server/test/test_people_controller.py
+uv run nosetests server/swagger_server/test/test_people_controller.py
 ```
 
 Tests live in `server/swagger_server/test/` and use [nose](https://nose.readthedocs.io/) with [flask_testing](https://flask-testing.readthedocs.io/).

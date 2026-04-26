@@ -28,7 +28,7 @@ FABRIC Storage Allocations
   - authz: `Authorization: Bearer $TOKEN` in the request header
   - response type: singleton `storage.details`
 
-### `/storage/site-list`
+### `/storage/sites`
 
 - GET - retrieve list of valid FABRIC site short-names
   - param: `search` - optional text search, 3 or more characters
@@ -44,7 +44,7 @@ FABRIC Storage Allocations
   - response type: singleton `storage.details`
 - PATCH - update an existing storage allocation
   - data: `active` as boolean (optional)
-  - data: `expires_on` as string (optional)
+  - data: `expires_on` as string (optional) — **must not exceed the parent project's `expires_on`** (returns `400` otherwise; introduced in v1.10.0)
   - data: `site_list` as array of string (optional)
   - data: `volume_name` as string (optional)
   - data: `volume_size_gb` as integer (optional)

@@ -34,6 +34,20 @@ FABRIC People
   - authz: open to authenticated user as self
   - response type: 200 OK as `204 no content`
 
+### `/people/{uuid}/project-lead-approved`
+
+- PATCH - update the "project lead approved" flag for a person
+  - data: `project_lead_approved` as boolean (required)
+  - authz: `project-admins` only — controls whether the person may be assigned as a project lead
+  - response type: 200 OK as `204 no content`
+
+### `/people/services-auth`
+
+- GET - return service-authorization details for a user identified by their OIDC `sub`
+  - param: `sub` - subject identifier from CILogon (required, ≥3 characters)
+  - authz: requires the `SERVICES_AUTHORIZATION_TOKEN` bearer token (intended for peer FABRIC services)
+  - response type: singleton `service_auth_details`
+
 ### `/people/{uuid}/profile`
 
 - PATCH - update an existing person profile

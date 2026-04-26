@@ -30,9 +30,9 @@ FABRIC Facility & Maintenance Announcements
 
 - GET: `/announcements`
 - POST: `/announcements`
-- GET: `/announcements`
-- PATCH: `/announcements`
-- DELETE: `/announcements`
+- GET: `/announcements/{uuid}`
+- PATCH: `/announcements/{uuid}`
+- DELETE: `/announcements/{uuid}`
 
 ### check-cookie
 Check OIDC authentication cookie claims
@@ -43,6 +43,13 @@ Check OIDC authentication cookie claims
 Core API metrics data
 
 - GET: `/core-api-metrics/overview`
+- GET: `/core-api-metrics/events`
+- GET: `/core-api-metrics/events/people-membership/{uuid}`
+- GET: `/core-api-metrics/events/projects-membership/{uuid}`
+- GET: `/core-api-metrics/people`
+- GET: `/core-api-metrics/people-details/{uuid}`
+- GET: `/core-api-metrics/projects`
+- GET: `/core-api-metrics/projects-details/{uuid}`
 
 ### people
 FABRIC People
@@ -51,10 +58,12 @@ FABRIC People
 - GET: `/people/{uuid}`
 - PATCH: `/people/{uuid}`
 - PATCH: `/people/{uuid}/profile`
+- PATCH: `/people/{uuid}/project-lead-approved`
 - GET: `/people/preferences`
 - GET: `/people/profile/otheridentity-types`
 - GET: `/people/profile/preferences`
 - GET: `/people/profile/personalpage-types`
+- GET: `/people/services-auth`
 
 ### projects
 FABRIC Projects
@@ -77,6 +86,7 @@ FABRIC Projects
 - PATCH: `/projects/{uuid}/profile`
 - PATCH: `/projects/{uuid}/project-creators`
 - PATCH: `/projects/{uuid}/project-funding`
+- PATCH: `/projects/{uuid}/project-lead`
 - PATCH: `/projects/{uuid}/project-members`
 - PATCH: `/projects/{uuid}/project-owners`
 - PATCH: `/projects/{uuid}/tags`
@@ -111,7 +121,7 @@ FABRIC Site Storage
 - GET: `/storage/sites`
 - GET: `/storage/{uuid}`
 - PATCH: `/storage/{uuid}`
-- DELETE: `/storage{uuid}`
+- DELETE: `/storage/{uuid}`
 
 ### testbed-info
 FABRIC Testbed Information
@@ -127,4 +137,4 @@ Core API Version
 ### whoami
 Who am I authenticated as
 
-- GET: `/whomai`
+- GET: `/whoami`

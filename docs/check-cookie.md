@@ -43,26 +43,21 @@ Check Cookie
       "University of North Carolina at Chapel Hill"
     ],
     "roles": [
-      "10582cb1-ee10-4b8c-8d61-ffc4688be0d6-pc",
       "10582cb1-ee10-4b8c-8d61-ffc4688be0d6-po",
       "10582cb1-ee10-4b8c-8d61-ffc4688be0d6-tk",
-      "1af8e23d-5fa8-46fc-be94-21609abbadd0-pc",
       "1af8e23d-5fa8-46fc-be94-21609abbadd0-po",
       "88c74e11-9324-42e1-83fa-97dc742919b6-pm",
       "8b3a2eae-a0c0-475a-807b-e9af581ce4c0-pm",
       "8b3a2eae-a0c0-475a-807b-e9af581ce4c0-tk",
-      "a5488d93-7c6b-48ea-9de1-19e216c0519b-pc",
       "a5488d93-7c6b-48ea-9de1-19e216c0519b-po",
-      "approval-committee ",
-      "d74993c8-e3b5-451c-977f-c7cc544f176f-pc",
+      "approval-committee",
       "d74993c8-e3b5-451c-977f-c7cc544f176f-po",
-      "ec8389c8-6129-40aa-a6ee-3a1d80d74f33-pc",
       "fabric-active-users",
       "facility-operators",
       "Jupyterhub",
       "long-lived-tokens",
       "portal-admins",
-      "project-leads"
+      "project-admins"
     ],
     "sub": [
       "http://cilogon.org/serverA/users/242181"

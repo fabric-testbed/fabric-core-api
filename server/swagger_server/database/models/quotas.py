@@ -8,39 +8,41 @@ from swagger_server.database.db import db
 # Enum for Resource Types
 class EnumResourceTypes(enum.Enum):
     """
-    ['p4',
-    'core',
-    'ram',
+    ['core',
     'disk',
+    'fpga_xilinx_sn1022',
+    'fpga_xilinx_u280',
+    'gpu_a30',
+    'gpu_a40',
     'gpu_rtx6000',
     'gpu_tesla_t4',
-    'gpu_a40',
-    'gpu_a30',
-    'sharednic_connectx_6',
-    'smartnic_bluefield_2_connectx_6',
-    'smartnic_connectx_6',
-    'smartnic_connectx_5',
     'nvme_p4510',
-    'storage_nas',
-    'fpga_xilinx_u280',
-    'fpga_xilinx_sn1022']
+    'p4',
+    'ram',
+    'sharednic_connectx_6',
+    'smartnic_connectx_5',
+    'smartnic_connectx_6',
+    'smartnic_connectx_7_100',
+    'smartnic_connectx_7_400',
+    'storage_nas']
     """
-    p4 = "P4"
     core = "Core"
-    ram = "RAM"
     disk = "Disk"
+    fpga_xilinx_sn1022 = "FPGA XILINX SN1022"
+    fpga_xilinx_u280 = "FPGA XILINX U280"
+    gpu_a30 = "GPU A30"
+    gpu_a40 = "GPU A40"
     gpu_rtx6000 = "GPU RTX6000"
     gpu_tesla_t4 = "GPU TESLA T4"
-    gpu_a40 = "GPU A40"
-    gpu_a30 = "GPU A30"
-    sharednic_connectx_6 = "SharedNIC ConnectX 6"
-    smartnic_bluefield_2_connectx_6 = "SmartNIC Bluefield 2 ConnectX 6"
-    smartnic_connectx_6 = "SmartNIC ConnectX 6"
-    smartnic_connectx_5 = "SmartNIC ConnectX 5"
     nvme_p4510 = "NVME P4510"
+    p4 = "P4"
+    ram = "RAM"
+    sharednic_connectx_6 = "SharedNIC ConnectX 6"
+    smartnic_connectx_5 = "SmartNIC ConnectX 5"
+    smartnic_connectx_6 = "SmartNIC ConnectX 6"
+    smartnic_connectx_7_100 = "SmartNIC ConnectX 7 - 100"
+    smartnic_connectx_7_400 = "SmartNIC ConnectX 7 - 400"
     storage_nas = "Storage NAS"
-    fpga_xilinx_u280 = "FPGA XILINX U280"
-    fpga_xilinx_sn1022 = "FPGA XILINX SN1022"
 
 
 # Enum for Resource Units

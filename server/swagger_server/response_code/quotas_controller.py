@@ -61,14 +61,14 @@ def quotas_get(project_uuid: str = None, offset: int = None, limit: int = None) 
                 if fab_project:
                     results_page = FabricQuotas.query.filter(
                         FabricQuotas.project_uuid == fab_project.uuid
-                    ).order_by(FabricQuotas.resource_type.name).paginate(page=_page, per_page=limit, error_out=False)
+                    ).order_by(FabricQuotas.resource_type).paginate(page=_page, per_page=limit, error_out=False)
                 else:
                     return cors_404(details="No match for Project with uuid = '{0}'".format(project_uuid))
             else:
                 results_page = FabricQuotas.query.filter(
                     FabricQuotas.project_uuid is not None
                 ).order_by(
-                    FabricQuotas.resource_type.name
+                    FabricQuotas.resource_type
                 ).paginate(page=_page, per_page=limit, error_out=False)
             # set quotas response
             response = Quotas()
@@ -345,7 +345,7 @@ def quotas_uuid_put(uuid, body=None):  # noqa: E501
                         return cors_400(details=details)
                     fab_quota.resource_type = str(body.resource_type).casefold()
                     fab_quota_modified = True
-                    consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, resource_type={1}'.format(
+                    consoleLogger.info('UPDATE: FabricQuotas: uuid={0}, resource_type={1}'.format(
                         fab_quota.uuid, fab_quota.resource_type))
             except Exception as exc:
                 consoleLogger.info("NOP: quotas_uuid_put(): 'resource_type' - {0}".format(exc))
@@ -359,8 +359,8 @@ def quotas_uuid_put(uuid, body=None):  # noqa: E501
                         return cors_400(details=details)
                     fab_quota.resource_unit = str(body.resource_unit).casefold()
                     fab_quota_modified = True
-                    consoleLogger.info('UPDATE: FabricAnnouncements: uuid={0}, resource_unit={1}'.format(
-                        fab_quota.uuid, fab_quota.resource_type))
+                    consoleLogger.info('UPDATE: FabricQuotas: uuid={0}, resource_unit={1}'.format(
+                        fab_quota.uuid, fab_quota.resource_unit))
             except Exception as exc:
                 consoleLogger.info("NOP: quotas_uuid_put(): 'resource_unit' - {0}".format(exc))
             # save modified quota

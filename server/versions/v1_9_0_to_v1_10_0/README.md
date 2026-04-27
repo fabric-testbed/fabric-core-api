@@ -2,14 +2,15 @@
 
 This directory contains the helper scripts and manifests required to migrate a deployed FABRIC Core API instance from API version **1.9.0** to **1.10.0**.
 
-The migration covers four classes of change:
+The migration covers five classes of change:
 
 1. **Project creator decoupling** — the per-project `<uuid>-pc` COU is removed from COmanage; creators are tracked only in the local `projects_creators` junction table.
 2. **`project-leads` role deprecation** — the facility-wide `project-leads` COU is purged; the role-equivalent for project creation is now `project-admins`.
 3. **Storage expiry alignment** — every storage allocation's `expires_on` is brought into line with its parent project's `expires_on`.
 4. **`created_by_uuid` backfill** — projects missing `created_by_uuid` are populated from the `projects_creators` junction table (preferred) or `project_lead` (fallback).
+5. **`EnumResourceTypes` update** — the obsolete `smartnic_bluefield_2_connectx_6` resource type is removed and two new ConnectX 7 variants (`smartnic_connectx_7_100`, `smartnic_connectx_7_400`) are added to the Postgres ENUM backing the `quotas.resource_type` column.
 
-The migration is performed in five phases. Phases 1–3 modify the local database; Phases 4–5 touch the remote COmanage registry and the operator's `.env`. Take a full backup before starting.
+The migration is performed in eight phases. Phases 1–3 modify the local database; Phases 4–5 touch the remote COmanage registry and the operator's `.env`. Take a full backup before starting.
 
 ---
 
@@ -21,6 +22,7 @@ The migration is performed in five phases. Phases 1–3 modify the local databas
 | `db_version_updates_v1.10.0.py` | script (legacy) | Carried over from the previous directory layout; superseded by the canonical `server/swagger_server/backup/utils/db_version_updates.py` (which contains the full set of v1.10.0 backfill functions). Kept here for historical reference; **do not use for the migration** |
 | `purge_pc_cous.py` | script | Removes per-project `-pc` COUs from COmanage after they've been NULLed locally |
 | `purge_project_leads.py` | script | Removes `project-leads` role memberships and (optionally) the COU itself |
+| `quotas_resource_types_alembic.py` | reference Alembic migration | Updates the Postgres `enumresourcetypes` ENUM to match the v1.10.0 `EnumResourceTypes` definition (drops one resource type, adds two). Must be copied into `migrations/versions/` before running `flask db upgrade` — see Phase 2 below |
 
 The canonical backfill driver lives at:
 
@@ -48,6 +50,14 @@ Take a full backup. Both database and config are touched; rollback requires a kn
 source .env
 ./full-backup.sh
 # Move/copy the resulting full-backup-*.tar.gz off-host
+```
+
+Snapshot the existing `quotas` rows that reference the obsolete resource type, so they can be reconstructed if a rollback is needed (Phase 2 deletes them):
+
+```bash
+docker exec api-database psql -U postgres -d postgres \
+  -c "\copy (SELECT * FROM quotas WHERE resource_type = 'smartnic_bluefield_2_connectx_6') TO '/tmp/quotas-bluefield-snapshot.csv' WITH CSV HEADER"
+docker cp api-database:/tmp/quotas-bluefield-snapshot.csv ./
 ```
 
 Snapshot the current state of the relevant COUs in case manual rollback is needed:
@@ -103,14 +113,64 @@ If the deployment was using `pip install -r requirements.txt` (v1.9.0 style), th
 
 ## Phase 2 — Apply Alembic migrations
 
+The v1.9.0 → v1.10.0 transition introduces **one schema change**: the Postgres `enumresourcetypes` type backing `quotas.resource_type` is amended to drop one obsolete value and add two new ConnectX 7 variants (see change #5 in the overview). Everything else is data-only and happens in Phase 3.
+
+### 2a. Stage the quotas-enum migration
+
+The migration is shipped at:
+
+```
+server/versions/v1_9_0_to_v1_10_0/quotas_resource_types_alembic.py
+```
+
+Because `migrations/` is gitignored (each deployment maintains its own Alembic chain), copy this file into the deployment's migration history and wire it into the chain:
+
+```bash
+# 1. Find your current Alembic head
+source .env
+uv run python -m flask db current
+# → e.g. abc123def456 (head)
+
+# 2. Copy the reference migration into the local migrations directory
+cp server/versions/v1_9_0_to_v1_10_0/quotas_resource_types_alembic.py \
+   migrations/versions/
+
+# 3. Edit the copied file:
+#    - set `down_revision = 'abc123def456'`  (whatever `db current` reported)
+#    - leave `revision = '1f10a0_quotas_enum_v1_10_0'` as-is (or rename consistently)
+$EDITOR migrations/versions/quotas_resource_types_alembic.py
+```
+
+### 2b. Apply migrations
+
 ```bash
 source .env
 uv run python -m flask db upgrade
 ```
 
-The v1.9.0 → v1.10.0 transition does **not** introduce any new schema (no column adds, no table drops). Alembic should report "already up to date" if the v1.9.0 database was current. The migration's data changes happen in Phase 3, not here.
+Alembic should:
 
-If `flask db upgrade` reports a version drift, stop and investigate before proceeding.
+1. Apply the quotas-enum migration (deletes any orphan `smartnic_bluefield_2_connectx_6` quota rows, adds the two ConnectX 7 enum values).
+2. Report the new head revision.
+
+Verify:
+
+```bash
+docker exec api-database psql -U postgres -d postgres -c \
+  "SELECT enumlabel FROM pg_enum
+   WHERE enumtypid = 'enumresourcetypes'::regtype
+   ORDER BY enumsortorder;"
+# Expected: 17 rows including 'smartnic_connectx_7_100' and 'smartnic_connectx_7_400';
+# 'smartnic_bluefield_2_connectx_6' may still appear at the SQL level but is
+# unreachable through the ORM (intentional — see migration docstring).
+
+docker exec api-database psql -U postgres -d postgres -c \
+  "SELECT count(*) FROM quotas
+   WHERE resource_type = 'smartnic_bluefield_2_connectx_6';"
+# Expected: 0
+```
+
+If `flask db upgrade` reports an unexpected version drift (heads other than the quotas migration), stop and investigate before proceeding.
 
 ---
 
@@ -130,6 +190,7 @@ What it does (in order):
 3. **`projects_backfill_created_by_uuid()`** — populates `created_by_uuid` for projects missing it. Source preference: `projects_creators[0]` → `project_lead`.
 4. **`projects_export_creator_owners_report()`** — writes `project_creator_owners.md` listing every project alongside its creators and owners, with rows bolded where the creator is not also an owner. **This is the input to Phase 5 manual review.**
 5. **`storage_align_expires_on_with_project()`** — sets each storage allocation's `expires_on` to its parent project's `expires_on` whenever they differ.
+6. **`quotas_backfill_missing_resource_types()`** — for every project, adds a `FabricQuotas` row (with `quota_limit = 0`, `quota_used = 0`, `resource_unit = hours`) for any `EnumResourceTypes` member it doesn't already have. After v1.10.0 this fills in the two new ConnectX 7 resource types on existing projects. Idempotent — safe to re-run.
 
 After this phase, verify:
 
@@ -149,6 +210,18 @@ docker exec api-database psql -U postgres -d postgres -c \
   "SELECT s.id, s.uuid, s.expires_on, p.expires_on AS project_expires
    FROM storage s JOIN projects p ON p.id = s.project_id
    WHERE s.expires_on > p.expires_on;"
+# → expected: 0 rows
+
+# Every project should have one quota row per current EnumResourceTypes
+# member (17 in v1.10.0). Any value below 17 indicates the backfill
+# missed a project — re-run db_version_updates and investigate.
+docker exec api-database psql -U postgres -d postgres -c \
+  "SELECT p.uuid, p.name, count(q.id) AS quota_count
+   FROM projects p
+   LEFT JOIN quotas q ON q.project_uuid = p.uuid::text
+   GROUP BY p.uuid, p.name
+   HAVING count(q.id) <> 17
+   ORDER BY quota_count;"
 # → expected: 0 rows
 ```
 
@@ -270,6 +343,11 @@ There is no automated rollback. If the migration fails:
 4. Restore the previous `.env` (the COU_ID_PROJECT_LEADS / COU_NAME_PROJECT_LEADS lines must come back).
 5. Roll the deployment back to the v1.9.0 code (`git checkout v1.9.0`, `pip install -r requirements.txt` since v1.9.0 didn't use uv).
 
+The quotas-enum migration's `downgrade()` is intentionally a no-op:
+
+- Postgres has no `DROP VALUE` for ENUM types — the two ConnectX 7 values added in Phase 2 cannot be removed without a full type rebuild.
+- The deleted bluefield rows can be replayed from `quotas-bluefield-snapshot.csv` (Phase 0) if a partial rollback is needed without restoring the whole database.
+
 Because step 3 is destructive (new COU IDs ≠ old IDs), prefer to fix-forward rather than roll back wherever possible.
 
 ---
@@ -280,7 +358,8 @@ Because step 3 is destructive (new COU IDs ≠ old IDs), prefer to fix-forward r
 |---|---|---|
 | 0 | `full-backup.sh` + COU snapshot | Manual |
 | 1 | `git checkout v1.10.0` + `uv sync --group dev` | Manual |
-| 2 | `uv run python -m flask db upgrade` | Scripted |
+| 2a | Copy `quotas_resource_types_alembic.py` into `migrations/versions/`, set `down_revision` | Manual |
+| 2b | `uv run python -m flask db upgrade` | Scripted |
 | 3 | `uv run python -m server.swagger_server.backup.utils.db_version_updates` | Scripted |
 | 4a | `purge_pc_cous.py --dry-run` → live | Scripted (with manual gate) |
 | 4b | `purge_project_leads.py --dry-run` → `--keep-cou` → live | Scripted (with manual gate) |

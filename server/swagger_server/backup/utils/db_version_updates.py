@@ -49,10 +49,12 @@ Changes from v1.9.0 --> v1.10.0
 import json
 import os
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
 from swagger_server.database.models.projects import FabricProjects
+from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 from swagger_server.database.models.storage import FabricStorage
 
 # API version of data to restore from
@@ -231,6 +233,62 @@ def projects_export_creator_owners_report():
         consoleLogger.error(exc)
 
 
+def quotas_backfill_missing_resource_types():
+    """
+    Ensure every project has one FabricQuotas row per current EnumResourceTypes
+    member.
+
+    A project created on an older schema may be missing rows for resource
+    types added in v1.10.0 (smartnic_connectx_7_100, smartnic_connectx_7_400).
+    Conversely, the obsolete smartnic_bluefield_2_connectx_6 row is removed
+    by the Alembic migration before this runs.
+
+    Defaults for newly-inserted rows match `create_fabric_project_from_api`:
+      - quota_limit = 0.0
+      - quota_used  = 0.0
+      - resource_unit = hours
+    Existing rows are left untouched.
+
+    This function is idempotent — running it twice is a no-op on the second
+    pass. It must be invoked AFTER the Alembic migration that adds the new
+    ENUM values, otherwise the inserts will fail.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        added_total = 0
+        fab_projects = FabricProjects.query.order_by('id').all()
+        for fp in fab_projects:
+            existing_types = {
+                q.resource_type.name
+                for q in FabricQuotas.query.filter_by(project_uuid=str(fp.uuid)).all()
+            }
+            missing_types = [
+                rt for rt in EnumResourceTypes if rt.name not in existing_types
+            ]
+            if not missing_types:
+                continue
+            for rt in missing_types:
+                fab_quota = FabricQuotas()
+                fab_quota.created_at = now
+                fab_quota.project_uuid = str(fp.uuid)
+                fab_quota.quota_limit = 0.0
+                fab_quota.quota_used = 0.0
+                fab_quota.resource_type = rt.name
+                fab_quota.resource_unit = EnumResourceUnits.hours.name
+                fab_quota.updated_at = now
+                fab_quota.uuid = str(uuid4())
+                db.session.add(fab_quota)
+                added_total += 1
+                print(' - Project id={0} ({1}): added quota for resource_type={2}'.format(
+                    fp.id, fp.name, rt.name))
+            db.session.commit()
+        consoleLogger.info('Backfilled {0} missing quota row(s) across {1} project(s)'.format(
+            added_total, len(fab_projects)))
+    except Exception as exc:
+        consoleLogger.error(exc)
+        db.session.rollback()
+
+
 if __name__ == '__main__':
     app.app_context().push()
 
@@ -255,3 +313,7 @@ if __name__ == '__main__':
     # Storage: align expires_on with project expires_on
     consoleLogger.info('Storage: aligning storage expires_on with project expires_on')
     storage_align_expires_on_with_project()
+
+    # Quotas: backfill any missing resource_type rows on existing projects
+    consoleLogger.info('Quotas: backfilling missing resource_type rows for existing projects')
+    quotas_backfill_missing_resource_types()

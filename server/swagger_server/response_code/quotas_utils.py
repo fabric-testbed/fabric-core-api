@@ -16,8 +16,14 @@ def create_fabric_quota_from_api(body: QuotasPost) -> FabricQuotas:
     - project_uuid = UUID as string
     - quota_limit = Float
     - quota_used = Float
-    - resource_type = in [p4, core, ram, disk, gpu, smartnic, sharednic, fpga, nvme, storage] as string
-    - resource_unit = in [hours, ...] as string
+    - resource_type = one of EnumResourceTypes member names (see
+      `database/models/quotas.py`): core, disk, fpga_xilinx_sn1022,
+      fpga_xilinx_u280, gpu_a30, gpu_a40, gpu_rtx6000, gpu_tesla_t4,
+      nvme_p4510, p4, ram, sharednic_connectx_6, smartnic_connectx_5,
+      smartnic_connectx_6, smartnic_connectx_7_100,
+      smartnic_connectx_7_400, storage_nas
+    - resource_unit = one of EnumResourceUnits member names (currently:
+      hours)
     - updated_at = UTC datetime
     - uuid = UUID as string
 

@@ -149,17 +149,63 @@ Four template files drive the deployment. All four are committed; the rendered (
 | `nginx/default.conf.template` | `nginx/default.conf` | TLS termination, CORS, `auth_request`, upstream `proxy_pass` |
 | `vouch/config.yml.template` | `vouch/config.yml` | Vouch Proxy: OIDC client + cookie + JWT |
 
-`env.template` is the master configuration document — every variable is grouped into one of 11 sections with inline comments describing what it controls and which other files it must stay in sync with. Markers used:
+### `env.template` layout
 
-- `# CHANGE-ME` — placeholder values that MUST be replaced before deployment
-- `# LOCAL` / `# DOCKER` — toggle between local-Flask and Docker-Compose modes (uncomment the appropriate line)
+`env.template` is the master configuration document. It opens with a banner header and a table of contents, then groups every variable into one of **eleven numbered sections**. Each section starts with a `# ----` rule and a comment block describing what each variable in the section controls.
 
-**Cross-file invariants** to watch when editing:
+```
+# =============================================================================
+# Core API environment configuration
+# -----------------------------------------------------------------------------
+# Copy this file to `.env`, fill in real values, then `source .env` before
+# running the server (or before `docker compose up` — Compose reads it as well).
+#
+# Sections:
+#   1.  Core API server
+#   2.  Postgres database
+#   3.  Authentication (Vouch / Nginx CORS)
+#   4.  COmanage Registry (API + COU mappings)
+#   5.  Background tasks (timeout intervals)
+#   6.  SSH key management
+#   7.  SMTP (outbound email)
+#   8.  Projects (lifecycle)
+#   9.  External FABRIC services
+#   10. Service-account auth tokens
+#   11. Runtime (Python / Flask)
+# =============================================================================
+```
 
-- `VOUCH_COOKIE_NAME` (.env) ↔ `vouch.cookie.name` (vouch/config.yml)
-- `VOUCH_JWT_SECRET` (.env) ↔ `vouch.jwt.secret` (vouch/config.yml)
-- nginx `/auth` location ↔ `oauth.callback_url` (vouch/config.yml) ↔ CILogon OIDC client redirect URI
-- `NGINX_ACCESS_CONTROL_ALLOW_ORIGIN` (.env) ↔ nginx CORS `Access-Control-Allow-Origin`
+| § | Section | Variables (selected) |
+|---|---|---|
+| 1 | Core API server | `CORE_API_DEPLOYMENT_TIER`, `CORE_API_SERVER_URL`, `CORE_API_DEFAULT_LIMIT`, `MAX_ACTIVE_CAROUSEL_ITEMS` |
+| 2 | Postgres database | `POSTGRES_SERVER` (LOCAL/DOCKER toggle), `POSTGRES_PASSWORD`, `PGDATA`, `PGDATA_HOST` |
+| 3 | Authentication | `VOUCH_COOKIE_NAME`, `VOUCH_JWT_SECRET`, `NGINX_ACCESS_CONTROL_ALLOW_ORIGIN` |
+| 4 | COmanage Registry | `COMANAGE_API_*`, plus the `COU_ID_*` / `COU_NAME_*` role mappings |
+| 5 | Background tasks | `CAM_*`, `PSK_*`, `TRL_*` task descriptions/intervals |
+| 6 | SSH key management | `SSH_KEY_ALGORITHM`, `SSH_*_KEY_VALIDITY_DAYS`, `SSH_KEY_SECRET`, `SSH_KEY_QTY_LIMIT` |
+| 7 | SMTP | `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_REPLY_TO_EMAIL` |
+| 8 | Projects (lifecycle) | `PROJECTS_RENEWAL_PERIOD_IN_DAYS`, `PROJECTS_RETIRE_POST_EXPIRY_IN_DAYS` |
+| 9 | External FABRIC services | `FABRIC_CORE_API`, `FABRIC_CREDENTIAL_MANAGER` |
+| 10 | Service-account auth tokens | `ANSIBLE_*`, `READONLY_*`, `SERVICES_AUTHORIZATION_TOKEN`, `SERVICE_ACCOUNT_UUID` |
+| 11 | Runtime (Python / Flask) | `PYTHONPATH` (LOCAL/DOCKER toggle), `FLASK_APP` |
+
+### Inline markers
+
+Search for these markers in `env.template` (and the other template files) to find values that need attention:
+
+- `# CHANGE-ME` — placeholder value that MUST be replaced before deployment (e.g. passwords, OIDC secrets, COmanage credentials, `FABRIC_*` URLs).
+- `# LOCAL development` / `# DOCKER deployment` — pair of lines where one is commented and the other active. Uncomment the row matching your run mode. Currently used for `POSTGRES_SERVER` (§ 2) and `PYTHONPATH` (§ 11).
+
+### Cross-file invariants
+
+Several values must stay in sync across `.env`, `vouch/config.yml`, and `nginx/default.conf`:
+
+| `.env` | must match |
+|---|---|
+| `VOUCH_COOKIE_NAME` | `vouch.cookie.name` in `vouch/config.yml` |
+| `VOUCH_JWT_SECRET` | `vouch.jwt.secret` in `vouch/config.yml` |
+| `NGINX_ACCESS_CONTROL_ALLOW_ORIGIN` | `Access-Control-Allow-Origin` header in `nginx/default.conf` |
+| `CORE_API_SERVER_URL` | `oauth.callback_url` in `vouch/config.yml` (callback `/auth`) **and** the redirect URI registered with the CILogon OIDC client |
 
 ---
 

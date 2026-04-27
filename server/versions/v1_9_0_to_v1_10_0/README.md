@@ -268,6 +268,36 @@ uv run python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads
 
 Unlike the per-project `-pc` COUs, `project-leads` is a single facility-wide COU. Operators may prefer to purge memberships only (`--keep-cou`) on the first pass, verify nothing else in COmanage references the COU, and delete it manually later.
 
+### 4c. Clean up local `-pc` roles and groups
+
+Phase 4a removes the `-pc` COUs from the **remote** COmanage registry. The corresponding rows in the local `people_roles` (`FabricRoles`) and `groups` (`FabricGroups`) tables won't go away on their own — `update_people_roles` will eventually clean up `people_roles` on the next user sync, but `groups` will linger forever otherwise.
+
+Run the cleanup function from `db_version_updates.py` once 4a has completed. It must run AFTER 4a — otherwise the next COmanage sync would resurrect the rows.
+
+```bash
+source .env
+uv run python -c "
+from swagger_server.__main__ import app
+from swagger_server.backup.utils.db_version_updates import cleanup_pc_roles_and_groups
+app.app_context().push()
+cleanup_pc_roles_and_groups()
+"
+```
+
+Verify:
+
+```bash
+docker exec api-database psql -U postgres -d postgres -c \
+  "SELECT count(*) FROM people_roles WHERE name LIKE '%-pc';"
+# → expected: 0
+
+docker exec api-database psql -U postgres -d postgres -c \
+  "SELECT count(*) FROM groups WHERE name LIKE '%-pc';"
+# → expected: 0
+```
+
+After this completes, `/check-cookie` and `/people/{uuid}` will no longer show `<uuid>-pc` entries in the user's `roles` array. Project-creator membership remains tracked via the `projects_creators` junction table — visible in the project detail's `memberships.is_creator` flag and the `/projects/{uuid}/project-creators` PATCH endpoint.
+
 ---
 
 ## Phase 5 — Manual review
@@ -363,6 +393,7 @@ Because step 3 is destructive (new COU IDs ≠ old IDs), prefer to fix-forward r
 | 3 | `uv run python -m server.swagger_server.backup.utils.db_version_updates` | Scripted |
 | 4a | `purge_pc_cous.py --dry-run` → live | Scripted (with manual gate) |
 | 4b | `purge_project_leads.py --dry-run` → `--keep-cou` → live | Scripted (with manual gate) |
+| 4c | `cleanup_pc_roles_and_groups()` (drops stale local `-pc` rows) | Scripted |
 | 5 | Review `project_creator_owners.md`; fix mismatches via API | Manual |
 | 6 | Remove `COU_*_PROJECT_LEADS` from `.env`; coordinate with portal team | Manual |
 | 7 | `docker compose build && up`; smoke-test endpoints | Manual |

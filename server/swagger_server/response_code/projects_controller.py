@@ -59,6 +59,21 @@ class EnumSearchSetTypes(enum.Enum):
     type = 4
 
 
+def _project_uuids_for_person(fab_person: FabricPeople) -> list:
+    """
+    Return the list of project UUIDs the person is associated with through any
+    membership type (creator, member, owner, token holder).
+
+    Member / owner / token-holder associations are derived from the role-name
+    suffix on `FabricRoles` (still synced from COmanage `<uuid>-pm/-po/-tk`).
+    Creator associations are read directly from the `projects_creators`
+    junction table — the legacy `<uuid>-pc` role was removed in v1.10.0.
+    """
+    role_uuids = [r.name.rsplit('-', 1)[0] for r in fab_person.roles]
+    creator_uuids = [str(p.uuid) for p in fab_person.project_creators]
+    return list(set(role_uuids + creator_uuids))
+
+
 def projects_communities_get(search=None):  # noqa: E501
     """List of Projects Communities options
 
@@ -336,35 +351,38 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
         elif not search and person_uuid:
             base = '{0}/projects?person_uuid={1}&{2}'.format(_SERVER_URL, person_uuid, _sort_order_path)
             if api_user.uuid == person_uuid:
+                user_project_uuids = _project_uuids_for_person(api_user)
                 results_page = FabricProjects.query.filter(
                     is_public_check &
-                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles])
+                    FabricProjects.uuid.in_(user_project_uuids)
                 ).order_by(_sort_order_query).paginate(
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
+                user_project_uuids = _project_uuids_for_person(fab_person)
                 if is_anonymous:
                     results_page = FabricProjects.query.filter(
                         is_public_check &
                         FabricProjects.active.is_(True) &
                         FabricProjects.is_public.is_(True) &
-                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
+                        FabricProjects.uuid.in_(user_project_uuids)
                     ).order_by(_sort_order_query).paginate(
                         page=_page, per_page=limit, error_out=False)
                 else:
                     results_page = FabricProjects.query.filter(
                         is_public_check &
                         FabricProjects.is_public.is_(True) &
-                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles])
+                        FabricProjects.uuid.in_(user_project_uuids)
                     ).order_by(_sort_order_query).paginate(
                         page=_page, per_page=limit, error_out=False)
         else:
             base = '{0}/projects?search={1}&person_uuid={2}&{3}'.format(_SERVER_URL, search, person_uuid,
                                                                         _sort_order_path)
             if api_user.uuid == person_uuid:
+                user_project_uuids = _project_uuids_for_person(api_user)
                 results_page = FabricProjects.query.filter(
                     is_public_check &
-                    FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in api_user.roles]) &
+                    FabricProjects.uuid.in_(user_project_uuids) &
                     ((FabricProjects.name.ilike("%" + search + "%")) |
                      (FabricProjects.description.ilike("%" + search + "%")) |
                      (FabricProjects.uuid.ilike("%" + search + "%")))
@@ -372,12 +390,13 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     page=_page, per_page=limit, error_out=False)
             else:
                 as_self = False
+                user_project_uuids = _project_uuids_for_person(fab_person)
                 if is_anonymous:
                     results_page = FabricProjects.query.filter(
                         is_public_check &
                         FabricProjects.active.is_(True) &
                         FabricProjects.is_public.is_(True) &
-                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
+                        FabricProjects.uuid.in_(user_project_uuids) &
                         (FabricProjects.name.ilike("%" + search + "%") |
                          FabricProjects.description.ilike("%" + search + "%"))
                     ).order_by(_sort_order_query).paginate(
@@ -386,7 +405,7 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
                     results_page = FabricProjects.query.filter(
                         is_public_check &
                         FabricProjects.is_public.is_(True) &
-                        FabricProjects.uuid.in_([r.name.rsplit('-', 1)[0] for r in fab_person.roles]) &
+                        FabricProjects.uuid.in_(user_project_uuids) &
                         (FabricProjects.name.ilike("%" + search + "%") |
                          FabricProjects.description.ilike("%" + search + "%"))
                     ).order_by(_sort_order_query).paginate(
@@ -1230,11 +1249,12 @@ def projects_uuid_patch(uuid: str = None, body: ProjectsPatch = None) -> Status2
         # check for name
         try:
             if len(body.name) != 0:
-                is_pc_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pc, description=body.name)
+                # co_cou_id_pc is NULL post-v1.10.0 (project creator decoupled
+                # from COmanage); only the -pm / -po / -tk COUs are renamed.
                 is_pm_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_pm, description=body.name)
                 is_po_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_po, description=body.name)
                 is_tk_name = update_comanage_group(co_cou_id=fab_project.co_cou_id_tk, description=body.name)
-                if is_pc_name and is_pm_name and is_po_name and is_tk_name:
+                if is_pm_name and is_po_name and is_tk_name:
                     fab_project.name = body.name
                     db.session.commit()
                     consoleLogger.info(

@@ -272,7 +272,11 @@ def update_fabric_person(fab_person: FabricPeople = None):
         update_user_subject_identities(fab_person=fab_person)
         # update user org affiliation
         update_user_org_affiliations(fab_person=fab_person)
-        # ensure project roles are properly set
+        # ensure project roles are properly set.
+        # As of v1.10.0, project_creators is no longer derived from a COmanage
+        # role suffix — creator membership is written directly to the
+        # projects_creators junction table via the API (see
+        # projects_utils.create_fabric_project_from_api / update_projects_personnel).
         for role in fab_person.roles:
             proj_uuid = role.name[:-3]
             if is_valid_uuid(proj_uuid):
@@ -280,9 +284,6 @@ def update_fabric_person(fab_person: FabricPeople = None):
                 fab_project = FabricProjects.query.filter_by(uuid=proj_uuid).one_or_none()
                 if fab_project:
                     # add person to appropriate project role if missing
-                    if role.name[-2:] == 'pc':
-                        if fab_person not in fab_project.project_creators:
-                            fab_project.project_creators.append(fab_person)
                     if role.name[-2:] == 'pm':
                         if fab_person not in fab_project.project_members:
                             fab_project.project_members.append(fab_person)
@@ -332,7 +333,7 @@ def get_people_roles_as_other(people_roles: [FabricRoles] = None) -> [object]:
     """
     roles = []
     for r in people_roles:
-        if r.name[-3:] in ['-pc', '-pm', '-po', '-tk']:
+        if r.name[-3:] in ['-pm', '-po', '-tk']:
             try:
                 fab_project = FabricProjects.query.filter_by(uuid=r.name[0:-3]).one_or_none()
                 if fab_project and fab_project.is_public:

@@ -300,7 +300,9 @@ def create_fabric_project_from_uuid(uuid: str) -> FabricProjects:
 def get_project_membership(fab_project: FabricProjects, fab_person: FabricPeople) -> ProjectMembership:
     membership = ProjectMembership()
     person_roles = [r.name for r in fab_person.roles]
-    membership.is_creator = str(fab_project.uuid) + '-pc' in person_roles
+    # creator membership is tracked in the projects_creators junction table only
+    # (the legacy `<uuid>-pc` COU was removed in v1.10.0)
+    membership.is_creator = fab_person in fab_project.project_creators
     membership.is_lead = str(fab_project.project_lead.uuid) == str(fab_person.uuid)
     membership.is_member = str(fab_project.uuid) + '-pm' in person_roles
     membership.is_owner = str(fab_project.uuid) + '-po' in person_roles

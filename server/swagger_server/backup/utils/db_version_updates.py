@@ -53,6 +53,7 @@ from uuid import uuid4
 
 from swagger_server.__main__ import app, db
 from swagger_server.api_logger import consoleLogger
+from swagger_server.database.models.people import FabricGroups, FabricRoles
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.database.models.quotas import EnumResourceTypes, EnumResourceUnits, FabricQuotas
 from swagger_server.database.models.storage import FabricStorage
@@ -231,6 +232,35 @@ def projects_export_creator_owners_report():
         consoleLogger.info('Exported creator/owner report to {0}'.format(output_file))
     except Exception as exc:
         consoleLogger.error(exc)
+
+
+def cleanup_pc_roles_and_groups():
+    """
+    v1.10.0: drop stale `<uuid>-pc` entries from FabricRoles and FabricGroups.
+
+    Project-creator membership is no longer represented as a COmanage role.
+    After Phase 4a (purge_pc_cous.py) deletes the COUs from COmanage, the
+    next `update_people_roles` sync will eventually clean up FabricRoles,
+    but FabricGroups isn't touched by that sync. This function does both
+    proactively so the local DB lands in a consistent state.
+
+    Run this AFTER `purge_pc_cous.py` has completed (Phase 4a). Running it
+    earlier is harmless, but the next COmanage sync would recreate the rows.
+    """
+    try:
+        deleted_roles = FabricRoles.query.filter(
+            FabricRoles.name.like('%-pc')
+        ).delete(synchronize_session=False)
+        deleted_groups = FabricGroups.query.filter(
+            FabricGroups.name.like('%-pc')
+        ).delete(synchronize_session=False)
+        db.session.commit()
+        consoleLogger.info(
+            'Removed {0} stale -pc role(s) and {1} stale -pc group(s)'.format(
+                deleted_roles, deleted_groups))
+    except Exception as exc:
+        consoleLogger.error(exc)
+        db.session.rollback()
 
 
 def quotas_backfill_missing_resource_types():

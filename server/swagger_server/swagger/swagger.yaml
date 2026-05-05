@@ -3942,6 +3942,8 @@ components:
       - uuid
       type: object
       properties:
+        bastion_login:
+          type: string
         email:
           type: string
         name:

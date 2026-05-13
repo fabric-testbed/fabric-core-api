@@ -15,9 +15,11 @@ class ServiceAuthOne(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, email: str=None, name: str=None, roles: List[PeopleOneRoles]=None, uuid: str=None):  # noqa: E501
+    def __init__(self, bastion_login: str=None, email: str=None, name: str=None, roles: List[PeopleOneRoles]=None, uuid: str=None):  # noqa: E501
         """ServiceAuthOne - a model defined in Swagger
 
+        :param bastion_login: The bastion_login of this ServiceAuthOne.  # noqa: E501
+        :type bastion_login: str
         :param email: The email of this ServiceAuthOne.  # noqa: E501
         :type email: str
         :param name: The name of this ServiceAuthOne.  # noqa: E501
@@ -28,6 +30,7 @@ class ServiceAuthOne(Model):
         :type uuid: str
         """
         self.swagger_types = {
+            'bastion_login': str,
             'email': str,
             'name': str,
             'roles': List[PeopleOneRoles],
@@ -35,11 +38,13 @@ class ServiceAuthOne(Model):
         }
 
         self.attribute_map = {
+            'bastion_login': 'bastion_login',
             'email': 'email',
             'name': 'name',
             'roles': 'roles',
             'uuid': 'uuid'
         }
+        self._bastion_login = bastion_login
         self._email = email
         self._name = name
         self._roles = roles
@@ -55,6 +60,27 @@ class ServiceAuthOne(Model):
         :rtype: ServiceAuthOne
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def bastion_login(self) -> str:
+        """Gets the bastion_login of this ServiceAuthOne.
+
+
+        :return: The bastion_login of this ServiceAuthOne.
+        :rtype: str
+        """
+        return self._bastion_login
+
+    @bastion_login.setter
+    def bastion_login(self, bastion_login: str):
+        """Sets the bastion_login of this ServiceAuthOne.
+
+
+        :param bastion_login: The bastion_login of this ServiceAuthOne.
+        :type bastion_login: str
+        """
+
+        self._bastion_login = bastion_login
 
     @property
     def email(self) -> str:

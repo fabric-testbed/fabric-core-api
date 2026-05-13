@@ -270,6 +270,7 @@ def people_services_auth_get(sub):  # noqa: E501
             return cors_404(details="No match for Person with sub = '{0}'".format(sub))
         # set ServiceAuthOne object
         service_auth_one = ServiceAuthOne()
+        service_auth_one.bastion_login = fab_person.bastion_login
         service_auth_one.email = fab_person.preferred_email
         service_auth_one.name = fab_person.display_name
         service_auth_one.roles = get_people_roles_as_self(people_roles=fab_person.roles)

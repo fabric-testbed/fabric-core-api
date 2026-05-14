@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 # Services:
 #   flask-server  — Connexion/Flask app served via uWSGI on port 6000
-#   database      — PostgreSQL 17 backing store on port 5432
+#   database      — PostgreSQL 14 backing store on port 5432
 #   nginx         — Reverse proxy (TLS termination, CORS) on 80/443
 #   vouch-proxy   — OIDC auth proxy (CILogon) on port 9090
 #
@@ -40,14 +40,15 @@ services:
     ports:
       - 6000:6000   # PRODUCTION: remove this published port
     volumes:
-      - ./logs/metrics:/code/logs/metrics   # auditable metrics log output
-      - ./migrations:/code/migrations       # Alembic migration history
+      - ./logs/metrics:/code/logs/metrics                                            # auditable metrics log output
+      - ./migrations:/code/migrations                                                # Alembic migration history
+      - ./server/swagger_server/backup/data:/code/server/swagger_server/backup/data  # backup/restore + per-version migration manifests
     restart: unless-stopped
 
   # PostgreSQL — persistent storage for users, projects, sshkeys, etc.
   # Data is bind-mounted to ./pg_data so it survives container removal.
   database:
-    image: postgres:17
+    image: postgres:14
     container_name: api-database
     restart: unless-stopped
     networks:

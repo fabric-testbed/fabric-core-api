@@ -27,7 +27,9 @@ Notes on Postgres ENUM semantics:
     much heavier migration. Skipped here as cosmetic.
   - `ALTER TYPE … ADD VALUE` requires Postgres 12+ to run inside a
     transaction. The project's `docker-compose.yml.template` pins
-    postgres:17, so this is safe.
+    postgres:14, so this is safe. (The PG14 → PG17 upgrade will be
+    handled as a separate maintenance window, unrelated to this
+    migration.)
 
 Revision ID: 1f10a0_quotas_enum_v1_10_0
 Revises: <SET TO YOUR CURRENT HEAD>

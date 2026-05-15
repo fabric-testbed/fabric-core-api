@@ -77,7 +77,7 @@ docker cp server/versions/v1_9_0_to_v1_10_0/pre_flight_creator_owner_report.py \
 
 mkdir -p server/swagger_server/backup/data
 docker exec api-flask-server bash -lc \
-  'source /code/.env && python /tmp/pre_flight_creator_owner_report.py' \
+  'source /code/.env && source /code/.venv/bin/activate && python /tmp/pre_flight_creator_owner_report.py' \
   > server/swagger_server/backup/data/project_creator_owners.md
 
 # Review the report — bolded rows have a creator who is not also an owner.
@@ -106,28 +106,27 @@ docker exec api-database psql -U postgres -d postgres \
 docker cp api-database:/tmp/quotas-bluefield-snapshot.csv ./
 ```
 
-Snapshot the current state of the relevant COUs in case manual rollback is needed:
+Snapshot the current state of the relevant COUs in case manual rollback is needed.
+
+> **Run this inside the live v1.9.0 `flask-server` container.** The v1.10.0 source tree (and its `pyproject.toml` listing `comanage_api`) hasn't been pulled yet — Phase 1 does that — so a host-shell `uv run python -c "from comanage_api import ..."` fails with `ModuleNotFoundError`. The running v1.9.0 container, however, already has `comanage_api` installed (pip-based) and `.env` populated.
 
 ```bash
-# From a clean shell:
-source .env
-
 # Save the project-leads COU members as JSON (will be reused by purge_project_leads.py)
 # This file is already committed at server/swagger_server/backup/data/comanage_project_leads_to_purge.json
 
-# (Optional) Save the full COU listing as a sanity-check snapshot
-uv run python -c "
+# (Optional) Save the full COU listing as a sanity-check snapshot — run inside the v1.9.0 container
+docker exec api-flask-server bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -c "
 import os, json
 from comanage_api import ComanageApi
 api = ComanageApi(
-    co_api_url=os.getenv('COMANAGE_API_URL'),
-    co_api_user=os.getenv('COMANAGE_API_USER'),
-    co_api_pass=os.getenv('COMANAGE_API_PASS'),
-    co_api_org_id=os.getenv('COMANAGE_API_CO_ID'),
-    co_api_org_name=os.getenv('COMANAGE_API_CO_NAME'),
+    co_api_url=os.getenv(\"COMANAGE_API_URL\"),
+    co_api_user=os.getenv(\"COMANAGE_API_USER\"),
+    co_api_pass=os.getenv(\"COMANAGE_API_PASS\"),
+    co_api_org_id=os.getenv(\"COMANAGE_API_CO_ID\"),
+    co_api_org_name=os.getenv(\"COMANAGE_API_CO_NAME\"),
 )
 print(json.dumps(api.cous_view_per_co(), indent=2))
-" > /tmp/cous-pre-migration.json
+"' > /tmp/cous-pre-migration.json
 ```
 
 Confirm:
@@ -144,14 +143,14 @@ All Phase 2–4 commands below therefore use one-shot containers attached to the
 
 ```bash
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m <module>'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m <module>'
 ```
 
 Notes:
 
 - `--no-deps` skips bringing up `database`/`nginx`/`vouch-proxy` (they're already running from before Phase 0.2 stopped `flask-server`).
 - `source /code/.env` is required — the container entrypoint only sources `.env` in the `run_server` branch; explicit-command invocations (`docker compose run ... <cmd>`) skip it.
-- `source .venv/bin/activate` puts `/code/.venv/bin` ahead of `/usr/local/bin` on `PATH` so `python` resolves to the venv (which has `flask`, `swagger_server`, etc.). Without it, the system Python in the image will fail with `No module named flask`.
+- `source /code/.venv/bin/activate` puts `/code/.venv/bin` ahead of `/usr/local/bin` on `PATH` so `python` resolves to the venv (which has `flask`, `swagger_server`, etc.). Without it, the system Python in the image will fail with `No module named flask`.
 - `uv` is a **build-time** dependency only. It is not installed in the runtime image, so don't prefix with `uv run`.
 
 **Persistent bind mount for `backup/data`.** Phase 3 and the Phase 4.2.1 manifest generator write JSON / Markdown artifacts to `/code/server/swagger_server/backup/data/`. By default this directory is not mounted, so one-shot containers lose those files when they exit. Add this line to the `flask-server` `volumes:` block in `docker-compose.yml` **before starting Phase 2**:
@@ -194,7 +193,7 @@ If the deployment was using `pip install -r requirements.txt` (v1.9.0 style), th
 > PYTHONPATH=./server uv run python -c "from swagger_server import __API_VERSION__; print(__API_VERSION__)"
 > ```
 >
-> **Containerized deployments don't hit this** — the Phase 2–4 commands below run inside `flask-server`, where `source /code/.env` and `source .venv/bin/activate` set `PYTHONPATH` correctly.
+> **Containerized deployments don't hit this** — the Phase 2–4 commands below run inside `flask-server`, where `source /code/.env` and `source /code/.venv/bin/activate` set `PYTHONPATH` correctly.
 
 ### 1.2. Rebuild the flask-server container image
 
@@ -207,7 +206,7 @@ docker compose build flask-server
 
 # Sanity check the rebuilt image
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -c "from swagger_server import __API_VERSION__; print(__API_VERSION__)"'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -c "from swagger_server import __API_VERSION__; print(__API_VERSION__)"'
 # → 1.10.0
 ```
 
@@ -257,7 +256,7 @@ Resolve this by confirming the restored chain's head produces the same schema, t
 ```bash
 # A. Identify the head of the restored chain
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m flask db heads'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m flask db heads'
 # → e.g. 4d31309d9e14 (head)
 
 # B. Stamp the DB at the restored head. The DB's prior revision id is not in
@@ -268,7 +267,7 @@ docker compose run --rm --no-deps flask-server \
 
 # Option B-i: flask db stamp --purge
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m flask db stamp --purge <restored_head>'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m flask db stamp --purge <restored_head>'
 
 # Option B-ii: direct SQL (use if your Flask-Migrate version does not support --purge)
 docker exec api-database psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
@@ -283,7 +282,7 @@ docker exec api-database psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
 #    truly describes the live schema, alembic will report "No changes in
 #    schema detected" and write no new file.
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m flask db migrate -m "diagnostic-noop"'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m flask db migrate -m "diagnostic-noop"'
 # Expected output:
 #   INFO  [alembic.env] No changes in schema detected.
 
@@ -317,7 +316,7 @@ $EDITOR migrations/versions/quotas_resource_types_alembic.py
 
 # 3. Confirm a single linear head now ends at the new file
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m flask db heads'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m flask db heads'
 # → 1f10a0_quotas_enum_v1_10_0 (head)
 ```
 
@@ -325,7 +324,7 @@ docker compose run --rm --no-deps flask-server \
 
 ```bash
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m flask db upgrade'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m flask db upgrade'
 ```
 
 Alembic should:
@@ -360,7 +359,7 @@ Phase 3 runs the canonical backfill driver, which executes all data-only migrati
 
 ```bash
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.swagger_server.backup.utils.db_version_updates'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.swagger_server.backup.utils.db_version_updates'
 ```
 
 > **All functions are idempotent.** A re-run on an already-migrated deployment is safe and will log "0 entries"/"already NULL"/"0 missing quota" for every step — useful if the artifacts were lost (e.g. before the `backup/data` bind mount was added) and need to be regenerated.
@@ -420,11 +419,11 @@ Driven by `comanage_pc_cous_to_purge.json` (produced in Phase 3, step 1). If tha
 ```bash
 # Always start with a dry run — prints what would be deleted, makes no changes
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_pc_cous --dry-run'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_pc_cous --dry-run'
 
 # Eyeball the dry-run output. When satisfied, run for real:
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_pc_cous'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_pc_cous'
 ```
 
 For each entry in the manifest, the script:
@@ -513,7 +512,7 @@ Run it. Confirm `COU_ID_PROJECT_LEADS` and `COU_NAME_PROJECT_LEADS` are still in
 
 ```bash
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.export_project_leads_manifest'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.export_project_leads_manifest'
 
 # Verify
 head -20 server/swagger_server/backup/data/comanage_project_leads_to_purge.json
@@ -530,15 +529,15 @@ docker exec api-database psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
 ```bash
 # Dry run first
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads --dry-run'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads --dry-run'
 
 # Cautious mode — purge memberships only, leave the COU itself in place
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads --keep-cou'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads --keep-cou'
 
 # Full purge (memberships AND the COU). Skips COU deletion if any membership delete failed.
 docker compose run --rm --no-deps flask-server \
-  bash -lc 'source /code/.env && source .venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads'
+  bash -lc 'source /code/.env && source /code/.venv/bin/activate && python -m server.versions.v1_9_0_to_v1_10_0.purge_project_leads'
 ```
 
 Unlike the per-project `-pc` COUs, `project-leads` is a single facility-wide COU. Operators may prefer to purge memberships only (`--keep-cou`) on the first pass, verify nothing else in COmanage references the COU, and delete it manually later.
@@ -551,7 +550,7 @@ Run the cleanup function from `db_version_updates.py` once 4.1 has completed. It
 
 ```bash
 docker compose run --rm --no-deps flask-server bash -lc '
-  source /code/.env && source .venv/bin/activate && python -c "
+  source /code/.env && source /code/.venv/bin/activate && python -c "
 from swagger_server.__main__ import app
 from swagger_server.backup.utils.db_version_updates import cleanup_pc_roles_and_groups
 app.app_context().push()

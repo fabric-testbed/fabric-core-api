@@ -36,7 +36,7 @@ from swagger_server.response_code import (PROJECTS_COMMUNITIES, PROJECTS_FUNDING
                                           PROJECTS_PROFILE_PREFERENCES, PROJECTS_TAGS)
 from swagger_server.response_code.comanage_utils import update_comanage_group
 from swagger_server.response_code.core_api_utils import add_core_api_event, normalize_date_to_utc
-from swagger_server.response_code.cors_response import cors_200, cors_400, cors_403, cors_404, cors_500
+from swagger_server.response_code.cors_response import cors_200, cors_400, cors_401, cors_403, cors_404, cors_500
 from swagger_server.response_code.decorators import login_required
 from swagger_server.response_code.email_utils import send_fabric_email
 from swagger_server.response_code.people_utils import get_person_by_login_claims
@@ -212,8 +212,8 @@ def projects_get(search=None, search_set=None, exact_match=None, offset=None, li
             is_anonymous = True
             fab_person = None
             if person_uuid:
-                return cors_400(
-                    details='project_get(): anonymous api_user is not allowed to search projects by person_uuid')
+                return cors_401(
+                    details='projects_get(): authentication required to search projects by person_uuid')
         else:
             is_anonymous = False
             # check api_user active flag

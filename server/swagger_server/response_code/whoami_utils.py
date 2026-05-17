@@ -15,9 +15,11 @@ def get_vouch_session_expiry() -> int:
 
     :rtype: int
     """
+    # get base64 encoded gzipped vouch JWT
+    base64_encoded_gzip_vouch_jwt = request.cookies.get(os.getenv('VOUCH_COOKIE_NAME'))
+    if not base64_encoded_gzip_vouch_jwt:
+        return -1
     try:
-        # get base64 encoded gzipped vouch JWT
-        base64_encoded_gzip_vouch_jwt = request.cookies.get(os.getenv('VOUCH_COOKIE_NAME'))
         # decode base64
         encoded_gzip_vouch_jwt_bytes = base64.urlsafe_b64decode(base64_encoded_gzip_vouch_jwt)
         # gzip decompress

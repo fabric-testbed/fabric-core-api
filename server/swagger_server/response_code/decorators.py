@@ -110,7 +110,11 @@ def validate_authorization_token(token: str) -> bool:
             if not is_token_revoked(token=token):
                 is_valid = True
         except Exception as exc:
-            print(exc)
+            consoleLogger.info(
+                "validate_authorization_token(): {0}: {1} (path={2})".format(
+                    type(exc).__name__, exc, request.path
+                )
+            )
             is_valid = False
     s.close()
     return is_valid

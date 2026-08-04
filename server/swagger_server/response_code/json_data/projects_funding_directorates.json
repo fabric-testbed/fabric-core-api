@@ -1,0 +1,25 @@
+{
+  "name": "projects.funding_directorates",
+  "description": "Project funding directorates",
+  "api_endpoints": [
+    {
+      "endpoint": "/projects/funding_directorates",
+      "description": "GET: List of Projects funding directorate options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/projects/project_funding",
+      "description": "PATCH: overwrite Projects funding directorates when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "Directorate for Biological Sciences": "Directorate for Biological Sciences",
+    "Directorate for Computer and Information Science and Engineering": "Directorate for Computer and Information Science and Engineering",
+    "Directorate for Engineering": "Directorate for Engineering",
+    "Directorate for Geosciences": "Directorate for Geosciences",
+    "Directorate for Mathematical and Physical Sciences": "Directorate for Mathematical and Physical Sciences",
+    "Directorate for Social, Behavioral and Economic Sciences": "Directorate for Social, Behavioral and Economic Sciences",
+    "Directorate for STEM Education": "Directorate for STEM Education",
+    "Funded by Other Agency": "Funded by Other Agency",
+    "Not Funded (yet)": "Not Funded (yet)"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "uis_people": [
+    {
+      "id": 1,
+      "registered_on": "2021-08-31 20:12:00.014547+00:00",
+      "uuid": "62f2b063-d9f6-46e9-87b1-c0b94899d711",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/2604273",
+      "name": "Scott Koranda ",
+      "email": "skoranda@gmail.com",
+      "eppn": "skoranda@wisc.edu",
+      "bastion_login": null,
+      "co_person_id": null
+    },
+    {
+      "id": 2,
+      "registered_on": "2021-08-31 20:12:00.590417+00:00",
+      "uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/242181",
+      "name": "Michael Stealey ",
+      "email": "stealey@unc.edu",
+      "eppn": "stealey@unc.edu",
+      "bastion_login": "stealey_0000242181",
+      "co_person_id": 1522
+    },
+    {
+      "id": 3,
+      "registered_on": "2021-08-31 20:12:01.164582+00:00",
+      "uuid": "69f9b1a6-c3c3-4c53-8693-21c63e771c78",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/26542073",
+      "name": "Yaxue Guo ",
+      "email": "yaxueguo@renci.org",
+      "eppn": "yaxue@unc.edu",
+      "bastion_login": "yaxueguo_0026542073",
+      "co_person_id": 1563
+    },
+    {
+      "id": 4,
+      "registered_on": "2021-08-31 20:12:01.840593+00:00",
+      "uuid": "4841e6c5-06d2-431f-98e6-f1d076382a06",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/15626041",
+      "name": "Charles Carpenter ",
+      "email": "charles.s.carpenter@uky.edu",
+      "eppn": "cscarp0@uky.edu",
+      "bastion_login": null,
+      "co_person_id": null
+    },
+    {
+      "id": 5,
+      "registered_on": "2021-08-31 20:12:02.557274+00:00",
+      "uuid": "2265a4da-e1fc-4ffc-bbb7-d86d56575bff",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/11904101",
+      "name": "Komal Thareja ",
+      "email": "kthare10@email.unc.edu",
+      "eppn": "kthare10@unc.edu",
+      "bastion_login": "kthare10_0011904101",
+      "co_person_id": 1649
+    },
+    {
+      "id": 6,
+      "registered_on": "2021-08-31 20:12:03.135122+00:00",
+      "uuid": "8ea240b4-b72c-4dee-9b77-c0dd6a816ba1",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/241998",
+      "name": "Ilya Baldin ",
+      "email": "ibaldin@renci.org",
+      "eppn": "ibaldin@unc.edu",
+      "bastion_login": "ibaldin_0000241998",
+      "co_person_id": 1662
+    },
+    {
+      "id": 7,
+      "registered_on": "2021-08-31 20:12:03.707167+00:00",
+      "uuid": "d5824c4f-ab9c-4b1a-b6f0-6ef6ec2c5efe",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/226066",
+      "name": "mj stealey ",
+      "email": "mjstealey@gmail.com",
+      "eppn": null,
+      "bastion_login": null,
+      "co_person_id": null
+    },
+    {
+      "id": 8,
+      "registered_on": "2021-08-31 20:12:04.271747+00:00",
+      "uuid": "47565693-aff7-498c-8685-3c4049a100cc",
+      "oidc_claim_sub": "http://cilogon.org/serverB/users/51446247",
+      "name": "Ezra Kissel ",
+      "email": "disprosium8@gmail.com",
+      "eppn": null,
+      "bastion_login": null,
+      "co_person_id": null
+    },
+    {
+      "id": 9,
+      "registered_on": "2021-09-02 22:27:42.388313+00:00",
+      "uuid": "2bdedbc9-42c0-4c6c-9de5-eff7d6ceb298",
+      "oidc_claim_sub": "http://cilogon.org/serverB/users/41004427",
+      "name": "Yaxue Guo ",
+      "email": "yaxue.guo23@gmail.com",
+      "eppn": null,
+      "bastion_login": "yaxue_guo23_0041004427",
+      "co_person_id": 2545
+    },
+    {
+      "id": 10,
+      "registered_on": "2021-09-10 21:03:22.730968+00:00",
+      "uuid": "7414d35f-ee8c-47c6-9984-3aab7cf8c9a9",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/31379841",
+      "name": "Paul Ruth ",
+      "email": "pruth@email.unc.edu",
+      "eppn": "pruth@unc.edu",
+      "bastion_login": "pruth_0031379841",
+      "co_person_id": 2193
+    },
+    {
+      "id": 11,
+      "registered_on": "2022-01-14 16:17:22.861856+00:00",
+      "uuid": "b1e8cfbd-0c6c-4202-977c-fd1ce4624e02",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/100641",
+      "name": "Mert Cevik",
+      "email": "mcevik@email.unc.edu",
+      "eppn": null,
+      "bastion_login": "mcevik_0000100641",
+      "co_person_id": null
+    },
+    {
+      "id": 12,
+      "registered_on": "2022-06-06 06:17:27.495095+00:00",
+      "uuid": "882328e3-f949-470d-9950-db1da0c1b994",
+      "oidc_claim_sub": "http://cilogon.org/serverE/users/7208",
+      "name": "Nhat Linh Nguyen ",
+      "email": "lnn45@nau.edu",
+      "eppn": "lnn45@nau.edu",
+      "bastion_login": "lnn45_0000007208",
+      "co_person_id": 2698
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "projects.funding_agencies",
+  "description": "Project Funding Source denotes zero of more sources of funding for a project.",
+  "api_endpoints": [
+    {
+      "endpoint": "/projects/project-funding",
+      "description": "GET: List of Projects funding source options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/projects/{uuid}/project-funding",
+      "description": "PATCH: overwrite Projects funding source when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "NIH": "National Institutes of Health",
+	"NSF": "National Science Foundation",
+	"DOD": "Department of Defense",
+	"DOE": "Department of Energy",
+	"Department of Education": "Department of Education",
+	"Other": "Other"
+  }
+}

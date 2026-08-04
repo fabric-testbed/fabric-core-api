@@ -1,0 +1,20 @@
+{
+  "name": "people.profile.otheridentity.types",
+  "description": "Other Identity objects are user defined identities that reference other platforms",
+  "api_endpoints": [
+    {
+      "endpoint": "/people/profile/otheridentity-types",
+      "description": "GET: List of People Profile Other Identity Type options using optional 'search' parameter"
+    },
+    {
+      "endpoint": "/people/{uuid}/profile",
+      "description": "PATCH: overwrite People Profile Other Identity Entry when found in request body"
+    }
+  ],
+  "key_value_pairs": {
+    "google_scholar": "Google Scholar identity - https://scholar.google.com",
+    "orcid": "ORCiD identity - https://orcid.org",
+    "other": "Other identity - generic",
+    "scopus": "Scopus scientific abstract and citation database - https://www.scopus.com/home.uri"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "pr_people": [
+    {
+      "id": 1,
+      "uuid": "593dd0d3-cedb-4bc6-9522-a945da0a8a8e",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/242181",
+      "co_person_id": 1522,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Michael Stealey",
+      "email": "stealey@unc.edu"
+    },
+    {
+      "id": 2,
+      "uuid": "62f2b063-d9f6-46e9-87b1-c0b94899d711",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/2604273",
+      "co_person_id": 1514,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Scott Koranda",
+      "email": "skoranda@gmail.com"
+    },
+    {
+      "id": 3,
+      "uuid": "69f9b1a6-c3c3-4c53-8693-21c63e771c78",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/26542073",
+      "co_person_id": 1563,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Yaxue Guo",
+      "email": "yaxueguo@renci.org"
+    },
+    {
+      "id": 4,
+      "uuid": "4841e6c5-06d2-431f-98e6-f1d076382a06",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/15626041",
+      "co_person_id": 1642,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Charles Carpenter",
+      "email": "charles.s.carpenter@uky.edu"
+    },
+    {
+      "id": 5,
+      "uuid": "2265a4da-e1fc-4ffc-bbb7-d86d56575bff",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/11904101",
+      "co_person_id": 1649,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Komal Thareja",
+      "email": "kthare10@email.unc.edu"
+    },
+    {
+      "id": 6,
+      "uuid": "8ea240b4-b72c-4dee-9b77-c0dd6a816ba1",
+      "oidc_claim_sub": "http://cilogon.org/serverT/users/241998",
+      "co_person_id": 1662,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Ilya Baldin",
+      "email": "ibaldin@renci.org"
+    },
+    {
+      "id": 7,
+      "uuid": "d5824c4f-ab9c-4b1a-b6f0-6ef6ec2c5efe",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/226066",
+      "co_person_id": 1731,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "mj stealey",
+      "email": "mjstealey@gmail.com"
+    },
+    {
+      "id": 8,
+      "uuid": null,
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/32877531",
+      "co_person_id": 1794,
+      "co_id": 26,
+      "co_status": "PendingConfirmation",
+      "name": "ISAAK GETZ",
+      "email": "isaakgetz@gmail.com"
+    },
+    {
+      "id": 9,
+      "uuid": "47565693-aff7-498c-8685-3c4049a100cc",
+      "oidc_claim_sub": "http://cilogon.org/serverB/users/51446247",
+      "co_person_id": 2022,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Ezra Kissel",
+      "email": "disprosium8@gmail.com"
+    },
+    {
+      "id": 10,
+      "uuid": "7414d35f-ee8c-47c6-9984-3aab7cf8c9a9",
+      "oidc_claim_sub": "http://cilogon.org/serverA/users/31379841",
+      "co_person_id": 2193,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Paul Ruth",
+      "email": "pruth@email.unc.edu"
+    },
+    {
+      "id": 11,
+      "uuid": "2bdedbc9-42c0-4c6c-9de5-eff7d6ceb298",
+      "oidc_claim_sub": "http://cilogon.org/serverB/users/41004427",
+      "co_person_id": 2545,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Yaxue Guo",
+      "email": "yaxue.guo23@gmail.com"
+    },
+    {
+      "id": 12,
+      "uuid": "882328e3-f949-470d-9950-db1da0c1b994",
+      "oidc_claim_sub": "http://cilogon.org/serverE/users/7208",
+      "co_person_id": 2698,
+      "co_id": 26,
+      "co_status": "Active",
+      "name": "Linh Nguyen",
+      "email": "lnn45@nau.edu"
+    }
+  ]
+}

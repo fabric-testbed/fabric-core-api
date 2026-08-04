@@ -1,0 +1,199 @@
+# =============================================================================
+# .gitignore — fabric-core-api
+# -----------------------------------------------------------------------------
+# Targets:
+#   - Development hosts: macOS (laptops, dev VMs)
+#   - Deployment hosts:  Linux (Docker hosts, production VMs)
+#
+# Sections:
+#   1. Project          — rendered config files (from *.template), generated code
+#   2. Application data — runtime artifacts, exports, DB volumes, backups
+#   3. Secrets          — environment files (NEVER commit)
+#   4. Python           — bytecode, packaging, virtualenvs
+#   5. uv               — package manager state (lockfile IS committed)
+#   6. Testing & coverage
+#   7. Type checkers & tool caches
+#   8. Editors & IDEs
+#   9. macOS — development hosts
+#  10. Linux — deployment hosts
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Project — rendered config files & generated code
+# -----------------------------------------------------------------------------
+# *.template files are committed; their rendered counterparts are local only.
+docker-compose.yml
+nginx/default.conf
+vouch/config*
+!vouch/config.yml.template
+
+# Connexion / swagger code generation outputs (regenerated on demand).
+python-flask-server-generated/
+server_archive/
+
+# Database migrations are generated locally per deployment.
+migrations/
+
+
+# -----------------------------------------------------------------------------
+# 2. Application data — runtime artifacts (never commit)
+# -----------------------------------------------------------------------------
+logs/
+pg_data/
+misc_local_files/
+
+# Per-table JSON exports/imports
+server/swagger_server/backup/data/
+server/swagger_server/backup/data/*.json
+
+# Full-backup script output (./full-backup-<timestamp>/ and tarballs)
+full-backup-*/
+full-backup-*.tar.gz
+
+
+# -----------------------------------------------------------------------------
+# 3. Secrets — environment files
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!env.template
+
+
+# -----------------------------------------------------------------------------
+# 4. Python — bytecode, packaging, virtualenvs
+# -----------------------------------------------------------------------------
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging (relevant if/when this becomes installable)
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenvs (covers `venv`, `.venv`, `env`, `ENV`, and timestamped backups)
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+pyvenv.cfg
+pip-selfcheck.json
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# -----------------------------------------------------------------------------
+# 5. uv — package manager state
+# -----------------------------------------------------------------------------
+# NOTE: uv.lock IS committed (do NOT add it here) — it's the reproducibility
+# guarantee for `uv sync --frozen` in CI and the Docker build.
+# .python-version is also typically committed when the project pins a Python
+# version, so it is not ignored here either.
+.uv-cache/        # only present if cache is configured to live in-tree
+
+
+# -----------------------------------------------------------------------------
+# 6. Testing & coverage
+# -----------------------------------------------------------------------------
+.tox/
+.nox/
+.cache/
+.pytest_cache/
+.hypothesis/
+htmlcov/
+cover/
+.coverage
+.coverage.*
+coverage.xml
+nosetests.xml
+*.cover
+*.py,cover
+
+
+# -----------------------------------------------------------------------------
+# 7. Type checkers & tool caches
+# -----------------------------------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+
+# -----------------------------------------------------------------------------
+# 8. Editors & IDEs
+# -----------------------------------------------------------------------------
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+
+# VS Code (kept even if you don't use VS Code — contributors might)
+.vscode/
+
+# Vim / Neovim swap & undo files
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Claude Code / agent state (local only)
+.claude/
+
+
+# -----------------------------------------------------------------------------
+# 9. macOS — development hosts
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*               # AppleDouble resource forks (e.g. ._filename)
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Files that may appear on network/USB volumes mounted under macOS
+.AppleDB
+.AppleDesktop
+Network\ Trash\ Folder
+Temporary\ Items
+.apdisk
+
+
+# -----------------------------------------------------------------------------
+# 10. Linux — deployment hosts
+# -----------------------------------------------------------------------------
+.fuse_hidden*
+.directory        # KDE
+.Trash-*          # KDE/GNOME trash
+.nfs*             # stale NFS handles
+core              # core dumps
+*.pid             # service pid files (e.g. uWSGI)

@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.2](#v1112) - released TBD
 - [v1.11.1](#v1111) - released TBD
 - [v1.11.0](#v1110) - released 07/24/2026
 - [v1.6.1](#v161) - released TBD
@@ -13,6 +14,15 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1112"></a>v1.11.2
+
+Deployed on: TBD
+
+Dependency security release. No schema change — no migration or backfill is required.
+
+- security: bump `cryptography` 48.0.1 → 50.0.0 for CVE-2026-69247 (Bleichenbacher-oracle hardening in PKCS7 decryption). This API reaches `cryptography` only transitively — via `authlib`, `joserfc`, and `fabric-fss-utils` — and none of those touch the affected PKCS7 path, so exposure was nil; the bump clears the shipped vulnerable code and the Dependabot alert. Verified against the JWT (RS256/HS256) and SSH key generation (ecdsa/rsa) paths. (#178)
+- config: `env.template` § 5 now documents the `SKE_*` trio (`SKE_DESCRIPTION`, `SKE_NAME`, `SKE_TIMEOUT_IN_SECONDS`). Without them, `init_task_tracker.py` fails to seed the `ssh_key_expiry` tracker row on fresh installs and `GET /start` errors instead of launching the SSH key expiry notification monitor. Existing deployments carrying a populated `.env` should add the trio by hand. (#180)
 
 ### <a name="v1111"></a>v1.11.1
 

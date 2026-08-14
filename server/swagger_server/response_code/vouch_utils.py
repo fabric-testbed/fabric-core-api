@@ -126,22 +126,20 @@ def token_get_custom_claims(token: str) -> dict:
     """
     s = requests.Session()
     try:
-        psk = TaskTimeoutTracker.query.filter_by(name=os.getenv('PSK_NAME')).one_or_none()
-        if not psk.timed_out():
-            public_signing_key = jwt.PyJWK(json.loads(psk.value)).key
-        else:
-            api_call = s.get(url=os.getenv('FABRIC_CREDENTIAL_MANAGER') + '/credmgr/certs')
-            jwks = api_call.json().get('keys')[0]
-            public_signing_key = jwt.PyJWK(jwks).key
-            psk.value = json.dumps(jwks)
-            psk.last_updated = datetime.now(timezone.utc)
-            db.session.commit()
+        # Static service tokens match only when the corresponding env var is
+        # actually configured. Without the truthiness guard an unset var makes
+        # os.getenv(...) None, and a caller sending the literal token 'None'
+        # would match -- in the ansible branch, promoted to a real facility
+        # operator. Never match an unset or blank static token.
+        ansible_token = os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')
+        readonly_token = os.getenv('READONLY_AUTHORIZATION_TOKEN')
+        services_token = os.getenv('SERVICES_AUTHORIZATION_TOKEN')
         # account for Ansible script which uses a static token for now
-        if token == format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
+        if ansible_token and token == ansible_token:
             # print('ANSIBLE AUTHORIZATION TOKEN')
             claims = first_valid_facility_operator()
-        # account for Ansible script which uses a static token for now
-        if token == format(os.getenv('READONLY_AUTHORIZATION_TOKEN')):
+        # account for read-only integrations which use a static token for now
+        elif readonly_token and token == readonly_token:
             # print('SERVICES AUTHORIZATION TOKEN')
             claims = {
                 'aud': 'FABRIC',
@@ -154,7 +152,7 @@ def token_get_custom_claims(token: str) -> dict:
                 'sub': None
             }
         # account for CF Services which uses a static token for now
-        elif token == format(os.getenv('SERVICES_AUTHORIZATION_TOKEN')):
+        elif services_token and token == services_token:
             # print('SERVICES AUTHORIZATION TOKEN')
             claims = {
                 'aud': 'FABRIC',
@@ -168,6 +166,16 @@ def token_get_custom_claims(token: str) -> dict:
             }
         # process normal user tokens
         else:
+            psk = TaskTimeoutTracker.query.filter_by(name=os.getenv('PSK_NAME')).one_or_none()
+            if not psk.timed_out():
+                public_signing_key = jwt.PyJWK(json.loads(psk.value)).key
+            else:
+                api_call = s.get(url=os.getenv('FABRIC_CREDENTIAL_MANAGER') + '/credmgr/certs')
+                jwks = api_call.json().get('keys')[0]
+                public_signing_key = jwt.PyJWK(jwks).key
+                psk.value = json.dumps(jwks)
+                psk.last_updated = datetime.now(timezone.utc)
+                db.session.commit()
             # print('USER AUTHORIZATION TOKEN')
             token_json = jwt.decode(
                 jwt=token,

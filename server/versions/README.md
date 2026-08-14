@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.3](#v1113) - released TBD
 - [v1.11.2](#v1112) - released TBD
 - [v1.11.1](#v1111) - released TBD
 - [v1.11.0](#v1110) - released 07/24/2026
@@ -14,6 +15,19 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1113"></a>v1.11.3
+
+Deployed on: TBD
+
+Security patch release. No schema change — no migration or backfill is required.
+
+- security: the `/storage` write operations (`POST /storage`, `PATCH /storage/{uuid}`, `DELETE /storage/{uuid}`) no longer substitute an identity. Each operation used to promote any caller whose identity resolved to no local person to the first active facility operator, after which the facility-operator check passed and the write proceeded. A `readonly` bearer token, a `services` bearer token, or any authenticated user whose `sub` is not in the local people table could create, modify, and delete persistent volumes. Those callers now receive 403.
+- security: `GET /storage` and `GET /storage/{uuid}` keep the existing global-read behavior only for the named `readonly` and `services` service tokens. An authenticated human whose `sub` is unknown locally now receives 403 instead of being promoted to facility-operator visibility over all storage.
+- security: an unset or blank static service-token environment variable (`ANSIBLE_AUTHORIZATION_TOKEN`, `READONLY_AUTHORIZATION_TOKEN`, `SERVICES_AUTHORIZATION_TOKEN`) no longer matches any caller. `os.getenv()` returns `None` for an unset variable and the comparison stringified it to `'None'`, so a caller sending the literal token `None` matched the ansible branch and resolved to a real facility operator. The comparison now runs only when the variable is configured.
+- internal: static service tokens are resolved before JWT handling, so they no longer touch the PSK/JWKS lookup or the credential-manager fetch. The ansible integration continues to resolve to a real facility operator via `first_valid_facility_operator()`.
+
+**Client-visible wire change.** Callers that relied on the removed identity substitution now receive 403 — `readonly`/`services` tokens and unknown-`sub` users on `/storage` writes, and unknown-`sub` human callers on `/storage` reads. The named `readonly`/`services` service tokens retain their existing `/storage` read access.
 
 ### <a name="v1112"></a>v1.11.2
 

@@ -20,9 +20,14 @@ from swagger_server.response_code.cors_response import cors_200, cors_400, cors_
 from swagger_server.response_code.decorators import login_or_token_required
 from swagger_server.response_code.people_utils import get_person_by_login_claims
 from swagger_server.response_code.storage_utils import create_storage_allocation_from_api, update_storage_site_list
+from swagger_server.response_code.vouch_utils import IdSourceEnum
 
 # Constants
 _SERVER_URL = os.getenv('CORE_API_SERVER_URL', '')
+_STORAGE_READER_TOKEN_SOURCES = frozenset((
+    IdSourceEnum.READONLY.value,
+    IdSourceEnum.SERVICES.value,
+))
 
 
 @login_or_token_required
@@ -43,11 +48,16 @@ def storage_get(offset: int = None, limit: int = None, project_uuid: str = None)
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
-        # TODO: token access does not have an api_user --> choose first facility-operator
-        if not api_user.id:
+        # Preserve the existing global read behavior only for the explicitly
+        # named service-token classes. An authenticated human whose sub is not
+        # known locally must not be promoted to a facility operator.
+        if not api_user.id and id_source in _STORAGE_READER_TOKEN_SOURCES:
             fac_op_ids = [r.people_id for r in
                           FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
-            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+            if fac_op_ids:
+                facility_operator = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+                if facility_operator:
+                    api_user = facility_operator
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -138,11 +148,13 @@ def storage_post(body: StoragePost = None) -> Storage:  # noqa: E501
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
-        # TODO: token access does not have an api_user --> choose first facility-operator
-        if not api_user.id:
-            fac_op_ids = [r.people_id for r in
-                          FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
-            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+        # SECURITY: no identity substitution on the write path. This block used
+        # to promote ANY caller without a local api_user to the first active
+        # facility-operator, which let a readonly/services token -- or any
+        # authenticated user whose sub is not in the local people table --
+        # create, modify and delete persistent volumes. The ansible token now
+        # resolves to a real person upstream via first_valid_facility_operator().
+        # Read compatibility is handled explicitly in the read handlers.
         # check api_user active flag and verify project-leads role
         if not api_user.active or not api_user.is_facility_operator():
             return cors_403(
@@ -224,11 +236,13 @@ def storage_uuid_delete(uuid: str) -> Status200OkNoContent:  # noqa: E501
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
-        # TODO: token access does not have an api_user --> choose first facility-operator
-        if not api_user.id:
-            fac_op_ids = [r.people_id for r in
-                          FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
-            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+        # SECURITY: no identity substitution on the write path. This block used
+        # to promote ANY caller without a local api_user to the first active
+        # facility-operator, which let a readonly/services token -- or any
+        # authenticated user whose sub is not in the local people table --
+        # create, modify and delete persistent volumes. The ansible token now
+        # resolves to a real person upstream via first_valid_facility_operator().
+        # Read compatibility is handled explicitly in the read handlers.
         # check api_user active flag and verify project-leads role
         if not api_user.active or not api_user.is_facility_operator():
             return cors_403(
@@ -287,11 +301,16 @@ def storage_uuid_get(uuid: str) -> Storage:  # noqa: E501
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
-        # TODO: token access does not have an api_user --> choose first facility-operator
-        if not api_user.id:
+        # Preserve the existing global read behavior only for the explicitly
+        # named service-token classes. An authenticated human whose sub is not
+        # known locally must not be promoted to a facility operator.
+        if not api_user.id and id_source in _STORAGE_READER_TOKEN_SOURCES:
             fac_op_ids = [r.people_id for r in
                           FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
-            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+            if fac_op_ids:
+                facility_operator = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+                if facility_operator:
+                    api_user = facility_operator
         # check api_user active flag
         if not api_user.active:
             return cors_403(
@@ -352,11 +371,13 @@ def storage_uuid_patch(uuid: str, body: StoragePatch = None) -> Status200OkNoCon
     try:
         # get api_user
         api_user, id_source = get_person_by_login_claims()
-        # TODO: token access does not have an api_user --> choose first facility-operator
-        if not api_user.id:
-            fac_op_ids = [r.people_id for r in
-                          FabricRoles.query.filter_by(name=os.getenv('COU_NAME_FACILITY_OPERATORS'))]
-            api_user = FabricPeople.query.filter_by(id=fac_op_ids[0]).one_or_none()
+        # SECURITY: no identity substitution on the write path. This block used
+        # to promote ANY caller without a local api_user to the first active
+        # facility-operator, which let a readonly/services token -- or any
+        # authenticated user whose sub is not in the local people table --
+        # create, modify and delete persistent volumes. The ansible token now
+        # resolves to a real person upstream via first_valid_facility_operator().
+        # Read compatibility is handled explicitly in the read handlers.
         # check api_user active flag and verify project-leads role
         if not api_user.active or not api_user.is_facility_operator():
             return cors_403(

@@ -78,14 +78,19 @@ def login_or_token_required(f):
 def validate_authorization_token(token: str) -> bool:
     s = requests.Session()
     is_valid = False
+    # Static service tokens match only when configured; an unset env var must
+    # never validate a caller sending the literal string 'None'.
+    ansible_token = os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')
+    readonly_token = os.getenv('READONLY_AUTHORIZATION_TOKEN')
+    services_token = os.getenv('SERVICES_AUTHORIZATION_TOKEN')
     # account for Ansible script which uses a static token for now
-    if token == 'Bearer {0}'.format(os.getenv('ANSIBLE_AUTHORIZATION_TOKEN')):
+    if ansible_token and token == 'Bearer {0}'.format(ansible_token):
         is_valid = True
     # account for Read Only Auth which uses a static token for now
-    elif token == 'Bearer {0}'.format(os.getenv('READONLY_AUTHORIZATION_TOKEN')):
+    elif readonly_token and token == 'Bearer {0}'.format(readonly_token):
         is_valid = True
     # account for Services Auth which uses a static token for now
-    elif token == 'Bearer {0}'.format(os.getenv('SERVICES_AUTHORIZATION_TOKEN')):
+    elif services_token and token == 'Bearer {0}'.format(services_token):
         is_valid = True
     # Handle CM based tokens
     else:

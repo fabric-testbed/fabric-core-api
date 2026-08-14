@@ -1,6 +1,6 @@
 [project]
 name = "fabric-core-api"
-version = "1.11.2"
+version = "1.11.3"
 description = "FABRIC Core API — User Information Service and Project Registry"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"

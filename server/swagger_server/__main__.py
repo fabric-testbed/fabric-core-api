@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import os
-import threading
-from time import sleep
 
 import connexion
 from connexion.exceptions import BadRequestProblem, Forbidden, Unauthorized, ValidationError
@@ -9,8 +7,8 @@ from flask_migrate import Migrate
 
 from swagger_server import encoder
 from swagger_server.database.db import db
-from swagger_server.response_code.cors_response import cors_400, cors_401, cors_403
-from swagger_server.response_code.task_monitor import check_sshkey_expiry_and_email
+from swagger_server.response_code.cors_response import cors_400, cors_401, cors_403, problem_detail
+from swagger_server.response_code.task_monitor import run_ssh_key_expiry_if_due
 
 """
 ---------------------------------------------------------------------------------
@@ -37,7 +35,8 @@ END: Imports needed for alembic and flask using multiple model definition files
 
 
 def flask_bad_request(exception):
-    return cors_400(details='Validation error or other malformed request type: {0}'.format(exception))
+    return cors_400(
+        details='Validation error or other malformed request type: {0}'.format(problem_detail(exception)))
 
 
 def flask_unauthorized(exception):
@@ -80,59 +79,45 @@ def main():
 
 app = main()
 
-thread_event = threading.Event()
-
-
-def ske_task_monitor(app, cooldown: int = 86400):
-    while thread_event.is_set():
-        # check SSH key expiry and send emails as needed
-        check_sshkey_expiry_and_email(app)
-        print(' - Sleeping for {} seconds...'.format(str(cooldown)))
-        sleep(int(cooldown))
-
 
 @app.before_first_request
 def create_tables():
     db.create_all()
 
 
-@app.route("/start", methods=["GET"])
-def start_task_monitor():
-    """
-    Start the task monitor
-    - only starts once on the condition of value != 'running'
-    - needs to be manually set back to None when a new version is deployed or service is restarted
-      to restart the timer thread
-    """
+def ske_cron_handler(signum=None):
+    """uWSGI cron entry point for the SSH key expiry notifications."""
     try:
-        ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
-        if str(ske.value).casefold() != 'running':
-            thread_event.set()
-            thread = threading.Thread(target=ske_task_monitor, args=(app, ske.timeout_in_seconds))
-            thread.start()
-            ske.value = 'running'
-            db.session.commit()
-            return "Task Monitor Started"
-        else:
-            return "Task Monitor Already Running"
+        run_ssh_key_expiry_if_due(app)
     except Exception as error:
-        return str(error)
+        app.logger.error('ssh_key_expiry: scheduled run failed: {0}'.format(error))
 
 
-# TODO: remove /stop on production deployment
-# @app.route("/stop", methods=["GET"])
-# def stop_task_monitor():
-#     try:
-#         ske = TaskTimeoutTracker.query.filter_by(name=os.getenv('SKE_NAME')).first()
-#         if str(ske.value).casefold() == 'running':
-#             thread_event.clear()
-#             ske.value = None
-#             db.session.commit()
-#             return "Task Monitor Stopped"
-#         else:
-#             return "Task Monitor Already Stopped"
-#     except Exception as error:
-#         return str(error)
+# SSH key expiry notifications are scheduled by the uWSGI MASTER process and
+# dispatched to a live worker.
+#
+# The previous implementation started a threading.Thread inside whichever worker
+# served GET /start. uWSGI recycles workers at max-requests (see core-api.ini), so
+# that thread was destroyed along with its process -- silently, with no error and
+# no restart -- while the tracker row still read 'running', which made GET /start
+# refuse to start a replacement. Production lost the task within days of every
+# start, deploy or no deploy. The master is never recycled, so the schedule cannot
+# be lost, and there is nothing left to reset by hand after a redeploy.
+#
+# SKE_CRON_HOUR / SKE_CRON_MINUTE follow uWSGI cron semantics, where -1 is a
+# wildcard; the defaults fire once a day at 06:00 in the container's timezone.
+# Outside uWSGI (local `flask run`, unit tests) the import fails and no schedule
+# is registered.
+try:
+    from uwsgidecorators import cron as uwsgi_cron
+except ImportError:
+    pass
+else:
+    uwsgi_cron(
+        int(os.getenv('SKE_CRON_MINUTE', '0')),
+        int(os.getenv('SKE_CRON_HOUR', '6')),
+        -1, -1, -1
+    )(ske_cron_handler)
 
 
 if __name__ == '__main__':

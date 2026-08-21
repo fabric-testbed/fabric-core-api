@@ -56,6 +56,30 @@ def delete_none(_dict):
     return _dict
 
 
+# X-Error is a response header, so its value must stay single-line and bounded.
+_X_ERROR_MAX_LEN = 200
+
+
+def problem_detail(exception) -> str:
+    """Most specific message a Connexion/jsonschema error carries.
+
+    ``BadRequestProblem`` keeps its message on ``.detail`` and stringifies to an
+    empty string, so formatting the exception itself discarded the only
+    diagnostic a 400 ever had -- which field failed validation and why. Connexion
+    builds that detail as "<message> - '<field>'". jsonschema's ``ValidationError``
+    keeps the message on ``.message`` and the field on ``.absolute_path``.
+    """
+    detail = getattr(exception, 'detail', None) or getattr(exception, 'message', None) or str(exception)
+    path = getattr(exception, 'absolute_path', None)
+    if path:
+        detail = "{0} - '{1}'".format(detail, '.'.join([str(item) for item in path]))
+    # collapse to one line: a newline in a header value is fatal to the response
+    detail = ' '.join(str(detail).split()) or exception.__class__.__name__
+    if len(detail) > _X_ERROR_MAX_LEN:
+        detail = detail[:_X_ERROR_MAX_LEN - 3] + '...'
+    return detail
+
+
 def cors_response(req: request, status_code: int = 200, body: object = None, x_error: str = None) -> Response:
     """
     Return CORS Response object

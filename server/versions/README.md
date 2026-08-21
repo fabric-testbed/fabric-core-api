@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.4](#v1114) - released TBD
 - [v1.11.3](#v1113) - released TBD
 - [v1.11.2](#v1112) - released TBD
 - [v1.11.1](#v1111) - released TBD
@@ -15,6 +16,21 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1114"></a>v1.11.4
+
+Deployed on: TBD
+
+Reliability patch release. No schema change — no migration or backfill is required.
+
+- fix: SSH key expiry notifications are scheduled by the uWSGI master process instead of a thread inside a worker. `GET /start` launched a `threading.Thread` in whichever of the eight workers served the request; `core-api.ini` sets `max-requests = 5000`, so uWSGI recycled that worker and destroyed the thread with it — silently, with no error and no restart — while `task_timeout_tracker.value` still read `running`, which made a later `GET /start` answer "Task Monitor Already Running" and refuse to launch a replacement. The task then stayed dead until someone noticed and reset the row by hand. Found on all three tiers in August 2026: production had run the check once in four days across 22 worker respawns, alpha-6 had been dead for 16 days, and beta-3 for 7. The master process is never recycled by `max-requests`, so the schedule cannot be lost this way.
+- removed: `GET /start`. It existed only to launch that thread, it was never in the OpenAPI spec, and the operation count is unchanged. It was also an unauthenticated public route that triggered a mail run on its first call. Access logs across all three tiers show no legitimate caller — only internet scanners probing `/start.action`. To run the check by hand inside the container: `python -c "from swagger_server.__main__ import app; from swagger_server.response_code.task_monitor import check_sshkey_expiry_and_email; check_sshkey_expiry_and_email(app)"`.
+- fix: a 400 response now says which field failed validation and why. `flask_bad_request` formatted the exception itself, and Connexion's `BadRequestProblem` carries its message on `.detail` while stringifying to an empty string, so every body-validation rejection arrived as the bare prefix `Validation error or other malformed request type:` in both the body and the `X-Error` header. Measured cost: `broker.fabric-testbed.net` sent 3,602 `PUT /quotas/{uuid}` requests to production and received 3,602 400s with no indication of the cause, while `quota_used` stayed 0 across 5,678 rows. The detail is collapsed to one line and capped at 200 characters because `cors_400` copies it into `X-Error`, where a newline invalidates the response.
+- config: `SKE_CRON_HOUR` (default `6`) and `SKE_CRON_MINUTE` (default `0`) set the daily fire time, in the container's timezone, using uWSGI cron semantics where `-1` is a wildcard. Both are optional — existing `.env` files need no change. `SKE_TIMEOUT_IN_SECONDS` no longer sets the cadence; half its value is now the debounce that keeps a second fire in the same day from re-sending notifications.
+
+**Operational change.** The post-deploy step of resetting `task_timeout_tracker` and calling `GET /start` is obsolete and must be dropped from the runbook — nothing needs to be started by hand after a redeploy. Verify instead that the container logs the scheduled run at `SKE_CRON_HOUR` and that `last_updated` on the `ssh_key_expiry` row advances. There is no scheduler outside uWSGI, so a local `flask run` never sends expiry mail.
+
+**Client-visible wire change.** The `details` field and `X-Error` header of a 400 now carry the validation message instead of an empty string. Callers matching on the exact prefix string are unaffected; the prefix is unchanged.
 
 ### <a name="v1113"></a>v1.11.3
 

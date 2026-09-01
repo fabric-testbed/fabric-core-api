@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.5](#v1115) - released TBD
 - [v1.11.4](#v1114) - released TBD
 - [v1.11.3](#v1113) - released TBD
 - [v1.11.2](#v1112) - released TBD
@@ -16,6 +17,18 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1115"></a>v1.11.5
+
+Deployed on: TBD
+
+Data-correctness patch release. No schema change - no migration is required.
+
+- fix: an organization affiliation is now resolved even when the identity provider sends no `eduPersonAffiliation`. Storing the OrgIdentity was conditional on that attribute, so when it was absent the organization *name* was discarded along with it and `people.org_affiliation` was left NULL. `journey_tracker_utils`, `people_uuid_get` and `core_api_metrics` read affiliation only through that foreign key, so those people render as `null` / `'Unknown'`. `organizations.affiliation` is NOT NULL, so every write now falls back to `UNSPECIFIED_ORG_AFFILIATION` (`'unspecified'`) rather than skipping the row. Affects `comanage_utils.update_org_affiliation`, `update_organizations` and `update_user_org_affiliations`, and `load_organizations` in both `db_load` and `db_verify`.
+
+**Scale, measured on production.** 617 of 3,289 people (19%) carried a NULL `org_affiliation` on 2026-09-01, and the count was still climbing - the same walk read 613 of 3,285 one day earlier, so every affected new enrollment was landing NULL. This release stops the population growing; it does not repair the people already affected.
+
+**The existing backlog needs a one-shot repair.** The ordinary heal is login-driven, so dormant accounts never recover on their own. `swagger_server.database.utils.repair_org_affiliation` walks the whole NULL population once and is idempotent. It is not shipped in the image - it is mounted read-only into a throwaway container by `scripts/org-affiliation-dry-pass.sh` on the `v2-develop` branch, which never touches the serving stack. Dry passes against both 1.x tiers on 2026-09-01 resolved every affected person with nothing unresolved. Run the repair only after this release is deployed: `--apply` needs `UNSPECIFIED_ORG_AFFILIATION`, which does not exist on 1.11.4, and the script guards against exactly that.
 
 ### <a name="v1114"></a>v1.11.4
 

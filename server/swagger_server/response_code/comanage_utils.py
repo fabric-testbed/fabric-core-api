@@ -9,6 +9,16 @@ from swagger_server.database.models.people import EmailAddresses, FabricGroups, 
     Organizations, UserOrgAffiliations, UserSubjectIdentifiers
 from swagger_server.response_code.response_utils import array_difference
 
+# COmanage OrgIdentity.Affiliation is eduPersonAffiliation (faculty/staff/
+# student/member/...), which many IdPs never release through CILogon. It was
+# previously required before an OrgIdentity could be stored, which discarded
+# the organization NAME along with it and left the person's affiliation
+# unresolvable ('Unknown' in people_uuid_get). Nothing reads
+# Organizations.affiliation -- every consumer reads .organization -- so the
+# column takes an explicit placeholder rather than an invented
+# eduPersonAffiliation value, and the org name resolves as it should.
+UNSPECIFIED_ORG_AFFILIATION = 'unspecified'
+
 api = ComanageApi(
     co_api_url=os.getenv('COMANAGE_API_URL'),
     co_api_user=os.getenv('COMANAGE_API_USER'),
@@ -240,12 +250,12 @@ def update_org_affiliation(fab_person_id: int, co_person_id: int) -> None:
                 for oi in org_identity:
                     organization = oi.get('O', None)
                     affiliation = oi.get('Affiliation', None)
-                    if org_identity_id and organization and affiliation and not oi.get('Deleted'):
+                    if org_identity_id and organization and not oi.get('Deleted'):
                         try:
                             fab_org = Organizations()
                             fab_org.org_identity_id = org_identity_id
                             fab_org.organization = organization
-                            fab_org.affiliation = affiliation
+                            fab_org.affiliation = affiliation or UNSPECIFIED_ORG_AFFILIATION
                             db.session.add(fab_org)
                             db.session.commit()
                             fab_person.org_affiliation = fab_org.id
@@ -449,7 +459,7 @@ def update_organizations() -> None:
             org_identity_id = org.get('Id', None)
             organization = org.get('O', None)
             affiliation = org.get('Affiliation', None)
-            if org_identity_id and organization and affiliation and not org.get('Deleted'):
+            if org_identity_id and organization and not org.get('Deleted'):
                 fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
                 if not fab_org:
                     consoleLogger.info(
@@ -457,7 +467,7 @@ def update_organizations() -> None:
                     fab_org = Organizations()
                     fab_org.org_identity_id = org_identity_id
                     fab_org.organization = organization
-                    fab_org.affiliation = affiliation
+                    fab_org.affiliation = affiliation or UNSPECIFIED_ORG_AFFILIATION
                     db.session.add(fab_org)
                     db.session.commit()
                 else:
@@ -530,12 +540,12 @@ def update_user_org_affiliations(fab_person: FabricPeople):
                 for oi in org_identity:
                     organization = oi.get('O', None)
                     affiliation = oi.get('Affiliation', None)
-                    if org_identity_id and organization and affiliation and not oi.get('Deleted'):
+                    if org_identity_id and organization and not oi.get('Deleted'):
                         try:
                             fab_org = Organizations()
                             fab_org.org_identity_id = org_identity_id
                             fab_org.organization = organization
-                            fab_org.affiliation = affiliation
+                            fab_org.affiliation = affiliation or UNSPECIFIED_ORG_AFFILIATION
                             db.session.add(fab_org)
                             db.session.commit()
                             consoleLogger.info(

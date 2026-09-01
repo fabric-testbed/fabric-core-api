@@ -11,8 +11,8 @@ from swagger_server.database.models.profiles import FabricProfilesPeople, Fabric
 from swagger_server.database.models.projects import FabricProjects
 from swagger_server.response_code import PEOPLE_PREFERENCES, PEOPLE_PROFILE_PREFERENCES, PROJECTS_PREFERENCES, \
     PROJECTS_PROFILE_PREFERENCES
-from swagger_server.response_code.comanage_utils import update_email_addresses, update_groups, update_org_affiliation, \
-    update_organizations, update_people_identifiers, update_people_roles
+from swagger_server.response_code.comanage_utils import UNSPECIFIED_ORG_AFFILIATION, update_email_addresses, \
+    update_groups, update_org_affiliation, update_organizations, update_people_identifiers, update_people_roles
 from swagger_server.response_code.people_utils import create_fabric_person_from_co_person_id
 from swagger_server.response_code.projects_utils import create_fabric_project_from_uuid
 
@@ -104,14 +104,14 @@ def load_organizations() -> None:
         org_identity_id = org.get('Id', None)
         organization = org.get('O', None)
         affiliation = org.get('Affiliation', None)
-        if org_identity_id and organization and affiliation and not org.get('Deleted'):
+        if org_identity_id and organization and not org.get('Deleted'):
             fab_org = Organizations.query.filter_by(org_identity_id=org_identity_id).one_or_none()
             if not fab_org:
                 try:
                     fab_org = Organizations()
                     fab_org.org_identity_id = org_identity_id
                     fab_org.organization = organization
-                    fab_org.affiliation = affiliation
+                    fab_org.affiliation = affiliation or UNSPECIFIED_ORG_AFFILIATION
                     db.session.add(fab_org)
                     logger.info(
                         "CREATE: entry in 'organizations' table for org_identity_id: {0}".format(org_identity_id))

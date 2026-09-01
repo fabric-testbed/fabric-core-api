@@ -23,6 +23,27 @@
 #     removed so internal services are reachable only via the bridge network.
 # =============================================================================
 
+# Container log rotation — applied to every service below.
+#
+# Docker's json-file driver has NO rotation by default: a container's log grows
+# until the container is recreated, and nothing else truncates it. Measured on
+# 2026-08-22/23 over a ~27-hour window (uis, the busiest tier): vouch-proxy
+# 36 MB/day, flask-server 19 MB/day, nginx 9 MB/day, database ~0. alpha-6 and
+# beta-3 run roughly a quarter of that.
+#
+# 50m x 6 caps each container at 300 MB (a ~1.5 GB ceiling for the stack) and
+# still retains, at the measured production rates, ~33 days of nginx, ~16 days
+# of flask-server and ~8 days of vouch-proxy. `docker logs` reads across the
+# rotated files, so `--since` windows are unaffected.
+#
+# Changing these values RECREATES the container on the next `up -d` (the log
+# config is fixed at container creation), and the recreate starts a fresh log.
+x-logging: &container-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "6"
+
 services:
 
   # Application server — uWSGI runs the Connexion/Flask app from server/.
@@ -32,6 +53,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: api-flask-server
+    logging: *container-logging
     depends_on:
       - database
       - nginx
@@ -50,6 +72,7 @@ services:
   database:
     image: postgres:14
     container_name: api-database
+    logging: *container-logging
     restart: unless-stopped
     networks:
       - core-api
@@ -68,6 +91,7 @@ services:
   nginx:
     image: nginx:1
     container_name: api-nginx
+    logging: *container-logging
     networks:
       - core-api
     ports:
@@ -83,6 +107,7 @@ services:
   vouch-proxy:
     image: fabrictestbed/vouch-proxy:0.27.1
     container_name: api-vouch-proxy
+    logging: *container-logging
     networks:
       - core-api
     ports:

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -125,10 +126,20 @@ def validate_authorization_token(token: str) -> bool:
     return is_valid
 
 
+# A CM token in canonical compact-JWS form: three unpadded base64url segments
+# and nothing else. The TRL holds sha256 of each token as issued, so any
+# encoding variant the JWT library still verifies (PyJWT 2.15.1 accepts
+# trailing '=' on the signature; <=2.13 also accepted non-canonical final
+# characters) would hash differently and walk past a revocation.
+_CANONICAL_JWS = re.compile(r'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+
+
 def is_token_revoked(token: str) -> bool:
     """
     Check all incoming tokens against a token revocation list (TRL)
     """
+    if not _CANONICAL_JWS.fullmatch(token):
+        return True
     revocation_list = get_token_revocation_list()
     try:
         token_hash = hashlib.new('sha256')

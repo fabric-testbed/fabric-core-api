@@ -1,6 +1,6 @@
 [project]
 name = "fabric-core-api"
-version = "1.11.5"
+version = "1.11.6"
 description = "FABRIC Core API — User Information Service and Project Registry"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -17,7 +17,7 @@ dependencies = [
     "Flask-Migrate==4.1.0",
     "Flask-SQLAlchemy==3.1.1",
     "psycopg2-binary",
-    "PyJWT",
+    "PyJWT>=2.15.0",              # 2.14/2.15 security fixes (Dependabot #24-#39)
     "python-dateutil",            # alembic[tz]
     "python-dotenv",
     "pytz",

@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.6](#v1116) - released TBD
 - [v1.11.5](#v1115) - released TBD
 - [v1.11.4](#v1114) - released TBD
 - [v1.11.3](#v1113) - released TBD
@@ -17,6 +18,17 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1116"></a>v1.11.6
+
+Deployed on: TBD
+
+Security patch release. No schema change - no migration is required.
+
+- security: PyJWT 2.13.0 -> 2.15.1 and urllib3 2.7.0 -> 2.8.0, clearing 16 advisories (PyJWT: one critical, five high; urllib3: two high). `pyproject.toml` now requires `PyJWT>=2.15.0`, the first release that clears all of them, so a future relock cannot quietly go back. urllib3 arrives only through `requests`; its one breaking change (HTTPS-proxy TLS settings) does not apply, because the service uses no proxies.
+- fix: a revoked Credential Manager token could still be used (CVE-2026-102269). The revocation check looks up the sha256 of the token string exactly as presented. PyJWT 2.13 also verified signatures whose last base64url character had altered unused bits, and 2.15.1 deliberately verifies a signature with trailing `=` padding again. Either re-encoding still verified but hashed differently, so it was not found in the revocation list. `decorators.is_token_revoked` now treats any token that is not three unpadded base64url segments as revoked, before the lookup. The Credential Manager issues tokens through PyJWT's encoder, which never pads, so legitimate tokens are unaffected. The altered-bits variant still matches that pattern; the `PyJWT>=2.15.0` floor is what rejects it.
+
+**Client-visible change.** A bearer token sent with `=` padding or surrounding whitespace is now rejected with a 401. No Credential Manager token has that shape.
 
 ### <a name="v1115"></a>v1.11.5
 

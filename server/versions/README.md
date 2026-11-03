@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.7](#v1117) - released TBD
 - [v1.11.6](#v1116) - released TBD
 - [v1.11.5](#v1115) - released TBD
 - [v1.11.4](#v1114) - released TBD
@@ -18,6 +19,17 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1117"></a>v1.11.7
+
+Deployed on: TBD
+
+Security patch release. No schema change - no migration is required.
+
+- fix: fabric-comanage-api 0.2.0 -> 0.4.0. 0.2.0 retried POST on 429/5xx, so a COU or role create that landed in COmanage but answered 5xx could be replayed into a duplicate. 0.3.0 stops retrying POST; reads, PUT and DELETE keep their retries. The `*_edit` helpers now treat only `None` as "keep the existing value"; the one caller already passes `None` for empty fields. The client now requires Python 3.11 or later (the image runs 3.12).
+- security: certifi 2026.10.19 -> 2026.10.23. PYSEC-2026-4320 (the `emSign ECC Root CA - G3` chain, whose intermediates had compromised keys) was already cleared by 2026.10.19; this matches the COmanage client's own `certifi>=2026.10.18` floor.
+
+**Behaviour change.** A COmanage create that meets a 429 or 5xx now fails on the first request instead of after about 7 seconds of retries. `create_comanage_role` and `create_comanage_group` return False, as they already did for any other failure.
 
 ### <a name="v1116"></a>v1.11.6
 

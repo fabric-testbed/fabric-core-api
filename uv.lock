@@ -40,11 +40,11 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2026.4.22"
+version = "2026.10.23"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/25/ee/6caf7a40c36a1220410afe15a1cc64993a1f864871f698c0f93acb72842a/certifi-2026.4.22.tar.gz", hash = "sha256:8d455352a37b71bf76a79caa83a3d6c25afee4a385d632127b6afb3963f1c580", size = 137077, upload-time = "2026-04-22T11:26:11.191Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/11/b524cbd9bbdaca58608e4cf4053fd463417549e1959fa8d3aa18319f9555/certifi-2026.10.23.tar.gz", hash = "sha256:a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd", size = 136225, upload-time = "2026-10-23T11:36:16.478Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/30/7cd8fdcdfbc5b869528b079bfb76dcdf6056b1a2097a662e5e8c04f42965/certifi-2026.4.22-py3-none-any.whl", hash = "sha256:3cb2210c8f88ba2318d29b0388d1023c8492ff72ecdde4ebdaddbb13a31b1c4a", size = 135707, upload-time = "2026-04-22T11:26:09.372Z" },
+    { url = "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl", hash = "sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1", size = 135082, upload-time = "2026-10-23T11:36:14.763Z" },
 ]
 
 [[package]]
@@ -212,19 +212,22 @@ wheels = [
 
 [[package]]
 name = "fabric-comanage-api"
-version = "0.2.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "certifi" },
+    { name = "idna" },
     { name = "requests" },
+    { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/73/b55a4c71f27f57573f531bc6c0fa591385f87ac15a17de3e41ff4845f4d1/fabric_comanage_api-0.2.0.tar.gz", hash = "sha256:4d6a43192cddef32213beae0a04314e14f187648e91f08d0432c98b4de5936ae", size = 24078, upload-time = "2026-04-25T23:23:26.715Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/c2/414a05623c1d4b90a96fb46c51e4a5ebf0ffa704d433e72a577e0f509f45/fabric_comanage_api-0.4.0.tar.gz", hash = "sha256:d35c3bd152d8292f79ff52b89eac8b46ecd625e894290e154212b85099099c03", size = 24698, upload-time = "2026-11-03T14:50:51.251Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/64/0dfd1c5d7ece1c229f314158049fb7d1a95decdeee117faf3052030e7280/fabric_comanage_api-0.2.0-py3-none-any.whl", hash = "sha256:66df73a6d0568b2b9cc8cb77e7b122ac0df3896f76e6f8e28115a20ebf3a72e4", size = 20028, upload-time = "2026-04-25T23:23:25.035Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/86/9056bca4aabb51f22d403b2dc49c4bcebe9f87c57be617a3c614d9e5a984/fabric_comanage_api-0.4.0-py3-none-any.whl", hash = "sha256:6203a7780ea2d80ae870c95f7b93b702fbc781ca6ca115c6f06bbb4c5956ebda", size = 20294, upload-time = "2026-11-03T14:50:49.634Z" },
 ]
 
 [[package]]
 name = "fabric-core-api"
-version = "1.11.6"
+version = "1.11.7"
 source = { virtual = "." }
 dependencies = [
     { name = "connexion" },
@@ -255,7 +258,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "connexion", specifier = "==2.14.2" },
-    { name = "fabric-comanage-api", specifier = "==0.2.0" },
+    { name = "fabric-comanage-api", specifier = "==0.4.0" },
     { name = "fabric-fss-utils" },
     { name = "flask-migrate", specifier = "==4.1.0" },
     { name = "flask-sqlalchemy", specifier = "==3.1.1" },

@@ -26,19 +26,6 @@ wheels = [
 ]
 
 [[package]]
-name = "authlib"
-version = "1.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cryptography" },
-    { name = "joserfc" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3c/f2/e05664d5275ce811fd4e9df0a2b3f0086ee19a8a80358d95499fa82fd50c/authlib-1.7.1.tar.gz", hash = "sha256:8c09b0f9d080c823e594b52316af70f79a1fa4eed64d0363a076233c04ef063a", size = 175884, upload-time = "2026-05-04T08:11:25.033Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/82/730650ee5e5b598b7bfdc291b784bc2f6fe02a5671695485403365101088/authlib-1.7.1-py2.py3-none-any.whl", hash = "sha256:8470f4aa6b5590ac41bd81d6e6ee12448ce36a0da0af19bbed69fb53fb4e8ad9", size = 258826, upload-time = "2026-05-04T08:11:23.208Z" },
-]
-
-[[package]]
 name = "certifi"
 version = "2026.10.23"
 source = { registry = "https://pypi.org/simple" }
@@ -227,7 +214,7 @@ wheels = [
 
 [[package]]
 name = "fabric-core-api"
-version = "1.11.7"
+version = "1.11.8"
 source = { virtual = "." }
 dependencies = [
     { name = "connexion" },
@@ -259,7 +246,7 @@ dev = [
 requires-dist = [
     { name = "connexion", specifier = "==2.14.2" },
     { name = "fabric-comanage-api", specifier = "==0.4.0" },
-    { name = "fabric-fss-utils" },
+    { name = "fabric-fss-utils", specifier = ">=1.7.0" },
     { name = "flask-migrate", specifier = "==4.1.0" },
     { name = "flask-sqlalchemy", specifier = "==3.1.1" },
     { name = "psycopg2-binary" },
@@ -284,18 +271,18 @@ dev = [
 
 [[package]]
 name = "fabric-fss-utils"
-version = "1.6.2"
+version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "authlib" },
     { name = "cryptography" },
     { name = "flask" },
+    { name = "joserfc" },
     { name = "pyjwt" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/fb/90dbb7df8c99ad01a18bce3eab2d3186ae7b7be13cee6533c055b7648c1b/fabric_fss_utils-1.6.2.tar.gz", hash = "sha256:772f7972724cc680faddcc46de9e6678d0a77407d65d70382d7e4cdfd76d3784", size = 23951, upload-time = "2026-02-11T15:25:45.766Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/42/f2/70933da803941e7a04d95021674d65536dc781605c96b9f9f365e2b4f3d7/fabric_fss_utils-1.7.0.tar.gz", hash = "sha256:482882530b8334e41370ac6742f8a1f161f9deccdceff38fbf18dc9797c60906", size = 23909, upload-time = "2026-05-19T01:45:09.981Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/29/d3/042aa10bd3c60028d862224d8df02285391bb7cd738b436829083bcbc735/fabric_fss_utils-1.6.2-py3-none-any.whl", hash = "sha256:44d2627c4784cd22bc7609b8a05eb2b7204f199fd017381db11e8a519bd3073e", size = 13252, upload-time = "2026-02-11T15:25:42.736Z" },
+    { url = "https://files.pythonhosted.org/packages/26/38/37f461d19e37bf957744e5fea8be2a76dd23ffd00ade9d3510582ac6924f/fabric_fss_utils-1.7.0-py3-none-any.whl", hash = "sha256:d8afe47bc202d144a49f4a767ac92dc4d83d7845f0d68825429b10c79dde1eba", size = 13238, upload-time = "2026-05-19T01:45:07.549Z" },
 ]
 
 [[package]]
@@ -406,14 +393,14 @@ wheels = [
 
 [[package]]
 name = "joserfc"
-version = "1.7.3"
+version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/c6/b1cac0280f8efc57626ea8804866b37099f23cae11b1485a42b213245e31/joserfc-1.7.3.tar.gz", hash = "sha256:116955c2587139dba20621fd0bd7fc9255fa960c9fe7f43c43ebef2e801dcfcf", size = 233821, upload-time = "2026-07-08T12:41:42.66Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/31/5c3f27e82c92a7bbe1f028033ff19e0251540395c9be244c01a50de42bdb/joserfc-1.8.0.tar.gz", hash = "sha256:cbf03cb2c6db8cc5289f1ef8718842e53dba244b4c0de5fefa0c0eaee4bde8db", size = 241023, upload-time = "2026-11-03T10:45:57.948Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/f5/650b59d1b74f5befb7a7a7e7d7c92a26b94256df3541e2b4914152cd177a/joserfc-1.7.3-py3-none-any.whl", hash = "sha256:7c39f3f2c943dbc03122747fa8ebbd8e156e54904cf25651b452f4d2634a6075", size = 70982, upload-time = "2026-07-08T12:41:41.521Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/7e/7ffaae13415e8f51c8e8d5d1845f2de7a27ebf2717e97a38d7e7446d6030/joserfc-1.8.0-py3-none-any.whl", hash = "sha256:176b836ac7ed9a46a88629e24076314b475f33a75d0bad7f26146e572eed7c79", size = 73147, upload-time = "2026-11-03T10:45:56.531Z" },
 ]
 
 [[package]]
@@ -466,14 +453,14 @@ wheels = [
 
 [[package]]
 name = "mako"
-version = "1.3.12"
+version = "1.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markupsafe" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/62/791b31e69ae182791ec67f04850f2f062716bbd205483d63a215f3e062d3/mako-1.3.12.tar.gz", hash = "sha256:9f778e93289bd410bb35daadeb4fc66d95a746f0b75777b942088b7fd7af550a", size = 400219, upload-time = "2026-04-28T19:01:08.512Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/09/e07c4b5579a79f4b16f8d4f29f6c54514ac787c4ad506b8c4f28a0e6b0bf/mako-1.4.3.tar.gz", hash = "sha256:cd6537fe88d5fec315c55c2f8529bc4ce7a9a352ad7db3eeaa6a66e2dd4ec37a", size = 412799, upload-time = "2026-09-22T20:54:31.509Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/b1/a0ec7a5a9db730a08daef1fdfb8090435b82465abbf758a596f0ea88727e/mako-1.3.12-py3-none-any.whl", hash = "sha256:8f61569480282dbf557145ce441e4ba888be453c30989f879f0d652e39f53ea9", size = 78521, upload-time = "2026-04-28T19:01:10.393Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/a0/053d6af3e8f871e0073b4a36732d9e65be77a72e5434c31b94f6af78a6bb/mako-1.4.3-py3-none-any.whl", hash = "sha256:723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f", size = 80164, upload-time = "2026-09-22T20:54:33.128Z" },
 ]
 
 [[package]]

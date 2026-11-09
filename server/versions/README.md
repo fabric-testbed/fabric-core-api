@@ -4,6 +4,7 @@ Version changelog and migration information
 
 ## Table of Contents
 
+- [v1.11.8](#v1118) - released TBD
 - [v1.11.7](#v1117) - released TBD
 - [v1.11.6](#v1116) - released TBD
 - [v1.11.5](#v1115) - released TBD
@@ -19,6 +20,17 @@ Version changelog and migration information
 - [v1.4.1](#v141) - released 02/07/2023
 - [v1.4.0](#v140) - released 01/23/2023
 - [v1.3.0](#v130) - released 08/29/2022
+
+### <a name="v1118"></a>v1.11.8
+
+Deployed on: TBD
+
+Security patch release. No schema change - no migration is required.
+
+- security: fabric-fss-utils 1.6.2 -> 1.7.0, which drops its authlib dependency. authlib 1.7.1 carried 1 critical, 3 high, 4 medium and 1 low advisories (JWS/JWT signature validation, algorithm confusion, an empty HMAC key, and OAuth/OIDC grant checks); this API never imported authlib - it came in only through fss-utils, whose `sshkey.FABRICSSHKey` is all the API uses and is unchanged (same name, fingerprint and length for RSA and ECDSA keys under both versions).
+- security: joserfc 1.7.3 -> 1.8.0 (unbounded JWE recipients and a compact JWS size-guard allocation; it came in through authlib).
+- security: Mako 1.3.12 -> 1.4.3 (a Windows-only TemplateLookup path traversal; not reachable on the Linux images).
+- Werkzeug 2.2.3 stays: its open advisory (`safe_join` and Windows device names) is Windows-only, and Werkzeug moves with Flask.
 
 ### <a name="v1117"></a>v1.11.7
 

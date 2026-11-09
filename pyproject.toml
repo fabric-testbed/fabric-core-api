@@ -1,6 +1,6 @@
 [project]
 name = "fabric-core-api"
-version = "1.11.7"
+version = "1.11.8"
 description = "FABRIC Core API — User Information Service and Project Registry"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -13,7 +13,7 @@ authors = [
 dependencies = [
     "connexion==2.14.2",
     "fabric-comanage-api==0.4.0",   # 0.3.0: POST no longer retried (duplicate-create risk)
-    "fabric_fss_utils",
+    "fabric_fss_utils>=1.7.0",     # 1.7.0 drops authlib (critical/high advisories, unused by us)
     "Flask-Migrate==4.1.0",
     "Flask-SQLAlchemy==3.1.1",
     "psycopg2-binary",
